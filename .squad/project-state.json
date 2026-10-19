@@ -61,7 +61,7 @@
         "evidence": "Pendente: decisão do usuário sobre a proposta da Opção A (e formato de exportação H9)."
       }
     ],
-    "notes": "Requisitos aprovados internamente (revisão independente concluída). ADR-0001 proposto, aguardando aprovação humana antes de iniciar a implementação. Nenhum código de produto criado até aqui; nenhum custo ou compromisso externo assumido. Commit local 088eafc em main (ahead 1, não publicado): requisitos v3, ADR-0001, TASK-002/003 e project-state; git status limpo após o commit. Alteração posterior do project-state (registro deste commit) segue pendente de novo commit."
+    "notes": "Requisitos aprovados internamente (revisão independente concluída). ADR-0001 proposto, aguardando aprovação humana antes de iniciar a implementação. Nenhum código de produto criado até aqui; nenhum custo ou compromisso externo assumido. Trabalho desta etapa commitado localmente em main (2 commits, não publicados — ver git log); árvore limpa após o commit. Registro do hash dentro do próprio project-state é evitado de propósito (auto-referência): usar git log como fonte do hash atual."
   },
   "blockers": [],
   "updated_at": "2026-10-19T22:20:00Z"
