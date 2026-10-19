@@ -2,14 +2,14 @@
   "schema_version": "1.0",
   "project": {
     "name": "squad-framework-2.0",
-    "goal": "framework de squad autônoma e agnóstica a stack para desenvolvimento de software usando OpenCode 2.0.32",
-    "stack_status": "undecided"
+    "goal": "Desenvolver um sistema contábil web para escritório multiempresas (normas do Brasil/PCASP), com módulos financeiro e contábil, na subpasta sistema-contabil/, conduzido pela squad do OpenCode.",
+    "stack_status": "proposed"
   },
   "workflow": {
-    "phase": "maintenance",
-    "status": "complete",
-    "current_task_id": null,
-    "next_action": "README.md recriado na raiz e verificado; divergência de memória corrigida (TASK-001 registrava o arquivo como existente, mas ele não estava no repositório). Nenhuma tarefa ativa; aguardar próximo pedido (/start)."
+    "phase": "architecture",
+    "status": "in_progress",
+    "current_task_id": "TASK-003",
+    "next_action": "Apresentar ADR-0001 (stack proposta: Node/TS + Fastify + React/Vite + SQLite/Drizzle) para aprovação humana junto com a definição do formato de exportação de relatórios (H9). Após aprovação: fechar TASK-003, registrar ADR como aceito e planejar a implementação (fase implementation)."
   },
   "tasks": [
     {
@@ -18,31 +18,51 @@
       "status": "done",
       "path": "README.md",
       "owner": "coordinator"
+    },
+    {
+      "id": "TASK-002",
+      "title": "Levantar requisitos do sistema contábil (intake -> requisitos)",
+      "status": "done",
+      "path": "docs/requirements/SISTEMA-CONTABIL.md",
+      "owner": "product-analyst"
+    },
+    {
+      "id": "TASK-003",
+      "title": "Definir arquitetura e stack do sistema contábil",
+      "status": "in_review",
+      "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md",
+      "owner": "architect"
     }
   ],
-  "decisions": [],
+  "decisions": [
+    {
+      "id": "ADR-0001",
+      "title": "Stack e arquitetura do sistema contábil (MVP) — proposta, aguardando aprovação humana",
+      "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md"
+    }
+  ],
   "active_work": [],
   "last_verified": {
     "commit": null,
     "checks": [
       {
-        "name": "Criação do README.md na raiz",
+        "name": "TASK-002 — requisitos concluídos e revisados (2 rodadas independentes)",
         "result": "passed",
-        "evidence": "README.md criado (111 linhas) cobrindo objetivo, estrutura, agentes, skills, commands, início/retomada, memória em .squad/ e aprovação humana; conteúdo extraído apenas dos arquivos existentes; UTF-8 confirmado por releitura."
+        "evidence": "docs/requirements/SISTEMA-CONTABIL.md v3 (RF-01..24, CA-01..55, CE-01..22, FIX-01, H1..H20, F1..F15, PB-1..4 respondidas). Revisão 1 (ses_ea9d3912cffe4RRX85r5YEMfLw): 5 importantes + 11 menores, sem bloqueantes. Re-inspeção 2 (ses_ea9b85397ffek3LkUNIO6z5FBa): veredito 'TASK-002 pode ser concluída'. Lacunas não avaliadas pelo revisor (M1/M6/M8/M9) verificadas por grep pelo coordenador: corrigidas. Ajustes menores finais (RF-09 admin não encerra; fronteira de configuração fiscal; estorno em período encerrado) verificados por grep: frases ambíguas antigas ausentes, CA-54/CA-55/CE-21/CE-22 presentes."
       },
       {
-        "name": "Limite de arquivos alterados",
+        "name": "TASK-003 — ADR entregue e inspecionado pelo coordenador",
         "result": "passed",
-        "evidence": "git status --porcelain pelo coordenador: apenas README.md adicionado como não rastreado além dos arquivos já existentes; nenhum arquivo de configuração (.opencode/, opencode.jsonc) alterado; nenhum commit."
+        "evidence": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md (137 linhas não vazias) com seções: contexto (com avaliação medida do ambiente: Node 24 e .NET 10 presentes; Python/Docker/PostgreSQL ausentes), 3 opções comparadas, decisão, estrutura de diretórios, modelo de dados, isolamento de tenant, auditoria append-only com triggers, consequências e estratégia de verificação dos CA. Confronto com requisitos: cobre multi-tenant, integridade transacional, papéis, sem serviços pagos, código em sistema-contabil/. git status: apenas ADR, docs/requirements/ e arquivos .squad/ esperados; nenhum commit."
       },
       {
-        "name": "Divergência memória x repositório",
-        "result": "passed",
-        "evidence": "Test-Path README.md retornou False antes do trabalho, embora a TASK-001 constasse como done; registro corrigido conforme a skill memory-management (corrigir informação desatualizada em vez de repeti-la como fato)."
+        "name": "Aprovação humana da stack (ADR-0001)",
+        "result": "not_run",
+        "evidence": "Pendente: decisão do usuário sobre a proposta da Opção A (e formato de exportação H9)."
       }
     ],
-    "notes": "README.md recriado em 2026-10-19 (a versão anterior da TASK-001 não estava presente no repositório). Trabalho entregue sem commit, conforme prática anterior; git segue sem commits e com arquivos não rastreados."
+    "notes": "Requisitos aprovados internamente (revisão independente concluída). ADR-0001 proposto, aguardando aprovação humana antes de iniciar a implementação. Nenhum código de produto criado até aqui; nenhum commit; nenhum custo ou compromisso externo assumido."
   },
   "blockers": [],
-  "updated_at": "2026-10-19T20:50:24Z"
+  "updated_at": "2026-10-19T22:20:00Z"
 }

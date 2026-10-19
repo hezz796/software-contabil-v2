@@ -1,0 +1,45 @@
+{
+  "id": "TASK-003",
+  "title": "Definir arquitetura e stack do sistema contábil",
+  "objective": "Avaliar opções de stack, modelo de dados, limite de serviços e padrão arquitetural para o sistema contábil web multiempresas e registrar a decisão em ADR, após a aprovação dos requisitos (TASK-002).",
+  "status": "in_review",
+  "owner": "architect",
+  "depends_on": ["TASK-002"],
+  "scope": {
+    "include": [
+      "recomendação de stack, banco de dados, autenticação e estrutura de pastas em sistema-contabil/",
+      "modelo de dados contábil (partidas dobradas) e regras de integridade",
+      "ADR em docs/decisions/ com opções consideradas e justificativa"
+    ],
+    "exclude": [
+      "implementação de código",
+      "publicação, deploy ou compromisso de custos",
+      "alterações em .squad/project-state.json (após o coordenador)"
+    ]
+  },
+  "acceptance_criteria": [
+    "ADR criado em docs/decisions/ descrevendo contexto, opções consideradas, decisão, consequências e alternativas rejeitadas.",
+    "A stack escolhida cobre: web app multiempresas (isolamento por tenant), persistência relacional com integridade transacional para partidas dobradas e autenticação multiusuário.",
+    "Estrutura de pastas definida para sistema-contabil/ sem conflito com os arquivos do framework na raiz.",
+    "Decisão compatível com as restrições registradas em docs/requirements/SISTEMA-CONTABIL.md e com operação sem custos obrigatórios de terceiros."
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspeção do ADR",
+      "method": "Coordenador lê o ADR e confere contexto, opções, decisão e consequências."
+    },
+    {
+      "name": "Confronto com requisitos",
+      "method": "Confere se a decisão atende aos itens de segurança e multiempresa registrados nos requisitos."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Depende da aprovação (ou ajuste) dos requisitos produzidos pela TASK-002."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "created_at": "2026-10-19T21:47:00Z",
+  "updated_at": "2026-10-19T21:47:00Z"
+}

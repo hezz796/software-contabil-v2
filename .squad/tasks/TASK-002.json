@@ -1,0 +1,48 @@
+{
+  "id": "TASK-002",
+  "title": "Levantar requisitos do sistema contábil (intake -> requisitos)",
+  "objective": "Converter o pedido 'criar um sistema contábil' em requisitos claros, restrições e critérios de aceite verificáveis, documentados em docs/requirements/SISTEMA-CONTABIL.md, sem escolher stack.",
+  "status": "done",
+  "owner": "product-analyst",
+  "depends_on": [],
+  "scope": {
+    "include": [
+      "docs/requirements/SISTEMA-CONTABIL.md (criação/escrita do documento de requisitos)",
+      "identificação de usuários, fluxos, casos de erro, hipóteses e perguntas bloqueantes"
+    ],
+    "exclude": [
+      "escolha de stack, arquitetura ou modelo de dados detalhado",
+      "qualquer alteração de código de produto",
+      "alterações em arquivos de configuração da squad (.opencode/, opencode.jsonc) e em .squad/project-state.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "Documento docs/requirements/SISTEMA-CONTABIL.md existe e contém: objetivo, usuários/fluxos, requisitos funcionais numerados, restrições, critérios de aceite observáveis, casos de erro/limites, hipóteses e perguntas bloqueantes.",
+    "Escopo confirmado pelo usuário refletido no documento: escritório contábil multiempresas; financeiro (contas a pagar/receber, conciliação bancária, fluxo de caixa) + contábil (plano de contas, lançamentos débito/crédito, balancete, razão, balanço); aplicação web; normas do Brasil (PCASP), com SPED/ECD/ECF fora do MVP.",
+    "Todo critério de aceite é observável por teste, inspeção ou demonstração (sem termos vagos como 'performático' sem medida).",
+    "Nenhum documento escolhe stack ou tecnologia específica.",
+    "Fatos confirmados, hipóteses e perguntas bloqueantes estão separados em seções distintas."
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspeção do documento de requisitos",
+      "method": "Coordenador lê docs/requirements/SISTEMA-CONTABIL.md e confere as seções e o escopo listados nos critérios de aceite."
+    },
+    {
+      "name": "Revisão independente",
+      "method": "QA/analista revisa o documento contra os critérios desta tarefa antes de concluí-la (limitação registrada se não executada)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "O sistema viverá na subpasta sistema-contabil/ deste repositório (escolha do usuário, 2026-10-19).",
+    "Sem restrição de stack declarada; a escolha pertence à etapa de arquitetura.",
+    "Idioma da interface: português do Brasil (hipótese reversível).",
+    "Dados contábeis são sensíveis: autenticação, isolamento por empresa e trilha de auditoria entram como restrição de segurança no MVP."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "created_at": "2026-10-19T21:47:00Z",
+  "updated_at": "2026-10-19T21:47:00Z"
+}
