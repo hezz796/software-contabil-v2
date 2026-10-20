@@ -1,0 +1,17 @@
+# Dependências e saídas de build
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Banco SQLite local (dev) e temporários
+apps/api/data/
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Ambiente e editor
+.env
+.env.local
+.DS_Store
