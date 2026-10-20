@@ -1,0 +1,48 @@
+{
+  "id": "TASK-014",
+  "title": "Lancamentos em partidas dobradas, imutabilidade e estorno",
+  "objective": "Implementar o nucleo contabil: gravacao transacional de lancamentos validos (RF-07), imutabilidade por triggers (RF-08/R9) e estorno unico vinculado, cobrindo CA-13..14, CA-24..26 e CA-29.",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-013"],
+  "scope": {
+    "include": [
+      "lancamento + partida: >=2 partidas, soma debitos = soma creditos, valores >0 (H7), data valida, periodo aberto",
+      "triggers de imutabilidade em lancamento/partida (sem UPDATE/DELETE no produto)",
+      "estorno: lancamento inverso vinculado (estorno_de_id), unico por origem, data em periodo aberto",
+      "transacionalidade (rollback completo) e auditoria na mesma transacao"
+    ],
+    "exclude": [
+      "balancete/razao/balanco (T015)",
+      "baixas financeiras (T016)",
+      "front-end (T020)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-014.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-13 desequilibrio (100 x 90) recusado com mensagem citando a diferenca; nada persistido.",
+    "CA-14 recusas: uma partida, valor zero, valor negativo, partida sem conta, data invalida, data em periodo encerrado.",
+    "CA-24 periodo M encerrado: lancamento/estorno com data em M recusado; data em M+1 aceito.",
+    "CA-25 nao existe acao no produto que edite ou exclua lancamento gravado (inspecao + tentativa).",
+    "CA-26 estorno de lancamento ja estornado recusado; estornar dois lancamentos distintos do mesmo periodo funciona.",
+    "CA-29 falha simulada no meio da gravacao: mensagem de erro ao usuario e nenhum registro parcial ou duplicado apos restaurar."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste 'CA-XX ...' por criterio; CA-29 injeta falha de banco no meio da transacao."
+    },
+    {
+      "name": "Teste direto de imutabilidade",
+      "method": "Tentativa de UPDATE/DELETE direto no banco abortada pelo trigger (mesma estrategia de CA-38)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 7,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

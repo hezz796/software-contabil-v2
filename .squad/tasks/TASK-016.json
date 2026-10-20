@@ -1,0 +1,52 @@
+{
+  "id": "TASK-016",
+  "title": "Financeiro: titulos, baixa total/parcial, cancelamento e estorno de baixa",
+  "objective": "Implementar contas a pagar/receber (RF-13/RF-14), baixa total ou parcial com validacoes (H8), situacao derivada das baixas, vinculo contabil das baixas (RF-15) e estorno de baixa (RF-24/F14).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-015"],
+  "scope": {
+    "include": [
+      "titulo: contraparte, descricao, vencimento, valor_centavos, conta, situacao (aberto|parcial|pago|cancelado), saldo_centavos",
+      "baixa: data, valor, vinculo a lancamento; recusas (valor > saldo, <=0, data invalida, titulo quitado/cancelado)",
+      "estorno de baixa: restaura saldo, gera lancamento de estorno vinculado, unico por baixa, recusado em periodo encerrado (CA-55)",
+      "bloqueio de escrita em empresa inativa (CA-40) e auditoria de todos os eventos"
+    ],
+    "exclude": [
+      "calculos fiscais: retencoes, multa/juros, DAS (T017)",
+      "exigencia de desconciliacao no estorno (regra em T018, CA-44)",
+      "front-end (T020)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-016.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-06 titulo a pagar de 500,00 pago no vencimento: situacao pago, saldo zera, sem nova baixa, lancamento vinculado de 500,00, sem multa/juros.",
+    "CA-07 mesmo fluxo para conta a receber resulta em titulo recebido com lancamento vinculado.",
+    "CA-16 recusas de baixa (valor > saldo, <= 0, data invalida, titulo pago/cancelado) sem alteracao parcial.",
+    "CA-40 empresa inativa: lancamento/titulo novo recusado com mensagem; historico segue consultavel.",
+    "CA-41 baixa parcial 200,00 => parcialmente pago com saldo 300,00; baixa seguinte 300,00 => pago, lancamentos somam 500,00.",
+    "CA-42 titulo pago com estorno volta a aberto com saldo 500,00; lancamento de estorno imutavel vinculado; trilha registra; novo pagamento funciona.",
+    "CA-43 estorno da baixa parcial (200,00) devolve titulo a aberto com saldo 500,00 e estorno vinculado.",
+    "CA-55 baixa em periodo encerrado: estorno recusado com mensagem, titulo inalterado, sem lancamento de estorno, tentativa auditada; estorno em periodo aberto funciona."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste 'CA-XX ...' por criterio, verificando titulo, lancamento vinculado e trilha."
+    },
+    {
+      "name": "Conferencia de somatorio",
+      "method": "Afirmar que lancamentos vinculados somam o valor total do titulo (CA-41) em reais inteiros (centavos)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Valores em centavos (inteiro) conforme ADR-0001; apresentacao BRL com 2 casas (H7)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 8,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

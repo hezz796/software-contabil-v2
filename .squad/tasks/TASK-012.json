@@ -1,0 +1,50 @@
+{
+  "id": "TASK-012",
+  "title": "Empresas, gestao de usuarios/atribuicoes e permissoes admin x contador",
+  "objective": "Implementar cadastro de empresas (RF-01), gestao de usuarios e atribuicoes pelo administrador (RF-02), leitura global auditada do admin (F13) e recusa de tentativas cruzadas de tenant (RF-04, R7).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-011"],
+  "scope": {
+    "include": [
+      "empresa: razao social, CNPJ validado e unico, situacao ativa/inativa, sem exclusao dura (H13)",
+      "gestao: admin cria/edita usuarios, define papel e atribui empresas",
+      "leitura global do admin com evento de auditoria (scope global exclusivo do papel administrador)",
+      "recusa auditada de escrita pelo admin e de acesso cruzado por contador (corpo, URL, ID)"
+    ],
+    "exclude": [
+      "plano de contas, lancamentos e periodos (T013/T014)",
+      "front-end (T020)",
+      "testes que dependem de balancete para CA-34 (validacao final em T021)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-012.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-15 recusa empresa com razao social vazia, CNPJ invalido ou duplicado, com mensagem especifica e nada persistido.",
+    "CA-20 contador de X nao obtem conteudo de Y via lista ou ID direto (negacao, nao vazio).",
+    "CA-23 contador sem atribuicao ve lista vazia e nao grava em nenhuma empresa.",
+    "CA-33 admin nao grava lancamento/titulo: acao de escrita recusada e nada persistido.",
+    "CA-35 e CA-36: adulteracao de empresa_id no corpo e requisicao direta com ID de Y sao recusadas e auditadas como tentativa.",
+    "CA-37 remocao de atribuição tem efeito imediato na tentativa seguinte sem novo login; operacoes na empresa restante seguem funcionando.",
+    "CA-34 (parte de permissao): admin sem atribuicao le dados de X e o acesso fica registrado na trilha (validacao com balancete em T021).",
+    "CA-40 (logica de empresa inativa bloqueando escrita) implementada aqui e verificada por inteiro em T016."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste 'CA-XX ...' por criterio, com usuarios fixtures (admin e contadores atribuidos)."
+    },
+    {
+      "name": "Auditoria das recusas",
+      "method": "Afirmar, na trilha, o evento de tentativa recusada com usuario, empresa e objeto."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 6,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

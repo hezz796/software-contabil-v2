@@ -1,0 +1,50 @@
+{
+  "id": "TASK-010",
+  "title": "Fundação do monorepo e harness de teste",
+  "objective": "Criar o esqueleto em sistema-contabil/ (workspaces npm, Fastify, React+Vite, Drizzle+SQLite WAL, migrações, harness de teste com banco temporário por teste) conforme ADR-0001, sem regra de negócio.",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-009"],
+  "scope": {
+    "include": [
+      "sistema-contabil/package.json (workspaces apps/*, packages/*)",
+      "sistema-contabil/apps/api (Fastify + /health + config.ts)",
+      "sistema-contabil/apps/web (React + Vite)",
+      "sistema-contabil/packages/shared (Zod/tipos mínimos)",
+      "conexão Drizzle + SQLite (WAL, synchronous=FULL, busy_timeout) + migrações",
+      "harness de teste: banco temporário por teste, npm test verde"
+    ],
+    "exclude": [
+      "regra de negócio, rotas de domínio ou telas",
+      "qualquer arquivo fora de sistema-contabil/ (exceto .squad/tasks/TASK-010.json)",
+      "arquivos do fluxo da landing page (landpage/, TASK-004..007, ADR-0002)",
+      "compra de VPS ou deploy"
+    ]
+  },
+  "acceptance_criteria": [
+    "npm install e npm run dev sobem API e web em sistema-contabil/ (ADR-0001, R3).",
+    "npm test executa a suíte vazia com sucesso e o harness cria/destroi um banco temporário por teste.",
+    "Migração aplicada de forma idempotente em banco limpo; parâmetros SQLite (WAL, synchronous=FULL, busy_timeout) verificáveis por consulta.",
+    "Nenhum arquivo da raiz do framework (raiz do repositório) foi alterado (R3)."
+  ],
+  "verification_plan": [
+    {
+      "name": "Execução local",
+      "method": "npm install, npm run dev, npm test e npm run migrate em sistema-contabil/; saída registrada como evidência."
+    },
+    {
+      "name": "Inspeção de configuração",
+      "method": "Confirmar journal_mode/synchronous/busy_timeout por query de diagnóstico em teste automatizado."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Node 24 e npm 11 presentes no ambiente (medido em 2026-10-19, ADR-0001)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 5,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

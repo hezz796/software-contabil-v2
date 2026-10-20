@@ -1,0 +1,50 @@
+{
+  "id": "TASK-020",
+  "title": "Frontend completo pt-BR (todas as telas)",
+  "objective": "Implementar a interface web React+Vite em pt-BR com todas as telas do MVP consumindo a API tipada, sem acoes proibidas para os papéis e exibindo as recusas previstas.",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-011"],
+  "scope": {
+    "include": [
+      "telas: login, empresas, usuarios/atribuicoes, plano de contas, periodos, lancamentos, titulos, conciliacao, relatorios (com export), fiscal, auditoria",
+      "packages/shared: cliente API tipado + tipos Zod compartilhados api<->web",
+      "exibicao das mensagens de recusa previstas (CE-1..CE-22) e ausencia de acoes indevidas por papel",
+      "layout responsivo minimo para navegador desktop (R12); textos em pt-BR (H1)"
+    ],
+    "exclude": [
+      "regra de negocio no front (validacao real e sempre no servidor)",
+      "edicao de arquivos de backend sem coordenacao (integracao final em T021)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-020.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-01 empresa criada pelo admin aparece na lista do admin e do contador atribuido (demonstravel na tela).",
+    "CA-02 contador atribuido cria conta, grava lancamento e consulta balancete/razao/balanco pela interface.",
+    "CA-10 estorno do CA-03 visivel no razao das duas contas com efeito liquido zero.",
+    "CA-12 apos lancamento, baixa e conciliacao, a tela de auditoria mostra usuario, empresa, acao, objeto e data/hora.",
+    "CA-21 e CA-33 na UI: contador nao ve acoes de gestao/auditoria; admin nao ve acoes de escrita contabil (e a tentativa direta ja e recusada pelo servidor).",
+    "Demonstracoes [D] prontas para inspecao: CA-06, CA-07, CA-31, CA-32 na interface.",
+    "npm run dev do web consome a API local sem proxy manual nao documentado."
+  ],
+  "verification_plan": [
+    {
+      "name": "Demonstracao guiada",
+      "method": "Executar os cenarios [D] na UI com evidencia (prints/logs) registrados em T021."
+    },
+    {
+      "name": "Inspecao de contrato",
+      "method": "Cliente tipado compartilhado; divergencia de contrato quebra em tempo de compilacao."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Tarefa incremental em worktree paralela a partir de T011; depende dos endpoints de cada modulo conforme eles saem da cadeia do nucleo."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 14,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

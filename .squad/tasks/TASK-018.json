@@ -1,0 +1,48 @@
+{
+  "id": "TASK-018",
+  "title": "Conciliacao bancaria e importacao de extrato OFX/CSV",
+  "objective": "Implementar contas bancarias, itens de extrato manuais e por importacao validada (RF-16/F10), conciliacao item a item com desconciliacao (CA-28) e a regra de estorno de baixa exigindo desconciliacao (H20/CA-44).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-017"],
+  "scope": {
+    "include": [
+      "conta_bancaria com saldo inicial; item_extrato manual (data, descricao, valor, origem)",
+      "importacao_extrato + parser OFX/CSV proprio, validacao estrita (arquivo nao reconhecido => 0 itens)",
+      "conciliacao: um item <-> um objeto (titulo OU lancamento) por vez, desconciliacao restaura",
+      "regra: estorno de baixa recusado enquanto o lancamento vinculado estiver conciliado (CA-44)"
+    ],
+    "exclude": [
+      "fluxo de caixa e exportacao (T019)",
+      "front-end (T020)",
+      "API de banco ou CNAB (fora do MVP, F10/F11)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-018.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-08 tres itens, dois conciliados (um a titulo, um a lancamento avulso): 2 conciliados + 1 pendente; estado persiste entre sessoes e o pendente pode ser conciliado depois.",
+    "CA-28 desconciliar devolve o item a pendente com historia na trilha; item conciliado nao concilia a dois objetos sem desconciliar antes.",
+    "CA-53 importacao de arquivo de exemplo com 3 itens gera 3 itens conciliaveis; arquivo em formato nao reconhecido e recusado com mensagem e NENHUM item criado.",
+    "CA-44 estorno de baixa com lancamento conciliado recusado com mensagem orientando a desconciliar; apos desconciliar, aceito (fluxo do CA-42)."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste 'CA-XX ...' por criterio; fixtures de arquivo OFX e CSV validos e um arquivo invalido."
+    },
+    {
+      "name": "Persistencia de estado",
+      "method": "CA-08 consulta o estado com sessao nova (sair e voltar) antes de concluir."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Parser proprio de OFX/CSV com validacao estrita (ADR-0001); formatos de bancos diferentes sao evolucao futura (RK-7 encerrado)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 7,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

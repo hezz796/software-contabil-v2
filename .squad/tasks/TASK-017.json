@@ -1,0 +1,50 @@
+{
+  "id": "TASK-017",
+  "title": "Fiscal configuravel: tabelas, retencoes, multa/juros e DAS",
+  "objective": "Implementar o escopo fiscal ampliado por PB-4 (F12): tabelas de imposto configuraveis (RF-20), retencao na fonte na baixa (RF-22), multa e juros pro rata diaria (RF-23) e apuracao do DAS (RF-21), todos com vinculo contabil (RF-15).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-016"],
+  "scope": {
+    "include": [
+      "tabela_imposto (aliquota >= 0, ativa) e associacao a titulos; permissao = configuracao administrativa auditada",
+      "retencao_titulo: separacao bruto/retido/liquido na baixa + lancamento de retencao a recolher",
+      "config_multa_juros com override por titulo/contrato; juros pro rata diaria (mensal/30, H18)",
+      "regime_fiscal + apuracao_das: aliquota x receitas do periodo (H17), lancamento vinculado"
+    ],
+    "exclude": [
+      "conciliacao e importacao (T018)",
+      "front-end (T020)",
+      "alteracoes nos requisitos (validacao fiscal com caso real = D4/RK-8, fora do MVP)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-017.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-45 tabela 4% configuravel e associavel; aliquota negativa ou nao numerica recusada com mensagem.",
+    "CA-46 Simples 6% sobre faturamento 10.000,00 => DAS 600,00 com lancamento gerado visivel no razao.",
+    "CA-47 titulo 1.000,00 com retencao 5% => liquido 950,00 + retencao 50,00 em lancamento separado; titulo pago.",
+    "CA-48 titulo 1.000,00 vencido ha 30 dias, multa 2% e juros 1% a.m. => multa 20,00, juros 10,00, total 1.030,00 no lancamento; titulo pago; baixa no vencimento nao gera multa/juros (contraste com CA-06).",
+    "CA-49 apuracao de DAS em empresa sem regime configurado recusada com mensagem; nada gerado.",
+    "CA-54 (a) usuario sem permissao de configuracao fiscal nao altera tabela: recusa + auditoria; (b) admin altera com sucesso, novo valor vale para associacoes seguintes e a acao fica auditada."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste 'CA-XX ...' por criterio, com asserts nos valores canonicos (600,00; 950/50; 20/10/1.030)."
+    },
+    {
+      "name": "Testes unitarios de dominio",
+      "method": "juros pro rata, retencao e DAS em funcoes puras testadas isoladamente."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "H17 (base = receitas lancadas no periodo) e H18 (mensal/30) mantidas; validacao com o escritorio e pendencia D4/RK-8 anterior a producao."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 7,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

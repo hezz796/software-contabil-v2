@@ -1,0 +1,53 @@
+{
+  "id": "TASK-011",
+  "title": "Segurança base: usuários, sessão, papéis, escopo de tenant e auditoria",
+  "objective": "Implementar autenticação por sessão, papéis, escopo de tenant sobrescrito pelo servidor e trilha de auditoria append-only, cobrindo os CA de autenticação/permissões/auditoria básicos (RF-02, RF-03, RF-04, RF-05, RF-19, R6..R11).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-010"],
+  "scope": {
+    "include": [
+      "tabelas usuario, sessao, usuario_empresa, audit_event (triggers BEFORE UPDATE/DELETE => RAISE(ABORT))",
+      "login/logout: argon2, cookie HttpOnly (H14 ~30min), política de senha (H15 >=8), failed_logins + bloqueio apos 5 falhas (H16)",
+      "middleware de sessao + escopo {usuario, empresa_id} sobrescrevendo corpo/URL",
+      "escrita de eventos de acesso (sucesso/falha/bloqueio) na trilha, na mesma transacao da escrita"
+    ],
+    "exclude": [
+      "CRUD de empresas e atribuicoes (T012)",
+      "telas de frontend (T020)",
+      "regra contabil/financeira",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-011.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-18 sem sessao: toda rota de dados negada, sem conteudo de empresa.",
+    "CA-19 credenciais invalidas: login recusado, nenhuma sessao criada.",
+    "CA-21 contador nao encontra acoes de gestao/auditoria; tentativa direta recusada.",
+    "CA-22 usuario desativado recusado na tentativa seguinte, inclusive com sessao anterior.",
+    "CA-38 tentativa direta de UPDATE/DELETE em audit_event abortada pelo banco; eventos originais preservados.",
+    "CA-39 consulta da trilha filtra por empresa e periodo; periodo sem eventos retorna lista vazia sem erro.",
+    "CA-50 senha <8 recusada com mensagem citando a politica; >=8 aceita.",
+    "CA-51 apos 5 falhas consecutivas a tentativa seguinte e bloqueada mesmo com a senha correta, e o bloqueio e auditado.",
+    "CA-52 trilha registra no mesmo dia, para o mesmo usuario, sucesso + falha + bloqueio com usuario/tipo/data-hora."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Um teste nomeado 'CA-XX ...' por criterio acima, via Fastify inject com banco temporario."
+    },
+    {
+      "name": "Inspecao de cookies e headers",
+      "method": "Teste que afirma flags HttpOnly/SameSite e expiracao da sessao (H14)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Trilha append-only garantida por triggers no banco, nao so pela aplicacao (ADR-0001)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 9,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

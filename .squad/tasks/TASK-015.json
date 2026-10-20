@@ -1,0 +1,50 @@
+{
+  "id": "TASK-015",
+  "title": "Balancete, razao, balanco e encerramento de periodo/exercicio (FIX-01)",
+  "objective": "Implementar os relatorios contabeis (RF-10..RF-12) e o encerramento de periodo e exercicio (RF-09/H12) restrito ao contador com escrita ativa, validados com a fixture FIX-01.",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-014"],
+  "scope": {
+    "include": [
+      "balancete por periodo (debitos, creditos, saldo, acumulado, totais)",
+      "razao por conta e intervalo de datas com saldo corrente",
+      "balanco patrimonial com igualdade ativo = passivo + PL",
+      "encerramento de periodo (zera resultado) e do 12o periodo => exercicio (transfere resultado ao PL), somente contador com escrita ativa",
+      "tests/fixtures: FIX-01 com os valores canonicos do requisito"
+    ],
+    "exclude": [
+      "exportacao de arquivo (T019)",
+      "front-end (T020)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-015.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-03 lancamento Caixa/Capital R$ 1.000,00 aparece no razao das duas contas e no balancete com totais equilibrados.",
+    "CA-04 com FIX-01: balancete com debitos = creditos = 3.000,00 e saldos por conta; razao de Caixa lista L1, L3, L5 com saldos 1.000/600/900.",
+    "CA-05 com FIX-01: balanco ativo 1.300,00, passivo 200,00, PL 1.100,00 e igualdade confere.",
+    "CA-31 encerramento zera contas de resultado e mantem permanentes; tentativa do admin e recusada com mensagem de permissao e auditada.",
+    "CA-32 encerramento do 12o periodo transfere o resultado (100,00) ao PL, balanco em 31/12 equilibrado; tentativa do admin recusada e auditada.",
+    "FIX-01 e uma unica factory reutilizada por todos os testes acima, com asserts nos numeros canonicos do requisito."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Testes 'CA-03 ...', 'CA-04 ...', 'CA-05 ...', 'CA-31 ...', 'CA-32 ...' contra a fixture FIX-01."
+    },
+    {
+      "name": "Conferencia de numeros",
+      "method": "Asserts diretos nos valores do documento de requisitos (3.000,00; 900/400/600/200/1.000/700; 1.300/200/1.100)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "H12 mantida: exercicio = 12 periodos do ano-calendario, encerramento manual do 12o."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 7,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

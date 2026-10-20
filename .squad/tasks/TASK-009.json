@@ -1,0 +1,50 @@
+{
+  "id": "TASK-009",
+  "title": "Plano de implementação do sistema contábil",
+  "objective": "Quebrar o MVP em tarefas pequenas e verificáveis com dependências, critérios de aceite ligados aos CA-01..55 e estimativas, em docs/plans/PLAN-IMPLEMENTACAO.md.",
+  "status": "done",
+  "owner": "coordinator",
+  "depends_on": ["TASK-008"],
+  "scope": {
+    "include": [
+      "docs/plans/PLAN-IMPLEMENTACAO.md",
+      "criação dos arquivos de tarefa TASK-010..TASK-022 em .squad/tasks/",
+      "matriz CA-01..55 -> tarefa responsável"
+    ],
+    "exclude": [
+      "implementação de código de produto",
+      "arquivos do fluxo da landing page (landpage/, ADR-0002, TASK-004..007)",
+      "alterações nos requisitos aprovados",
+      "alterações em .squad/project-state.json (após o coordenador)"
+    ]
+  },
+  "acceptance_criteria": [
+    "docs/plans/PLAN-IMPLEMENTACAO.md existe com: estratégia, grafo de dependências, tabela de tarefas com horas, detalhamento por tarefa, matriz CA->tarefa cobrindo os 55 CA, estimativas e seção de fora de escopo.",
+    "Cada tarefa TASK-010..TASK-022 tem arquivo em .squad/tasks/ com objetivo, escopo, dependências, critérios de aceite observáveis e plano de verificação.",
+    "Nenhum CA fica sem tarefa atribuída.",
+    "Estimativas somam e são coerentes com a faixa de prazo registrada no plano."
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspeção do plano",
+      "method": "Coordenador lê o plano e confere as seções listadas e a matriz de 55 CA."
+    },
+    {
+      "name": "Contagem automática",
+      "method": "Contar IDs de tarefa e arquivos .squad/tasks/TASK-0[12]*.json; conferir que todo CA aparece na matriz."
+    }
+  ],
+  "evidence": [
+    "docs/plans/PLAN-IMPLEMENTACAO.md (13 tarefas T010..T022, 93h somadas, matriz de 55 CA, grafo de dependências com paralelismo definido por partição de arquivos).",
+    "Arquivos .squad/tasks/TASK-010.json .. TASK-022.json criados."
+  ],
+  "assumptions": [
+    "Estimativas em horas de agente; revisão oficial ao fim de T011 e T016 (variância >30% reajusta o plano).",
+    "Sequência T016 -> T017 -> {T018 || T019} porque T017 altera o cálculo da baixa (arquivos compartilhados)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "created_at": "2026-10-20T22:45:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

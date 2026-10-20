@@ -7,77 +7,37 @@
   },
   "workflow": {
     "phase": "implementation",
-    "status": "ready",
-    "current_task_id": null,
-    "next_action": "Criar a TASK-009 (plano de implementação do sistema contábil): quebrar o sistema em tarefas pequenas e verificáveis em sistema-contabil/ (esqueleto do monorepo, autenticação/papéis, domínio contábil com partidas dobradas, financeiro, conciliação, fiscal, relatórios, auditoria), cada uma com critérios ligados aos CA-01..55. Antes de publicar qualquer coisa na web: (a) aprovar critérios de segurança de exposição pública (requisitos v4: CSRF, HTTPS, rate limit, headers, CORS); (b) RK-6 revisão de segurança; (c) rotina de backup com restore testado (RK-5/D3); (d) H9 formato de exportação (não bloqueante, recomendação CSV+PDF). Pendência de coordenação: resolver a colisão de IDs com o fluxo da landing page (ver HANDOFF-001-id-collision)."
+    "status": "in_progress",
+    "current_task_id": "TASK-010",
+    "next_action": "Executar TASK-010 (fundação: monorepo, Drizzle+SQLite WAL, harness de teste em sistema-contabil/). Depois TASK-011 (segurança base). A partir de TASK-011, T020 (frontend) pode rodar em worktree paralela; após T017, T018 e T019 em paralelo (sequência e grafo em docs/plans/PLAN-IMPLEMENTACAO.md). Pendências de produto que NÃO bloqueiam T010..T020: (a) aprovação da v4 de segurança (CSRF, HTTPS, rate limit, headers, CORS); (b) H9 formato de exportação; (c) RK-8 validação fiscal com o escritório. Pendências de coordenação: colisão de IDs com o fluxo da landing page (HANDOFF-001-id-collision) e aprovação do ADR-0002 da landing page."
   },
   "tasks": [
-    {
-      "id": "TASK-001",
-      "title": "Criar README.md na raiz documentando a squad",
-      "status": "done",
-      "path": "README.md",
-      "owner": "coordinator"
-    },
-    {
-      "id": "TASK-002",
-      "title": "Levantar requisitos do sistema contábil (intake -> requisitos)",
-      "status": "done",
-      "path": "docs/requirements/SISTEMA-CONTABIL.md",
-      "owner": "product-analyst"
-    },
-    {
-      "id": "TASK-003",
-      "title": "Definir arquitetura e stack do sistema contábil",
-      "status": "done",
-      "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md",
-      "owner": "architect"
-    },
-    {
-      "id": "TASK-005",
-      "title": "[landing page] Registrar decisão de stack em ADR",
-      "status": "done",
-      "path": "docs/decisions/ADR-0002-landing-page-stack.md",
-      "owner": "architect"
-    },
-    {
-      "id": "TASK-006",
-      "title": "[landing page] Implementar a landing page estática",
-      "status": "done",
-      "path": "landpage/",
-      "owner": "implementer"
-    },
-    {
-      "id": "TASK-007",
-      "title": "[landing page] Verificar critérios de aceite da landing page",
-      "status": "todo",
-      "path": ".squad/tasks/TASK-007.json",
-      "owner": "qa"
-    },
-    {
-      "id": "TASK-008",
-      "title": "Definir estratégia de implantação web (ADR-0003)",
-      "status": "done",
-      "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md",
-      "owner": "coordinator"
-    }
+    { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
+    { "id": "TASK-002", "title": "Levantar requisitos do sistema contábil (intake -> requisitos)", "status": "done", "path": "docs/requirements/SISTEMA-CONTABIL.md", "owner": "product-analyst" },
+    { "id": "TASK-003", "title": "Definir arquitetura e stack do sistema contábil", "status": "done", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md", "owner": "architect" },
+    { "id": "TASK-005", "title": "[landing page] Registrar decisão de stack em ADR", "status": "done", "path": "docs/decisions/ADR-0002-landing-page-stack.md", "owner": "architect" },
+    { "id": "TASK-006", "title": "[landing page] Implementar a landing page estática", "status": "done", "path": "landpage/", "owner": "implementer" },
+    { "id": "TASK-007", "title": "[landing page] Verificar critérios de aceite da landing page", "status": "todo", "path": ".squad/tasks/TASK-007.json", "owner": "qa" },
+    { "id": "TASK-008", "title": "Definir estratégia de implantação web (ADR-0003)", "status": "done", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md", "owner": "coordinator" },
+    { "id": "TASK-009", "title": "Plano de implementação do sistema contábil", "status": "done", "path": "docs/plans/PLAN-IMPLEMENTACAO.md", "owner": "coordinator" },
+    { "id": "TASK-010", "title": "Fundação do monorepo e harness de teste", "status": "todo", "path": ".squad/tasks/TASK-010.json", "owner": "implementer" },
+    { "id": "TASK-011", "title": "Segurança base: sessão, papéis, tenant e auditoria", "status": "todo", "path": ".squad/tasks/TASK-011.json", "owner": "implementer" },
+    { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "todo", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
+    { "id": "TASK-013", "title": "Plano de contas e períodos contábeis", "status": "todo", "path": ".squad/tasks/TASK-013.json", "owner": "implementer" },
+    { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "todo", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
+    { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "todo", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
+    { "id": "TASK-016", "title": "Financeiro: títulos, baixas e estorno de baixa", "status": "todo", "path": ".squad/tasks/TASK-016.json", "owner": "implementer" },
+    { "id": "TASK-017", "title": "Fiscal configurável: tabelas, retenções, multa/juros, DAS", "status": "todo", "path": ".squad/tasks/TASK-017.json", "owner": "implementer" },
+    { "id": "TASK-018", "title": "Conciliação bancária e importação OFX/CSV", "status": "todo", "path": ".squad/tasks/TASK-018.json", "owner": "implementer" },
+    { "id": "TASK-019", "title": "Fluxo de caixa e exportação CSV/PDF", "status": "todo", "path": ".squad/tasks/TASK-019.json", "owner": "implementer" },
+    { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "todo", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
+    { "id": "TASK-021", "title": "Verificação integral CA-01..55 + reviews", "status": "todo", "path": ".squad/tasks/TASK-021.json", "owner": "qa" },
+    { "id": "TASK-022", "title": "Implantação: backup/restore, runbook, checklist", "status": "todo", "path": ".squad/tasks/TASK-022.json", "owner": "implementer" }
   ],
   "decisions": [
-    {
-      "id": "ADR-0001",
-      "title": "Stack e arquitetura do sistema contábil (MVP) — aceita em 2026-10-20",
-      "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md"
-    },
-    {
-      "id": "ADR-0002",
-      "title": "Stack da landing page (HTML/CSS/JS estático) — proposta do fluxo paralelo, aguardando aprovação",
-      "path": "docs/decisions/ADR-0002-landing-page-stack.md"
-    },
-    {
-      "id": "ADR-0003",
-      "title": "Implantação na web: VPS em São Paulo + SQLite com condições operacionais — aceita em 2026-10-20",
-      "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md"
-    }
+    { "id": "ADR-0001", "title": "Stack e arquitetura do sistema contábil (MVP) — aceita em 2026-10-20", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md" },
+    { "id": "ADR-0002", "title": "Stack da landing page (HTML/CSS/JS estático) — proposta do fluxo paralelo, aguardando aprovação", "path": "docs/decisions/ADR-0002-landing-page-stack.md" },
+    { "id": "ADR-0003", "title": "Implantação na web: VPS em São Paulo + SQLite — aceita em 2026-10-20", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md" }
   ],
   "active_work": [],
   "last_verified": {
@@ -86,37 +46,42 @@
       {
         "name": "TASK-002 — requisitos concluídos e revisados (2 rodadas independentes)",
         "result": "passed",
-        "evidence": "docs/requirements/SISTEMA-CONTABIL.md v3 (RF-01..24, CA-01..55, CE-01..22, FIX-01, H1..H20, F1..F15, PB-1..4 respondidas). Revisão 1 (ses_ea9d3912cffe4RRX85r5YEMfLw): 5 importantes + 11 menores, sem bloqueantes. Re-inspeção 2 (ses_ea9b85397ffek3LkUNIO6z5FBa): veredito 'TASK-002 pode ser concluída'."
+        "evidence": "docs/requirements/SISTEMA-CONTABIL.md v3 (RF-01..24, CA-01..55, CE-01..22, FIX-01, H1..H20, PB-1..4 respondidas). Revisões: ses_ea9d3912cffe4RRX85r5YEMfLw e ses_ea9b85397ffek3LkUNIO6z5FBa."
       },
       {
         "name": "TASK-003 — ADR-0001 entregue, inspecionado e APROVADO",
         "result": "passed",
-        "evidence": "docs/decisions/ADR-0001-...md com status 'Aceito (aprovação humana em 2026-10-20)'. Inspeção do coordenador: contexto com avaliação medida do ambiente, 3 opções comparadas, decisão, estrutura de diretórios, modelo de dados, isolamento de tenant, auditoria append-only, consequências e estratégia de verificação dos CA. Aprovação: usuário respondeu 'Gostei das suas recomendações. Prossigamos com elas.' em 2026-10-20 após debate sobre exposição na web."
+        "evidence": "Status 'Aceito (aprovação humana em 2026-10-20)'; aprovação confirmada pelo usuário após o debate de exposição na web."
       },
       {
         "name": "TASK-008 — ADR-0003 (implantação web) criado e confrontado com restrições",
         "result": "passed",
-        "evidence": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md: 4 opções comparadas; decisão VPS São Paulo + SQLite com 5 condições (instância única, WAL, synchronous=FULL, volume persistente, backup via API de backup + fora do servidor + restore testado); gatilhos de migração para PostgreSQL; checklist de segurança da exposição pública mapeado a RF-19/CA-22/CA-37/CA-50/RK-6 com lacunas registradas como pendência (requisitos v4 não alterados). Confronto com R4, R13/RK-5/D3 e RK-6: compatível. Preços datados de 2026-10-20: Hostinger e Hetzner das páginas oficiais; Vultr/Contabo por referência secundária (sinalizado)."
+        "evidence": "4 opções comparadas; 5 condições do SQLite; gatilhos de migração; checklist de segurança mapeado a RF-19/CA/RK-6; preços de VPS datados de 2026-10-20 (Hostinger e Hetzner de fonte oficial). Confronto com R4/R13/RK-5/RK-6/D3: compatível."
+      },
+      {
+        "name": "TASK-009 — plano de implementação criado e conferido",
+        "result": "passed",
+        "evidence": "docs/plans/PLAN-IMPLEMENTACAO.md com 13 tarefas (T010..T022), grafo de dependências e paralelismo por partição de arquivos. Verificações automáticas executadas: (1) todos os 55 CA aparecem na matriz CA->tarefa (script de contagem: 'COBERTURA: os 55 CA aparecem na matriz'); (2) 13 arquivos .squad/tasks/TASK-010..022 presentes; (3) estimate_hours somam 93, igual ao plano; (4) todos os JSON de .squad válidos (ConvertFrom-Json sem erro)."
       },
       {
         "name": "Colisão de identificadores entre fluxos (contábil x landing page)",
         "result": "passed",
-        "evidence": "Detectada em 2026-10-20 durante esta sessão: dois arquivos ADR-0002 e disputa pelo ID TASK-004. Resolução adotada (só em arquivos do fluxo contábil, sem tocar nos da landing page): ADR de implantação renomeado para ADR-0003; task de implantação renomeada para TASK-008; partição registrada em .squad/handoffs/HANDOFF-001-id-collision.json. Resta órfão: depends_on de TASK-005/006/007 apontando para TASK-004, cujo arquivo não existe (ação da outra sessão)."
+        "evidence": "Resolvida em .squad/handoffs/HANDOFF-001-id-collision.json (ADR de implantação -> ADR-0003; task -> TASK-008; IDs TASK-004..007 e ADR-0002 cedidos ao fluxo da landing page)."
       },
       {
         "name": "Compra/contratação de VPS",
         "result": "not_run",
-        "evidence": "Não é ação da squad. ADR-0003 recomenda; a contratação e o custo são decisão humana."
+        "evidence": "Não é ação da squad; ADR-0003 recomenda e a contratação é decisão humana."
       }
     ],
-    "notes": "Requisitos (TASK-002), stack (ADR-0001) e implantação (ADR-0003) concluídos e aceitos pela aprovação humana de 2026-10-20. Nenhum código de produto contábil criado; nenhum custo ou compromisso externo assumido. Existe um segundo fluxo paralelo (landing page, outra sessão) com artefatos TASK-005..007/ADR-0002/landpage/ ainda não verificados por QA por mim — status copiado dos arquivos de tarefa daquele fluxo, não inspecionado aqui. O campo commit fica null de propósito (auto-referência): usar git log como fonte do hash atual. Pendências de produto abertas: critérios de segurança de exposição pública (requisitos v4), formato H9 e aprovação do ADR-0002 da landing page."
+    "notes": "Requisitos, stack, implantação e plano aprovados. Estimativa revisada pelo plano: ~93h de agente somadas (T010..T022), 3-4 semanas de calendário com paralelismo; revisão oficial de estimativa ao fim de T011 e T016. Nenhum código de produto criado até aqui; nenhum custo assumido. O campo commit fica null de propósito (auto-referência): usar git log. Fluxo paralelo da landing page: artefatos TASK-005/006/007, ADR-0002 e landpage/ observados, não inspecionados nem commitados por este fluxo."
   },
   "blockers": [
     {
-      "description": "Fluxo da landing page: depends_on de TASK-005/006/007 e o cabeçalho de docs/requirements/landpage.md referenciam TASK-004 como tarefa de requisitos da landing, mas não existe .squad/tasks/TASK-004.json (ID cedido ao fluxo contábil e depois movido para TASK-008).",
+      "description": "Fluxo da landing page: depends_on de TASK-005/006/007 e o cabeçalho de docs/requirements/landpage.md referenciam TASK-004 como tarefa de requisitos da landing, mas não existe .squad/tasks/TASK-004.json.",
       "owner": "sessão da landing page",
-      "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências para um ID livre, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
+      "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
     }
   ],
-  "updated_at": "2026-10-20T22:40:00Z"
+  "updated_at": "2026-10-20T23:00:00Z"
 }

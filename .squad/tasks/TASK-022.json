@@ -1,0 +1,47 @@
+{
+  "id": "TASK-022",
+  "title": "Implantacao: backup/restore testado, runbook e checklist de publicacao",
+  "objective": "Preparar a operacao conforme ADR-0003 e R13/RK-5/D3: rotina de backup do SQLite por API de backup, teste de restauracao, runbook de subida no VPS e checklist de publicacao com pendencias explicitas.",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-021"],
+  "scope": {
+    "include": [
+      "script de backup (VACUUM INTO / .backup) com exemplo de cron e copia fora do servidor",
+      "procedimento de restauracao TESTADO com evidencia (RK-5/D3)",
+      "runbook: subir API+web+SQLite em VPS (ADR-0003), systemd/reverse proxy/HTTPS Let's Encrypt",
+      "checklist de publicacao com itens bloqueadores (v4 de seguranca aprovada, RK-6 concluido, H9 resolvido, contratacao do VPS)"
+    ],
+    "exclude": [
+      "contratar VPS ou assumir custo (acao humana)",
+      "publicar em producao sem aprovacao humana",
+      "arquivos fora de sistema-contabil/ + docs/ e .squad/tasks/TASK-022.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "Backup diario gerado por comando documentado; arquivo de backup abre e passa em verificacao de integridade.",
+    "Restauracao a partir do backup reproduz o banco com dados conferidos (teste executado, nao planejado).",
+    "Runbook executa do zero em maquina limpa (ou passo a passo validado por inspecao, com limitacao registrada).",
+    "Checklist de publicacao existe com cada item em estado real (ok/bloqueado/nao executado) e as pendencias de aprovacao humana explicitas."
+  ],
+  "verification_plan": [
+    {
+      "name": "Teste de restauracao",
+      "method": "Gerar backup, alterar/deletar dados, restaurar, conferir registros e saldos."
+    },
+    {
+      "name": "Inspecao do runbook",
+      "method": "Leitura passo a passo por revisor independente contra a ADR-0003."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "RPO diario ate 1 dia aceito (confirmar com o escritorio antes de producao — registrado na ADR-0003)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 3,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

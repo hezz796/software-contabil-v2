@@ -1,0 +1,45 @@
+{
+  "id": "TASK-019",
+  "title": "Fluxo de caixa e exportacao CSV/PDF dos relatorios",
+  "objective": "Implementar o fluxo de caixa com saldo inicial, realizadas e previstas (RF-17) e a exportacao de balancete, razao, balanco e fluxo de caixa em arquivo com os mesmos valores da tela (RF-18/H9).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-017"],
+  "scope": {
+    "include": [
+      "fluxo de caixa por intervalo: saldo inicial, entradas/saidas realizadas (baixas) e previstas (titulos em aberto por vencimento), saldo final",
+      "exportacao CSV e PDF dos 4 relatorios (bibliotecas abertas, ADR-0001)",
+      "mesmos valores da tela e do arquivo (sem divergencia de arredondamento: centavos)"
+    ],
+    "exclude": [
+      "front-end (T020) — aqui fica a API/gerador de arquivo; o botao de export na tela chega em T020/T021",
+      "decisao final de formato H9 (pendencia de produto; CSV+PDF recomendado, cobertura de CA-11 independe do formato escolhido)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-019.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-09 com saldo inicial 10.000,00 (D-2), recebimento 1.500,00 (D-2), titulo 2.000,00 aberto (D+5) e titulo 3.000,00 aberto (D+10): entradas/saidas exibidas nas datas certas e saldo final 10.500,00 = 10.000 + 1.500 + 2.000 - 3.000.",
+    "CA-11 os 4 relatorios possuem acao de exportacao e o arquivo gerado contem os mesmos valores da tela (conferencia linha a linha em teste).",
+    "Teste de exportacao compara arquivo (CSV) com a resposta da API do relatorio, campo a campo."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Testes 'CA-09 ...' e 'CA-11 ...' com fixtures de titulos realizados e previstos."
+    },
+    {
+      "name": "Conferencia de saldo",
+      "method": "Assert de saldo final por identidade aritmetica em todos os intervalos testados."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Tarefa paralela segura com T018 (somente leitura de baixas/titulos e geracao de arquivo)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 5,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}

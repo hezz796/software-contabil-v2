@@ -1,0 +1,42 @@
+{
+  "id": "TASK-013",
+  "title": "Plano de contas hierarquico e periodos contabeis",
+  "objective": "Implementar plano de contas por empresa com hierarquia e regras de inativacao (RF-06) e periodos contabeis mensais com estado aberto/encerrado (base de RF-09).",
+  "status": "todo",
+  "owner": "implementer",
+  "depends_on": ["TASK-012"],
+  "scope": {
+    "include": [
+      "conta: codigo unico por empresa, descricao, tipo (ativo/passivo/PL/receita/despesa), conta_pai_id, ativa",
+      "regras: conta com lancamentos so inativa; pai com filhas ativas nao inativa; exclusao dura nao existe",
+      "periodo_contabil: (empresa, ano, mes) unico, aberto/encerrado (campo de encerramento; acoes de encerramento chegam em T015)"
+    ],
+    "exclude": [
+      "lancamentos e estornos (T014)",
+      "acoes de encerramento de periodo/exercicio (T015)",
+      "front-end (T020)",
+      "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-013.json"
+    ]
+  },
+  "acceptance_criteria": [
+    "CA-17 recusa codigo duplicado na empresa, tipo ausente e exclusao de conta com lancamentos (so inativacao).",
+    "CA-27 inativar conta com lancamentos e aceito; excluir e recusado; pai com filhas ativas nao inativa antes das filhas.",
+    "Periodos sao unicos por (empresa, ano, mes) e criados pelo contador atribuido; auditoria registra criacao/alteracao."
+  ],
+  "verification_plan": [
+    {
+      "name": "Testes de integracao por CA",
+      "method": "Testes 'CA-17 ...' e 'CA-27 ...' com fixtures de hierarquia (pai/filhas) e lancamento existente."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Sem pre-carga obrigatoria de PCASP (H5 aberta): o escritorio monta o plano."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 5,
+  "created_at": "2026-10-20T22:55:00Z",
+  "updated_at": "2026-10-20T22:55:00Z"
+}
