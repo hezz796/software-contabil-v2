@@ -1,9 +1,9 @@
 # ADR-0001: Stack e arquitetura do sistema contábil (MVP)
 
-- **Status:** Proposta (aguardando aprovação do coordenador — TASK-003)
+- **Status:** Aceito (aprovação humana em 2026-10-20)
 - **Data:** 2026-10-19
 - **Responsáveis:** Squad (arquiteto)
-- **Relacionado:** TASK-003; `docs/requirements/SISTEMA-CONTABIL.md` (v3)
+- **Relacionado:** TASK-003; `docs/requirements/SISTEMA-CONTABIL.md` (v3); ADR-0003 (implantação web)
 
 ## Contexto
 
@@ -164,9 +164,10 @@ O app vive inteiro em `sistema-contabil/`, sem tocar no framework da raiz (R3). 
 
 ## Validação
 
-- Pendências para o coordenador/produto: (1) aprovar esta ADR; (2) confirmar formato de exportação (H9) — não bloqueante; (3) decisões futuras de deploy/backup (R13) ficam para ADR de implantação.
+- Pendências para o coordenador/produto: (1) ~~aprovar esta ADR~~ — **aprovada em 2026-10-20**; (2) confirmar formato de exportação (H9) — não bloqueante; (3) decisões de deploy/backup (R13) — resolvidas na **ADR-0003** (implantação web em VPS + SQLite).
 - Nenhuma informação faltante altera a escolha da stack.
 
 ## Histórico
 
 - 2026-10-19: decisão criada (TASK-003).
+- 2026-10-20: aprovada pelo usuário; exposição pública registrada na ADR-0003.

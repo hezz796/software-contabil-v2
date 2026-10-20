@@ -1,0 +1,57 @@
+{
+  "id": "TASK-008",
+  "title": "Definir estratégia de implantação web (ADR-0003)",
+  "objective": "Registrar a decisão de publicar o sistema na web, o modelo de hospedagem (VPS em São Paulo) e as condições que tornam o SQLite adequado, em docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md, após aprovação humana.",
+  "status": "done",
+  "owner": "coordinator",
+  "depends_on": ["TASK-003"],
+  "scope": {
+    "include": [
+      "ADR de implantação com opções comparadas (VPS+SQLite, VPS+PostgreSQL, servidor no escritório, PaaS)",
+      "condições operacionais do SQLite (instância única, WAL, synchronous=FULL, volume persistente, backup via API de backup)",
+      "gatilhos de migração para PostgreSQL",
+      "checklist de segurança da exposição pública mapeado aos requisitos existentes"
+    ],
+    "exclude": [
+      "contratação de VPS ou qualquer compromisso de custo (ação humana)",
+      "alteração dos requisitos aprovados (pendência de aprovação: critérios de segurança da exposição pública)",
+      "implementação de código",
+      "arquivos do fluxo paralelo da landing page (landpage/, docs/requirements/landpage.md, ADR-0002-landing-page-stack.md, TASK-005..007)",
+      "alterações em .squad/project-state.json (após o coordenador)"
+    ]
+  },
+  "acceptance_criteria": [
+    "ADR-0003 criado em docs/decisions/ com contexto, opções consideradas, decisão, consequências e pendências.",
+    "Decisão compatível com R4 (sem serviço pago obrigatório), R13/RK-5/D3 (backup documentado antes de produção) e RK-6 (revisão de segurança antes de publicar).",
+    "Condições do SQLite e gatilhos de migração para PostgreSQL estão explícitos e observáveis.",
+    "Lacunas de segurança da exposição pública (HTTPS, CSRF, rate limit, headers, CORS) registradas como pendência de aprovação, sem alterar silenciosamente os requisitos.",
+    "Preços de VPS datados e com indicação de quais foram verificados na fonte oficial.",
+    "Nenhum arquivo do fluxo paralelo da landing page é alterado por esta tarefa."
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspeção do ADR",
+      "method": "Coordenador lê ADR-0003 e confere seções, opções, decisão e pendências."
+    },
+    {
+      "name": "Confronto com restrições",
+      "method": "Confere R4, R13, RK-5, RK-6 e D3 contra o texto do ADR."
+    }
+  ],
+  "evidence": [
+    "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md (criado em 2026-10-20).",
+    "docs/decisions/ADR-0001-...md atualizado: status 'Aceito (aprovação humana em 2026-10-20)', pendência (1) resolvida e referências apontando para ADR-0003.",
+    "Preços verificados em 2026-10-20 nas páginas oficiais: Hostinger KVM 1 R$29,99/mês (renova R$59,99), Hetzner €5,99–6,49/mês; Vultr/Contabo por referência secundária (sinalizado no ADR).",
+    "Confronto com restrições executado pelo coordenador em 2026-10-20: R4, R13, RK-5, RK-6, D3 citados e atendidos no texto do ADR."
+  ],
+  "assumptions": [
+    "A aprovação humana foi dada pelo usuário em 2026-10-20 com 'Gostei das suas recomendações. Prossigamos com elas.', em resposta à lista que continha os dois registros (ADR de implantação e aprovação do ADR-0001).",
+    "RPO diário (até 1 dia sem dados) é aceitável — confirmar com o escritório antes de produção."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "renumbered_from": "TASK-004 (criada originalmente como TASK-004 pelo fluxo do sistema contábil em 2026-10-20T22:20Z; cedida para o fluxo da landing page, que usa TASK-004 como tarefa de requisitos em docs/requirements/landpage.md e nas dependências de TASK-005/006/007 — ver HANDOFF-001-id-collision)",
+  "created_at": "2026-10-20T22:20:00Z",
+  "updated_at": "2026-10-20T22:35:00Z"
+}

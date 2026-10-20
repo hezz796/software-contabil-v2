@@ -2,7 +2,7 @@
   "id": "TASK-003",
   "title": "Definir arquitetura e stack do sistema contábil",
   "objective": "Avaliar opções de stack, modelo de dados, limite de serviços e padrão arquitetural para o sistema contábil web multiempresas e registrar a decisão em ADR, após a aprovação dos requisitos (TASK-002).",
-  "status": "in_review",
+  "status": "done",
   "owner": "architect",
   "depends_on": ["TASK-002"],
   "scope": {
@@ -33,13 +33,16 @@
       "method": "Confere se a decisão atende aos itens de segurança e multiempresa registrados nos requisitos."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md — status 'Aceito (aprovação humana em 2026-10-20)'; inspeção do coordenador registrada no project-state (137 linhas não vazias, seções completas, confronto com requisitos).",
+    "Aprovação humana em 2026-10-20 (usuário, após debate de exposição na web encerrado na ADR-0003)."
+  ],
   "assumptions": [
-    "Depende da aprovação (ou ajuste) dos requisitos produzidos pela TASK-002."
+    "Depende da aprovação (ou ajuste) dos requisitos produzidos pela TASK-002 — aprovados."
   ],
   "blockers": [],
   "worktree": null,
   "session_id": null,
   "created_at": "2026-10-19T21:47:00Z",
-  "updated_at": "2026-10-19T21:47:00Z"
+  "updated_at": "2026-10-20T00:00:00Z"
 }

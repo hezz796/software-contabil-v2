@@ -1,0 +1,68 @@
+{
+  "id": "HANDOFF-001-id-collision",
+  "task_id": "TASK-008",
+  "from": "coordinator (sessão do sistema contábil)",
+  "to": "coordinator (sessão da landing page)",
+  "objective": "Resolver a colisão de identificadores entre os dois fluxos ativos no mesmo repositório (sistema contábil x landing page) sem quebrar referências de nenhum dos dois.",
+  "confirmed_context": [
+    "Existem dois fluxos simultâneos no mesmo repositório: fluxo A = sistema contábil (TASK-001..003 + TASK-008; ADR-0001, ADR-0003), fluxo B = landing page (TASK-005..007; ADR-0002-landing-page-stack.md; docs/requirements/landpage.md; landpage/).",
+    "Fluxo B aterrissou primeiro o arquivo ADR-0002-landing-page-stack.md (2026-10-20 19:09 local); o ADR de implantação do fluxo A foi criado 11 minutos depois.",
+    "Ambos os fluxos acreditavam ser donos da numeração TASK-004: o fluxo B afirma em TASK-005/006/007 ('renumbered_from') que TASK-001..004 pertencem ao sistema contábil, mas docs/requirements/landpage.md e os campos depends_on de TASK-005/006 tratam TASK-004 como a tarefa de requisitos da landing page.",
+    "Não há arquivo .squad/tasks/TASK-004.json da landing page: a tarefa de requisitos do fluxo B não tem arquivo de tarefa (o arquivo TASK-004.json existente pertence ao fluxo A e foi movido para TASK-008).",
+    "Nenhum arquivo foi commitado por nenhum dos fluxos desde 6bb0ebb; tudo está na árvore de trabalho."
+  ],
+  "references": [
+    "docs/decisions/ADR-0002-landing-page-stack.md",
+    "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md",
+    "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md",
+    ".squad/tasks/TASK-005.json, TASK-006.json, TASK-007.json, TASK-008.json",
+    "docs/requirements/landpage.md"
+  ],
+  "scope": {
+    "include": [
+      "coordenação de identificadores entre os dois fluxos"
+    ],
+    "exclude": [
+      "alterar arquivos do fluxo A (feito pelo coordenador do fluxo A apenas nos seus próprios arquivos)",
+      "alterar docs/requirements/landpage.md, landpage/ ou ADR-0002-landing-page-stack.md (pertencem ao fluxo B)"
+    ]
+  },
+  "acceptance_criteria": [
+    "Cada ID (ADR-0002, TASK-004..007) remete a exatamente um artefato em todo o repositório.",
+    "depends_on de TASK-005/006/007 aponta para um ID que existe como arquivo em .squad/tasks/.",
+    ".squad/project-state.json reflete artefatos dos dois fluxos sem contradição."
+  ],
+  "decisions": [
+    "Adotada a partição: fluxo do sistema contábil usa ADR-0001, ADR-0003 e TASK-001..003 + TASK-008 em diante; fluxo da landing page usa ADR-0002, TASK-004 (requisitos, a criar) e TASK-005..007.",
+    "Motivo de ceder: a outra sessão já gravou referências a TASK-004 em 3 arquivos que ela edita; ceder custa apenas edições nos arquivos do fluxo A (feito) e evita escrita concorrente em arquivos de terceiros."
+  ],
+  "files_examined": [
+    ".squad/tasks/TASK-005.json",
+    ".squad/tasks/TASK-006.json",
+    ".squad/tasks/TASK-007.json",
+    "docs/requirements/landpage.md",
+    "docs/decisions/ADR-0002-landing-page-stack.md",
+    ".squad/project-state.json"
+  ],
+  "files_changed": [
+    "docs/decisions/ADR-0002-implantacao-web-vps-sqlite.md -> ADR-0003-implantacao-web-vps-sqlite.md (renomeado pelo fluxo A)",
+    ".squad/tasks/TASK-004.json -> TASK-008.json (renomeado pelo fluxo A)",
+    "docs/decisions/ADR-0001-...md: referências ADR-0002 -> ADR-0003",
+    ".squad/tasks/TASK-003.json: referência ADR-0002 -> ADR-0003",
+    ".squad/project-state.json: refletida a numeração nova e registrados os artefatos do fluxo B"
+  ],
+  "checks": [
+    "grep por 'ADR-0002-implantacao' e 'TASK-004.json' no repositório: nenhuma referência órfã ao nome antigo após as renomeações (confirmado pelo coordenador do fluxo A)."
+  ],
+  "assumptions": [
+    "O fluxo B está ativo e pode ainda escrever arquivos; por isso o fluxo A não tocou em nenhum arquivo do fluxo B.",
+    "A landing page é um pedido legítimo do usuário feito em outra sessão."
+  ],
+  "blockers": [
+    "TASK-005/006/007 deambulam para TASK-004: necessário que a sessão da landing page crie .squad/tasks/TASK-004.json (requisitos) ou renomeie seus depends_on."
+  ],
+  "next_action": "Sessão da landing page: criar o arquivo da sua tarefa de requisitos como TASK-004 (ou renomear depends_on) e confirmar a partição; depois executar TASK-007 (QA) e commitar os arquivos do fluxo B. Fluxo A: criar TASK-009 (plano de implementação do sistema contábil).",
+  "worktree": null,
+  "session_id": null,
+  "created_at": "2026-10-20T22:35:00Z"
+}
