@@ -1,0 +1,52 @@
+{
+  "id": "TASK-023",
+  "title": "Direção de UI/UX e wireframes do sistema contábil",
+  "objective": "Definir arquitetura de informação, padrões de tela e wireframes low-fi das 9-11 telas do MVP, com checklist de revisão para aprovacao humana ANTES da TASK-020 (frontend), evitando retrabalho na maior tarefa do plano.",
+  "status": "todo",
+  "owner": "product-analyst",
+  "depends_on": ["TASK-009"],
+  "scope": {
+    "include": [
+      "docs/design/UIUX-DIRETRIZES.md: arquitetura de navegacao/menu, padroes de densidade, estados (vazio/carregando/erro), exibicao das recusas CE-01..CE-22, orientacao de estorno (RK-4), matriz de visibilidade por papel (admin x contador), mascara/formatacao BRL, desktop-first >=1280px (R12), pt-BR (H1)",
+      "docs/design/wireframes/*.html: wireframes estaticos navegaveis por file:// (sem build) das telas: login, empresas, usuarios/atribuicoes, plano de contas, periodos, lancamentos (lista+novo), titulos (lista+baixa/estorno), conciliacao, relatorios (+exportacao), fiscal (tabelas/regime/DAS), auditoria",
+      "mapeamento: cada area do wireframe aponta para o RF/CA que a sustenta (nada de tela sem requisito)",
+      "checklist de revisao para o usuario (o que ele precisa aprovar, tela por tela)"
+    ],
+    "exclude": [
+      "qualquer codigo em sistema-contabil/ (R3) — wireframes sao HTML/CSS estatico puro em docs/design/, sem JS de aplicacao",
+      "paleta de cores, tipografia final e acabamento visual (fase de estilo vem depois da aprovacao da estrutura)",
+      "alterar docs/requirements/SISTEMA-CONTABIL.md",
+      "arquivos do fluxo da landing page (landpage/, TASK-004..007, ADR-0002)",
+      "alteracoes em .squad/project-state.json (apenas o coordenador)"
+    ]
+  },
+  "acceptance_criteria": [
+    "As 9-11 telas previstas existem como wireframe navegavel (file://, sem servidor, sem build) em docs/design/wireframes/.",
+    "docs/design/UIUX-DIRETRIZES.md registra: densidade 'denso no dado, calmo na forma', grid de tabela com linha de totais fixa, formulario espaçado com validacao visivel, estados vazio/carregando/erro, e desktop-first >=1280px.",
+    "As 22 recusas CE-01..CE-22 estao mapeadas a um padrao de feedback visual (mensagem + acao sugerida), com orientacao explicita ao estorno (RK-4).",
+    "Matriz de visibilidade por papel: acao disponivel x admin/contador em cada tela (admin sem escrita contabil, contador sem gestao/auditoria).",
+    "Cada area de tela referencia RF/CA de origem; nenhuma funcionalidade sem requisito aparece no wireframe (guarda contra RK-1).",
+    "Checklist de revisao entregue para aprovacao humana; a TASK-020 nao inicia antes dessa aprovacao."
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspecao do coordenador",
+      "method": "Abrir wireframes via file://, conferir as 11 telas, o mapeamento RF/CA e o checklist."
+    },
+    {
+      "name": "Revisao humana",
+      "method": "Usuario revisa telas por meio do checklist e registra aprovacao ou pedidos de ajuste (aprovacao e obrigatoria antes de T020)."
+    }
+  ],
+  "evidence": [],
+  "assumptions": [
+    "Referencia hibrida por componente adotada (grid denso / conciliacao estilo internet banking / formularios modernos), decidida pelo coordenador em 2026-10-20 e aprovada pelo usuario ('Prossiga de acordo com suas recomendacoes').",
+    "Tarefa paralela segura a T010 e T011 (escreve apenas em docs/design/)."
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "estimate_hours": 4,
+  "created_at": "2026-10-20T23:10:00Z",
+  "updated_at": "2026-10-20T23:10:00Z"
+}

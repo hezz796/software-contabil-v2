@@ -4,7 +4,7 @@
   "objective": "Implementar a interface web React+Vite em pt-BR com todas as telas do MVP consumindo a API tipada, sem acoes proibidas para os papéis e exibindo as recusas previstas.",
   "status": "todo",
   "owner": "implementer",
-  "depends_on": ["TASK-011"],
+  "depends_on": ["TASK-011", "TASK-023"],
   "scope": {
     "include": [
       "telas: login, empresas, usuarios/atribuicoes, plano de contas, periodos, lancamentos, titulos, conciliacao, relatorios (com export), fiscal, auditoria",
@@ -39,7 +39,7 @@
   ],
   "evidence": [],
   "assumptions": [
-    "Tarefa incremental em worktree paralela a partir de T011; depende dos endpoints de cada modulo conforme eles saem da cadeia do nucleo."
+    "Tarefa incremental em worktree paralela a partir de T011, somente após aprovacao humana dos wireframes da T023; depende dos endpoints de cada modulo conforme eles saem da cadeia do nucleo."
   ],
   "blockers": [],
   "worktree": null,

@@ -19,24 +19,26 @@
 4. **Cada tarefa só conclui com seus CA verificados por teste automatizado** (ou limitação registrada). Sem "testar depois".
 5. **FIX-01 é fixture canônica:** implementada uma vez (`tests/fixtures/`), usada por CA-04, CA-05, CA-31, CA-32.
 6. **Frontend não bloqueia backend** (API-first) e **backend não espera frontend**: integração final ocorre em T021.
+7. **UI/UX antes de UI:** a **T023 (direção de UI/UX + wireframes)** roda em paralelo com T010/T011 e exige **aprovação humana antes da T020** — a estrutura das telas se decide em desenho, não em código. Decisões já adotadas: referência híbrida por componente (grid denso / conciliação estilo internet banking / formulários modernos) e densidade "denso no dado, calmo na forma", desktop-first ≥1280px (R12), pt-BR (H1).
 
 ### Grafo de dependências
 
 ```
-T010 fundação
-  └─ T011 segurança base (auth, sessão, papéis, tenant, auditoria)
-       ├─ T012 empresas + gestão de usuários + permissões
-       │    └─ T013 plano de contas + períodos
-       │         └─ T014 lançamentos, partidas, imutabilidade, estorno
-       │              └─ T015 balancete/razão/balanço + encerramentos
-       │                   └─ T016 financeiro (títulos, baixas, estorno de baixa)
-       │                        └─ T017 fiscal (tabelas, retenções, multa/juros, DAS)
-       │                             ├─ T018 conciliação + importação OFX/CSV   ┐ paralelo
-       │                             └─ T019 fluxo de caixa + exportação        ┘ (worktrees)
-       └─ T020 frontend completo (paralelo à cadeia, incremental) ─────────────┐
-                                                                              ├─ T021 verificação integral + reviews
-                                    (T015..T020 convergem) ◄──────────────────┘
-                                             └─ T022 implantação: backup/restore + runbook
+T009 (plano) ─┬─ T010 fundação
+              │    └─ T011 segurança base (auth, sessão, papéis, tenant, auditoria)
+              │         ├─ T012 empresas + gestão de usuários + permissões
+              │         │    └─ T013 plano de contas + períodos
+              │         │         └─ T014 lançamentos, partidas, imutabilidade, estorno
+              │         │              └─ T015 balancete/razão/balanço + encerramentos
+              │         │                   └─ T016 financeiro (títulos, baixas, estorno de baixa)
+              │         │                        └─ T017 fiscal (tabelas, retenções, multa/juros, DAS)
+              │         │                             ├─ T018 conciliação + importação OFX/CSV   ┐ paralelo
+              │         │                             └─ T019 fluxo de caixa + exportação        ┘ (worktrees)
+              │         └─ T020 frontend completo (paralelo à cadeia, incremental) ─────────────┐
+              │                                                                                    ├─ T021 verificação integral + reviews
+              └─ T023 UI/UX + wireframes ──> aprovação humana ──> habilita T020 ◄────────────────┘
+                                               (T015..T020 convergem)
+                                                            └─ T022 implantação: backup/restore + runbook
 ```
 
 ---
@@ -55,12 +57,13 @@ T010 fundação
 | **T017** | Fiscal configurável: tabelas, retenções, multa/juros, DAS | T016 | 7 |
 | **T018** | Conciliação bancária e importação OFX/CSV | T017 | 7 |
 | **T019** | Fluxo de caixa e exportação CSV/PDF | T017 | 5 |
-| **T020** | Frontend completo pt-BR (todas as telas) | T011* | 14 |
+| **T020** | Frontend completo pt-BR (todas as telas) | T011* **+ T023 aprovada** | 14 |
 | **T021** | Verificação integral CA-01..55, FIX-01, code review e security review (RK-6) | T015..T020 | 10 |
 | **T022** | Implantação: backup/restore testado, runbook e checklist de publicação | T021 | 3 |
-| | **Total** | | **93** |
+| **T023** | Direção de UI/UX e wireframes (paralela a T010/T011; aprovação humana antes de T020) | T009 | 4 |
+| | **Total** | | **97** |
 
-\* T020 inicia após T011 e evolui incrementalmente em worktree paralela; cada endpoint entregue pela cadeia do núcleo vira tela correspondente. Integração e correção final em T021.
+\* T020 inicia após T011 **e após a aprovação humana dos wireframes da T023**, evoluindo incrementalmente em worktree paralela; cada endpoint entregue pela cadeia do núcleo vira tela correspondente. Integração e correção final em T021.
 
 ### Detalhamento
 
@@ -117,6 +120,12 @@ T010 fundação
 - Script de backup `VACUUM INTO` + cron de exemplo, **teste de restauração documentado** (RK-5/D3), runbook de subida no VPS da ADR-0003, checklist pré-publicação (RK-6, v4 de segurança aprovada, H9 resolvido).
 - Aceite: restore a partir do backup reproduz o banco; runbook executa do zero; checklist com itens `not_run/blocked` explícitos para o que depende de aprovação humana.
 
+**T023 — Direção de UI/UX e wireframes** (`docs/design/`)
+- Arquitetura de informação (menu e mapa de 11 telas), wireframes estáticos navegáveis por `file://` (sem build), padrões: grid denso com linha de totais fixa, formulários com validação visível, estados vazio/carregando/erro, mensagens de recusa (`CE-01..CE-22`) com ação sugerida (orientação ao estorno, `RK-4`), matriz de visibilidade por papel, máscara BRL, desktop-first ≥1280px.
+- Cada área do wireframe referencia o RF/CA que a sustenta (guarda contra `RK-1`).
+- **Entrega com checklist para revisão humana; T020 só começa após essa aprovação.**
+- Fora: cores/acabamento final (fase de estilo depois da estrutura), código de produto, alteração de requisitos.
+
 ---
 
 ## 3. Matriz de critérios de aceite → tarefa
@@ -134,6 +143,7 @@ T010 fundação
 | T019 | 09, 11 |
 | T020 | 01, 02, 10, 12 (UI) + demonstrações [D] 06, 07, 31, 32 + papéis em UI (21, 33) |
 | T021 | 30, 12 (completo), 34 (completo) + **matriz final de todos os 55** |
+| T023 | nenhum CA direto — habilita T020; mapeia cada tela a RF/CA (guarda `RK-1`) |
 
 Conferência: 55 CA, todos atribuídos; CA-12/21/33/34 aparecem em duas tarefas (implementação e verificação final), o que é intencional.
 
@@ -141,8 +151,8 @@ Conferência: 55 CA, todos atribuídos; CA-12/21/33/34 aparecem em duas tarefas 
 
 ## 4. Estimativas e prazo
 
-- **Somatório das tarefas: ≈93 h de trabalho de agente** (estimativa revisada para cima em relação à faixa pré-plano de 50–80 h — o plano detalhou testes e reviews que antes estavam estimados por palpite).
-- **Calendário:** 3 a 4 semanas com paralelismo (2–3 agentes em worktrees) e 1 rodada de revisão humana por dia; até 5 semanas se correções pós-review e a verificação dos 55 CA renderem o esperado no lado de cima.
+- **Somatório das tarefas: ≈97 h de trabalho de agente** (T010..T023; revisada para cima em relação à faixa pré-plano de 50–80 h — o plano detalhou testes, reviews e UI/UX que antes estavam estimados por palpite).
+- **Calendário:** 3 a 4 semanas com paralelismo (2–3 agentes em worktrees) e 1 rodada de revisão humana por dia; até 5 semanas se correções pós-review, a verificação dos 55 CA e a revisão dos wireframes renderem o lado de cima.
 - **Marcos:** fim da semana 1 ≈ T011 (login funcional); semana 2 ≈ T015 (relatórios com FIX-01); semana 3 ≈ T018/T019 + frontend avançado; semana 4 ≈ T021/T022.
 
 ### Precisão e quando revisar

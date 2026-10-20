@@ -9,7 +9,7 @@
     "phase": "implementation",
     "status": "in_progress",
     "current_task_id": "TASK-010",
-    "next_action": "Executar TASK-010 (fundação: monorepo, Drizzle+SQLite WAL, harness de teste em sistema-contabil/). Depois TASK-011 (segurança base). A partir de TASK-011, T020 (frontend) pode rodar em worktree paralela; após T017, T018 e T019 em paralelo (sequência e grafo em docs/plans/PLAN-IMPLEMENTACAO.md). Pendências de produto que NÃO bloqueiam T010..T020: (a) aprovação da v4 de segurança (CSRF, HTTPS, rate limit, headers, CORS); (b) H9 formato de exportação; (c) RK-8 validação fiscal com o escritório. Pendências de coordenação: colisão de IDs com o fluxo da landing page (HANDOFF-001-id-collision) e aprovação do ADR-0002 da landing page."
+    "next_action": "Execucao em andamento: TASK-010 (fundacao, foreground) e TASK-023 (UI/UX wireframes, background) em paralelo desde 2026-10-20. Apos T011: T020 (frontend) so inicia com os wireframes da T023 APROVADOS pelo usuario. Sequencia e grafo em docs/plans/PLAN-IMPLEMENTACAO.md (14 tarefas, 97h). Pendencias de produto que NAO bloqueiam T010..T019: (a) aprovacao da v4 de seguranca (CSRF, HTTPS, rate limit, headers, CORS); (b) H9 formato de exportacao; (c) RK-8 validacao fiscal com o escritorio; (d) aprovacao dos wireframes T023 (bloqueia apenas T020). Pendencias de coordenacao: colisao de IDs com o fluxo da landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing page."
   },
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
@@ -32,7 +32,8 @@
     { "id": "TASK-019", "title": "Fluxo de caixa e exportação CSV/PDF", "status": "todo", "path": ".squad/tasks/TASK-019.json", "owner": "implementer" },
     { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "todo", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
     { "id": "TASK-021", "title": "Verificação integral CA-01..55 + reviews", "status": "todo", "path": ".squad/tasks/TASK-021.json", "owner": "qa" },
-    { "id": "TASK-022", "title": "Implantação: backup/restore, runbook, checklist", "status": "todo", "path": ".squad/tasks/TASK-022.json", "owner": "implementer" }
+    { "id": "TASK-022", "title": "Implantação: backup/restore, runbook, checklist", "status": "todo", "path": ".squad/tasks/TASK-022.json", "owner": "implementer" },
+    { "id": "TASK-023", "title": "Direção de UI/UX e wireframes (aprov. humana antes de T020)", "status": "todo", "path": ".squad/tasks/TASK-023.json", "owner": "product-analyst" }
   ],
   "decisions": [
     { "id": "ADR-0001", "title": "Stack e arquitetura do sistema contábil (MVP) — aceita em 2026-10-20", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md" },
@@ -61,7 +62,7 @@
       {
         "name": "TASK-009 — plano de implementação criado e conferido",
         "result": "passed",
-        "evidence": "docs/plans/PLAN-IMPLEMENTACAO.md com 13 tarefas (T010..T022), grafo de dependências e paralelismo por partição de arquivos. Verificações automáticas executadas: (1) todos os 55 CA aparecem na matriz CA->tarefa (script de contagem: 'COBERTURA: os 55 CA aparecem na matriz'); (2) 13 arquivos .squad/tasks/TASK-010..022 presentes; (3) estimate_hours somam 93, igual ao plano; (4) todos os JSON de .squad válidos (ConvertFrom-Json sem erro)."
+        "evidence": "docs/plans/PLAN-IMPLEMENTACAO.md com 14 tarefas (T010..T023), grafo de dependências e paralelismo por partição de arquivos. Verificações automáticas executadas: (1) todos os 55 CA aparecem na matriz CA->tarefa; (2) 14 arquivos .squad/tasks/TASK-010..023 presentes; (3) estimate_hours somam 97, igual ao plano; (4) todos os JSON de .squad válidos. Atualização em 2026-10-20: T023 (UI/UX) adicionada com aprovação humana como gate da T020 (depends_on de T020 = [TASK-011, TASK-023])."
       },
       {
         "name": "Colisão de identificadores entre fluxos (contábil x landing page)",
@@ -74,7 +75,7 @@
         "evidence": "Não é ação da squad; ADR-0003 recomenda e a contratação é decisão humana."
       }
     ],
-    "notes": "Requisitos, stack, implantação e plano aprovados. Estimativa revisada pelo plano: ~93h de agente somadas (T010..T022), 3-4 semanas de calendário com paralelismo; revisão oficial de estimativa ao fim de T011 e T016. Nenhum código de produto criado até aqui; nenhum custo assumido. O campo commit fica null de propósito (auto-referência): usar git log. Fluxo paralelo da landing page: artefatos TASK-005/006/007, ADR-0002 e landpage/ observados, não inspecionados nem commitados por este fluxo."
+    "notes": "Requisitos, stack, implantacao, plano e direcao de UI/UX decididos. Estimativa revisada pelo plano: ~97h de agente somadas (T010..T023), 3-4 semanas de calendario com paralelismo; revisao oficial de estimativa ao fim de T011 e T016. Nenhum codigo de produto criado ate este commit; nenhum custo assumido. O campo commit fica null de proposito (auto-referencia): usar git log. Fluxo paralelo da landing page: artefatos TASK-005/006/007, ADR-0002 e landpage/ observados, nao inspecionados nem commitados por este fluxo."
   },
   "blockers": [
     {
@@ -83,5 +84,5 @@
       "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
     }
   ],
-  "updated_at": "2026-10-20T23:00:00Z"
+  "updated_at": "2026-10-20T23:14:00Z"
 }
