@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 9/11 — Relatórios · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 9/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> · período <b>10/2026</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b> · admin também emite (CA-34)</span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html" class="ativo">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Relatórios</h1>
+      <span class="ref">RF-10</span><span class="ref">RF-11</span><span class="ref">RF-12</span><span class="ref">RF-17</span><span class="ref">RF-18</span>
+      <span class="ref">CA-04</span><span class="ref">CA-05</span><span class="ref">CA-09</span><span class="ref">CA-11</span><span class="ref">CA-34</span>
+    </div>
+    <p class="sub">Uma tela com 4 abas (H-UI-5) — valores idênticos aos do arquivo exportado (CA-11). Dados de FIX-01.</p>
+  </div>
+
+  <!-- Abas por âncora nativa (sem JS) -->
+  <div class="abas">
+    <a href="#balancete" class="ativo">Balancete <span class="ref">RF-10</span></a>
+    <a href="#razao">Razão <span class="ref">RF-11</span></a>
+    <a href="#balanco">Balanço patrimonial <span class="ref">RF-12</span></a>
+    <a href="#fluxo">Fluxo de caixa <span class="ref">RF-17</span></a>
+  </div>
+
+  <!-- Filtros persistentes comuns + exportação -->
+  <div class="filtros" style="border-bottom:1px solid #c8c8c8;margin-bottom:16px">
+    <div class="f"><label for="r-per">Período / data</label><select id="r-per"><option>10/2026</option><option>Até 20/10/2026</option></select></div>
+    <div class="f"><label for="r-conta">Conta (razão)</label><select id="r-conta"><option>1.1.1 — Caixa</option><option>Todas as contas</option></select></div>
+    <div class="f"><label for="r-int">Intervalo (fluxo)</label><input id="r-int" type="text" value="01/10/2026 – 31/12/2026" size="24"></div>
+    <div class="direita">
+      <a class="btn primario" href="#exportar">Exportar arquivo</a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Balancete (RF-10 / CA-04)
+       ============================================================ -->
+  <div class="painel" id="balancete">
+    <div class="topo"><h2>Balancete do período 10/2026 <span class="ref">RF-10</span><span class="ref">CA-04</span></h2><div class="acoes"><span class="badge aberto">débitos = créditos</span></div></div>
+    <div class="corpo" style="padding:0">
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr><th>Código</th><th>Conta</th><th class="num">Débitos do período</th><th class="num">Créditos do período</th><th class="num">Saldo devedor</th><th class="num">Saldo credor</th><th class="num">Acumulado até o período</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">1.1.1</td><td class="txt">Caixa</td><td class="num">1.300,00</td><td class="num">400,00</td><td class="num">900,00</td><td class="num">—</td><td class="num">900,00 (D)</td></tr>
+            <tr><td class="mono">1.1.2</td><td class="txt">Clientes</td><td class="num">700,00</td><td class="num">300,00</td><td class="num">400,00</td><td class="num">—</td><td class="num">400,00 (D)</td></tr>
+            <tr><td class="mono">5</td><td class="txt">Despesas</td><td class="num">600,00</td><td class="num">—</td><td class="num">600,00</td><td class="num">—</td><td class="num">600,00 (D)</td></tr>
+            <tr><td class="mono">2.1.1</td><td class="txt">Fornecedores</td><td class="num">400,00</td><td class="num">600,00</td><td class="num">—</td><td class="num">200,00</td><td class="num">200,00 (C)</td></tr>
+            <tr><td class="mono">3.1.1</td><td class="txt">Capital social</td><td class="num">—</td><td class="num">1.000,00</td><td class="num">—</td><td class="num">1.000,00</td><td class="num">1.000,00 (C)</td></tr>
+            <tr><td class="mono">4</td><td class="txt">Receita</td><td class="num">—</td><td class="num">700,00</td><td class="num">—</td><td class="num">700,00</td><td class="num">700,00 (C)</td></tr>
+          </tbody>
+          <tfoot>
+            <!-- linha de totais fixa no rodapé -->
+            <tr><td colspan="2">Totais gerais</td><td class="num">3.000,00</td><td class="num">3.000,00</td><td class="num">1.900,00</td><td class="num">1.900,00</td><td class="num">equilibrado</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Razão (RF-11 / CA-04)
+       ============================================================ -->
+  <div class="painel" id="razao">
+    <div class="topo"><h2>Razão — conta 1.1.1 Caixa <span class="ref">RF-11</span></h2></div>
+    <div class="corpo" style="padding:0">
+      <div class="grid-scroll" style="max-height:260px">
+        <table class="grid">
+          <thead>
+            <tr><th>Data</th><th>Lançamento</th><th>Histórico</th><th>Contrapartes</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">Saldo corrente</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">02/10/2026</td><td class="mono"><a href="lancamentos.html">L-0001</a></td><td class="txt">Aporte de capital</td><td>3.1.1 Capital</td><td class="num">1.000,00</td><td class="num">—</td><td class="num">1.000,00 (D)</td></tr>
+            <tr><td class="mono">10/10/2026</td><td class="mono"><a href="lancamentos.html">L-0003</a></td><td class="txt">Pagamento a fornecedor</td><td>2.1.1 Fornecedores</td><td class="num">—</td><td class="num">400,00</td><td class="num">600,00 (D)</td></tr>
+            <tr><td class="mono">15/10/2026</td><td class="mono"><a href="lancamentos.html">L-0005</a></td><td class="txt">Recebimento de cliente</td><td>1.1.2 Clientes</td><td class="num">300,00</td><td class="num">—</td><td class="num">900,00 (D)</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="4">Totais — Caixa (conferência FIX-01)</td><td class="num">1.300,00</td><td class="num">400,00</td><td class="num">900,00 (D)</td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="nota" style="margin:0">CA-04: razão de Caixa lista exatamente L1, L3 e L5 com saldos correntes 1.000,00 → 600,00 → <b>900,00</b>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Balanço patrimonial (RF-12 / CA-05)
+       ============================================================ -->
+  <div class="painel" id="balanco">
+    <div class="topo"><h2>Balanço patrimonial em 20/10/2026 <span class="ref">RF-12</span></h2><div class="acoes"><span class="badge ativo">ativo = passivo + PL</span></div></div>
+    <div class="corpo" style="padding:0">
+      <div class="grid-scroll" style="max-height:300px">
+        <table class="grid">
+          <thead><tr><th>Grupo</th><th>Conta</th><th class="num">Valor</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="2"><b>Ativo</b></td><td class="txt">Caixa</td><td class="num">900,00</td></tr>
+            <tr><td class="txt">Clientes</td><td class="num">400,00</td></tr>
+            <tr><td><b>Passivo</b></td><td class="txt">Fornecedores</td><td class="num">200,00</td></tr>
+            <tr><td rowspan="2"><b>Patrimônio líquido</b></td><td class="txt">Capital social</td><td class="num">1.000,00</td></tr>
+            <tr><td class="txt">Lucro do período (Receita 700 − Despesas 600)</td><td class="num">100,00</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="2">Ativo 1.300,00 · Passivo 200,00 · PL 1.100,00 — confere</td><td class="num">1.300,00 = 1.300,00</td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="nota" style="margin:0">CA-05: ativo 1.300,00 = passivo 200,00 + PL 1.100,00 (ativo − passivo − PL = 0).</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Fluxo de caixa (RF-17 / CA-09)
+       ============================================================ -->
+  <div class="painel" id="fluxo">
+    <div class="topo"><h2>Fluxo de caixa — 01/10/2026 a 31/12/2026 <span class="ref">RF-17</span></h2><div class="acoes"><span class="papel-nota">realizadas + previstas</span></div></div>
+    <div class="corpo">
+      <div class="kpis">
+        <div class="kpi"><div class="rotulo">Saldo inicial</div><div class="valor">R$ 10.000,00</div><div class="extra">em 01/10/2026</div></div>
+        <div class="kpi"><div class="rotulo">Entradas realizadas</div><div class="valor">R$ 1.500,00</div><div class="extra">títulos já baixados no intervalo</div></div>
+        <div class="kpi"><div class="rotulo">Entradas previstas</div><div class="valor">R$ 2.000,00</div><div class="extra">títulos em aberto · vencimentos</div></div>
+        <div class="kpi"><div class="rotulo">Saídas previstas</div><div class="valor">R$ 3.000,00</div><div class="extra">títulos em aberto · vencimentos</div></div>
+        <div class="kpi"><div class="rotulo">Saldo final</div><div class="valor">R$ 10.500,00</div><div class="extra">10.000 + 1.500 + 2.000 − 3.000</div></div>
+      </div>
+      <table class="grid" style="border:1px solid #c8c8c8">
+        <thead><tr><th>Data</th><th>Descrição</th><th>Realizada/prevista</th><th class="num">Entrada</th><th class="num">Saída</th><th class="num">Saldo</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">D−2</td><td class="txt">Recebimento Cliente Gama (baixado)</td><td>realizada</td><td class="num">1.500,00</td><td class="num">—</td><td class="num">11.500,00</td></tr>
+          <tr><td class="mono">D+5</td><td class="txt">Título a receber em aberto</td><td>prevista</td><td class="num">2.000,00</td><td class="num">—</td><td class="num">13.500,00</td></tr>
+          <tr><td class="mono">D+10</td><td class="txt">Título a pagar em aberto</td><td>prevista</td><td class="num">—</td><td class="num">3.000,00</td><td class="num">10.500,00</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="3">Conferência: saldo inicial + entradas − saídas</td><td class="num">3.500,00</td><td class="num">3.000,00</td><td class="num">10.500,00</td></tr></tfoot>
+      </table>
+      <p class="nota">CA-09: saldo final R$ 10.500,00 confere com a fórmula do RF-17.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 5 — Exportação (RF-18 / CA-11)
+       ============================================================ -->
+  <div class="painel" id="exportar">
+    <div class="topo"><h2>Exportar <span class="ref">RF-18</span><span class="ref">CA-11</span></h2><div class="acoes"><span class="papel-nota">contador e admin (leitura — H-UI-3)</span></div></div>
+    <div class="corpo">
+      <div class="duo">
+        <a class="btn primario" href="#exportar">Baixar o relatório exibido</a>
+        <span class="mono">conteúdo = mesmos valores da tela, conferência linha a linha (CA-11)</span>
+      </div>
+      <div class="msg info">
+        <div class="titulo">Formato do arquivo: definido na arquitetura (H9 — aberta).</div>
+        <div class="detalhe">São exportáveis: balancete, razão, balanço patrimonial e fluxo de caixa (RF-18). <b>Fora do MVP:</b> DRE detalhada, SPED/ECD/ECF, tributos por receita (seção 11 dos requisitos — guarda RK-1).</div>
+      </div>
+      <div class="msg info">
+        <div class="titulo">Admin nesta tela</div>
+        <div class="detalhe">Pode emitir qualquer relatório de qualquer empresa — <b>leitura global auditada</b>: a consulta aparece na trilha identificando admin, empresa e horário. <span class="ref">CA-34</span><span class="ref">F13</span></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="conciliacao.html">8. Conciliação</a> · próxima: <a href="fiscal.html">10. Fiscal</a></p>
+
+</main>
+</div>
+</body>
+</html>

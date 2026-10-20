@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 5/11 — Períodos contábeis · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 5/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> · exercício <b>2026</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html" class="ativo">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Períodos contábeis e exercício</h1>
+      <span class="ref">RF-09</span><span class="ref">H12</span>
+      <span class="ref">CA-31 [D]</span><span class="ref">CA-32 [D]</span><span class="ref">CA-24</span><span class="ref">CE-03</span>
+    </div>
+    <p class="sub">12 períodos mensais do ano-calendário = exercício. Encerramento é ação manual do contador com escrita contábil ativa — o administrador não encerra nem por ação administrativa (F13).</p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Grid dos 12 períodos (padrão A)
+       Origem: RF-09 (estado aberto/encerrado) · CA-31 e CA-32 [D]
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo">
+      <h2>Exercício 2026 <span class="ref">RF-09</span></h2>
+      <div class="acoes">
+        <span class="papel-nota">ações de encerramento: somente contador</span>
+        <a class="btn secundario" href="#encerramento-exercicio">Encerrar exercício 2026</a>
+        <a class="btn primario" href="#encerramento-periodo">Encerrar período atual</a>
+      </div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-exerc">Exercício</label><select id="f-exerc"><option>2026</option><option>2025</option></select></div>
+        <div class="f"><label for="f-sitp">Situação</label><select id="f-sitp"><option>Todos</option><option>Abertos</option><option>Encerrados</option></select></div>
+        <div class="direita">Exercício = 12 períodos mensais; o encerramento do 12º permite encerrar o exercício (H12)</div>
+      </div>
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr><th>Período</th><th>Mês</th><th>Situação</th><th>Lançamentos gravados</th><th>Encerrado em</th><th class="acao">Ações</th></tr>
+          </thead>
+          <tbody>
+            <tr class="encerrado"><td class="mono">01/2026</td><td>Janeiro</td><td><span class="badge pago">encerrado</span></td><td class="num">14</td><td class="mono">05/02/2026 — M. Souza</td><td class="acao">—</td></tr>
+            <tr class="encerrado"><td class="mono">02/2026</td><td>Fevereiro</td><td><span class="badge pago">encerrado</span></td><td class="num">11</td><td class="mono">04/03/2026 — M. Souza</td><td class="acao">—</td></tr>
+            <tr class="encerrado"><td class="mono">03/2026</td><td>Março</td><td><span class="badge pago">encerrado</span></td><td class="num">18</td><td class="mono">07/04/2026 — M. Souza</td><td class="acao">—</td></tr>
+            <tr class="encerrado"><td class="mono">…/2026</td><td>Abril–Agosto</td><td><span class="badge pago">encerrados</span></td><td class="num">76</td><td class="mono">encerrados</td><td class="acao">—</td></tr>
+            <tr><td class="mono">09/2026</td><td>Setembro</td><td><span class="badge aberto">aberto</span></td><td class="num">9</td><td>—</td><td class="acao"><a class="btn pequeno secundario" href="#encerramento-periodo">Encerrar</a></td></tr>
+            <tr style="background:#f4f4f4"><td class="mono"><b>10/2026</b></td><td><b>Outubro (atual)</b></td><td><span class="badge aberto">aberto</span></td><td class="num">6</td><td>—</td><td class="acao"><a class="btn pequeno primario" href="#encerramento-periodo">Encerrar</a></td></tr>
+            <tr><td class="mono">11/2026</td><td>Novembro</td><td><span class="badge aberto">aberto</span></td><td class="num">0</td><td>—</td><td class="acao"><a class="btn pequeno secundario" href="#encerramento-periodo">Encerrar</a></td></tr>
+            <tr><td class="mono">12/2026</td><td>Dezembro (12º)</td><td><span class="badge aberto">aberto</span></td><td class="num">0</td><td>—</td><td class="acao"><a class="btn pequeno secundario" href="#encerramento-periodo">Encerrar</a></td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">12 períodos · 4 encerrados (síntese) · 8 abertos</td><td class="num">134</td><td colspan="2">Ação do exercício só habilita ao encerrar o 12º</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Recusa: nada é gravado em período encerrado (CE-03)
+       Origem: RF-09/RF-08 · CA-24 (recusa específica, aceite em M+1)
+       ============================================================ -->
+  <div class="msg erro">
+    <div class="titulo">O período 03/2026 está encerrado: nada é gravado em período encerrado.</div>
+    <div class="detalhe">Tentativa de lançamento <b>ou estorno</b> com data em período encerrado é recusada e não altera nada. Lançamento com data em período aberto é aceito. <span class="ref">CE-03</span><span class="ref">CA-24</span><span class="ref">RF-08</span></div>
+    <div class="acao">Ação sugerida: <b>usar data em período aberto</b> (ex.: hoje). Se o erro está num lançamento gravado, a correção é <b>Estornar</b> em período aberto <span class="ref">RK-4</span></div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Diálogo: encerrar período (CA-31 [D])
+       Origem: RF-09 (zera contas de resultado) · CA-31 com FIX-01
+       ============================================================ -->
+  <div class="overlay" id="encerramento-periodo">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C) — CA-31 [D]</div>
+    <div class="dialogo">
+      <h2>Encerrar o período 09/2026?</h2>
+      <p>O encerramento <b>zera as contas de resultado do mês</b> e transfere o resultado para o mês seguinte. Depois de encerrado, <b>nada é gravado</b> nesse período — nem estornos.</p>
+      <div class="msg info" style="margin-top:8px">
+        Efeito demonstrado (CA-31 com FIX-01): Despesas e Receita ficam com saldo zero no balancete seguinte; saldos permanententes permanecem — Caixa 900,00 (D) · Cliente 400,00 (D) · Fornecedor 200,00 (C) · Capital 1.000,00 (C). <span class="ref">CA-31</span><span class="ref">FIX-01</span>
+      </div>
+      <div class="acoes">
+        <a class="btn secundario" href="periodos.html">Voltar</a>
+        <a class="btn primario" href="periodos.html">Confirmar encerramento</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Diálogo: encerramento do exercício (CA-32 [D])
+       Origem: RF-09/H12 (transferência do resultado ao PL)
+       ============================================================ -->
+  <div class="overlay" id="encerramento-exercicio">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C) — CA-32 [D] (estado de demonstração)</div>
+    <div class="dialogo">
+      <h2>Encerrar o exercício 2026?</h2>
+      <p>Disponível ao encerrar o <b>12º período</b>. O encerramento é manual e transfere o <b>resultado acumulado do ano ao patrimônio líquido</b>; as contas de resultado ficam zeradas.</p>
+      <div class="msg info" style="margin-top:8px">
+        Efeito demonstrado (CA-32 com FIX-01): lucro de 100,00 transferido ao PL — PL passa a R$ 1.100,00 e o balanço em 31/12 permanece equilibrado (ativo 1.300,00 = passivo 200,00 + PL 1.100,00). <span class="ref">CA-32</span>
+      </div>
+      <div class="acoes">
+        <a class="btn secundario" href="periodos.html">Voltar</a>
+        <a class="btn primario" href="periodos.html">Confirmar encerramento do exercício</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 5 — Recusa por papel (variação do CA-31/CA-32 para admin)
+       Origem: F13/RF-09 — admin não encerra períodos nem exercício
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Como o administrador vê esta tela <span class="ref">F13</span><span class="ref">CA-31</span><span class="ref">CA-32</span></h2><div class="acoes"><span class="papel-nota">FB-3 · recusa de permissão</span></div></div>
+    <div class="corpo">
+      <p>Os botões <b>Encerrar período</b> e <b>Encerrar exercício</b> <b>não são exibidos</b> (distintivo <span class="badge somente-leitura">somente leitura</span> na barra). Tentativa direta é recusada e auditada:</p>
+      <div class="msg erro" style="max-width:760px">
+        <div class="titulo">Você não tem permissão para encerrar períodos ou o exercício.</div>
+        <div class="detalhe">O encerramento é exclusivo do contador com escrita contábil ativa. Nada foi alterado; a tentativa fica registrada na trilha de auditoria. <span class="ref">CA-31</span><span class="ref">CA-32</span><span class="ref">RF-05</span></div>
+        <div class="acao">Ação sugerida: <b>solicitar ao contador responsável</b></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="plano-contas.html">4. Plano de contas</a> · próxima: <a href="lancamentos.html">6. Lançamentos</a></p>
+
+</main>
+</div>
+</body>
+</html>

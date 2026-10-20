@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 1/11 — Login · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 1/11</span></span>
+  <span class="spacer"></span>
+  <span class="papel">Papéis: <b>admin</b> <b>contador</b></span>
+  <a class="link-topo" href="index.html">Índice</a>
+</header>
+
+<main class="main" style="max-width:900px">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Login e acesso</h1>
+      <span class="ref">RF-03</span><span class="ref">RF-19</span><span class="ref">R6</span>
+      <span class="ref">CA-18</span><span class="ref">CA-19</span><span class="ref">CA-51</span><span class="ref">CA-52</span>
+    </div>
+    <p class="sub">Única tela acessível sem sessão. Todo acesso a dados exige autenticação (R6); sem sessão válida não há retorno de dados (CA-18).</p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Formulário de credenciais
+       Origem: RF-03 (autenticação) · CA-19 (credenciais inválidas não criam sessão)
+       ============================================================ -->
+  <div class="painel" style="max-width:520px">
+    <div class="topo"><h2>Entrar <span class="ref">RF-03</span></h2></div>
+    <div class="corpo">
+      <!-- Padrão B: formulário em coluna com validação visível -->
+      <form class="form">
+        <div class="campo">
+          <label for="usuario">Usuário (e-mail) <span class="obrig">obrigatório</span></label>
+          <input id="usuario" type="text" value="contador@escritorio.com.br">
+        </div>
+        <div class="campo">
+          <label for="senha">Senha <span class="obrig">obrigatório</span></label>
+          <input id="senha" type="password" value="••••••••">
+          <!-- CE-02 / CA-50: validação de campo visível (política de senha na criação/alteração — RF-19, H15) -->
+        </div>
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn primario" href="empresas.html">Entrar</a>
+        </div>
+      </form>
+      <!-- Não existe link "esqueci minha senha": não há RF de autoatendimento de senha no MVP
+           (ver checklist T1 das diretrizes) — ação é do administrador (RF-02). -->
+      <p class="nota">Sem "esqueci a senha" por guarda de escopo (RK-1): nenhum RF prevê recuperação autoatendida; criação/alteração de senha é gestão do admin (RF-02/RF-19).</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Mensagens de recusa do login (demonstração dos estados)
+       Origem: CA-19 (credencial inválida) · CE-11 (sessão expirada) · CE-17 (bloqueio)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo">
+      <h2>Recusas previstas nesta tela <span class="ref">CE-11</span><span class="ref">CE-17</span></h2>
+      <div class="acoes"><span class="papel-nota">FB-5 · negação de acesso</span></div>
+    </div>
+    <div class="corpo">
+
+      <!-- FB-5: mensagem específica + ação sugerida -->
+      <div class="msg erro">
+        <div class="titulo">Usuário ou senha inválidos.</div>
+        <div class="detalhe">Verifique os dados e tente novamente. Tentativa registrada na trilha de auditoria.</div>
+        <div class="acao">Ação sugerida: <b>rever credenciais e entrar</b> <span class="ref">CA-19</span><span class="ref">CA-52</span></div>
+      </div>
+
+      <div class="msg erro">
+        <div class="titulo">Acesso bloqueado após 5 tentativas falhas consecutivas.</div>
+        <div class="detalhe">Tente novamente em 15 minutos, mesmo com a senha correta, ou contate o administrador para desbloqueio. Evento de bloqueio auditado.</div>
+        <div class="acao">Ação sugerida: <b>aguardar o período ou contatar o administrador</b> <span class="ref">CE-17</span><span class="ref">CA-51</span></div>
+      </div>
+
+      <div class="msg info">
+        <div class="titulo">Sessão expirada após inatividade.</div>
+        <div class="detalhe">Entre novamente. A operação interrompida não foi gravada (nada ficou salvo pela metade).</div>
+        <div class="acao">Ação sugerida: <b>entrar e repetir a operação</b> <span class="ref">CE-11</span><span class="ref">CA-30</span></div>
+      </div>
+
+      <p class="legenda-tela">Todas as mensagens seguem a estrutura das diretrizes §7: <b>o que houve</b> (específico) + <b>o que fazer</b>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Política de senha (contexto, sem ação nesta tela)
+       Origem: RF-19 · CA-50 (senha &lt; 8 caracteres recusada na criação)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Contexto de política de senha <span class="ref">RF-19</span><span class="ref">CA-50</span></h2></div>
+    <div class="corpo">
+      <p>A política (mínimo de caracteres — H15) é exigida <b>na criação e na alteração de senha</b>, ambas na tela de usuários (admin). Nesta tela de login a recusa é FB-5 genérica de credencial (não expõe se o usuário existe).</p>
+      <div class="msg info" style="max-width:640px">
+        <div class="titulo">Sem sessão, sem dados.</div>
+        <div class="detalhe">Tentar acessar qualquer tela ou URL de dados sem sessão redireciona para este login, sem conteúdo de empresa (CA-18).</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice dos wireframes</a> · próxima: <a href="empresas.html">2. Empresas</a></p>
+
+</main>
+</body>
+</html>

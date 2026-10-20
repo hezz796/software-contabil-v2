@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 7/11 — Títulos (pagar/receber) · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 7/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> · período <b>10/2026 (aberto)</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b> <span class="badge somente-leitura">admin: somente leitura</span></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html" class="ativo">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Títulos a pagar e a receber</h1>
+      <span class="ref">RF-13</span><span class="ref">RF-14</span><span class="ref">RF-15</span><span class="ref">RF-22</span><span class="ref">RF-23</span><span class="ref">RF-24</span>
+      <span class="ref">CA-06 [D]</span><span class="ref">CA-07 [D]</span><span class="ref">CA-41</span><span class="ref">CA-42</span><span class="ref">CA-43</span><span class="ref">CA-47</span><span class="ref">CA-48</span>
+    </div>
+    <p class="sub">
+      <a href="#lista">1. Lista</a> · <a href="#baixa">2. Baixa (total/parcial)</a> · <a href="#estorno-baixa">3. Estorno de baixa</a> · <a href="#recusas">4. Recusas</a>
+    </p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Grid de títulos com badges de situação (padrão A)
+       Origem: RF-13/RF-14 (situação aberto/parcial/pago/cancelado, baixa parcial H8)
+       ============================================================ -->
+  <div class="painel" id="lista">
+    <div class="topo">
+      <h2>1. Títulos <span class="ref">RF-13</span><span class="ref">RF-14</span></h2>
+      <div class="acoes">
+        <span class="papel-nota">somente contador (admin: leitura — CA-33)</span>
+        <a class="btn primario" href="#baixa">+ Novo título</a>
+      </div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-tipo">Tipo</label><select id="f-tipo"><option>Todos (pagar e receber)</option><option>A pagar</option><option>A receber</option></select></div>
+        <div class="f"><label for="f-sitt">Situação</label><select id="f-sitt"><option>Todas</option><option>Aberto</option><option>Parcialmente pago</option><option>Pago</option><option>Cancelado</option></select></div>
+        <div class="f"><label for="f-venc">Vencimento de</label><input id="f-venc" type="text" value="01/10/2026"></div>
+        <div class="f"><label for="f-venc2">até</label><input id="f-venc2" type="text" value="31/12/2026"></div>
+        <div class="f"><label for="f-forn">Fornecedor/Cliente</label><input id="f-forn" type="text" placeholder="buscar"></div>
+        <div class="direita">Uma tela com filtro de tipo (H-UI-2) <span class="ref">RF-13</span><span class="ref">RF-14</span></div>
+      </div>
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr><th>Vencimento</th><th>Tipo</th><th>Fornecedor / Cliente · descrição</th><th class="num">Valor bruto</th><th class="num">Retido</th><th class="num">Saldo</th><th>Situação</th><th>Vínculo contábil</th><th class="acao">Ações</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">20/10/2026</td><td>a pagar</td><td class="txt">Fornecedor Alfa · material de escritório</td>
+              <td class="num">R$ 500,00</td><td class="num">—</td><td class="num">R$ 500,00</td>
+              <td><span class="badge aberto">aberto</span></td><td class="mono">—</td>
+              <td class="acao"><a class="btn pequeno primario" href="#baixa">Dar baixa</a> <a class="btn pequeno fantasma" href="#cancelar">Cancelar</a></td>
+            </tr>
+            <tr>
+              <td class="mono">18/10/2026</td><td>a pagar</td><td class="txt">Fornecedor Beta · aluguel (em atraso)</td>
+              <td class="num">R$ 1.000,00</td><td class="num">R$ 50,00</td><td class="num">R$ 300,00</td>
+              <td><span class="badge parcial">parcialmente pago</span></td><td><a class="mono" href="lancamentos.html">L-0031, L-0038</a></td>
+              <td class="acao"><a class="btn pequeno primario" href="#baixa">Dar baixa</a> <a class="btn pequeno fantasma" href="#estorno-baixa">Estornar baixa</a></td>
+            </tr>
+            <tr>
+              <td class="mono">15/10/2026</td><td>a receber</td><td class="txt">Cliente Gama · serviço de consultoria</td>
+              <td class="num">R$ 700,00</td><td class="num">—</td><td class="num">R$ 0,00</td>
+              <td><span class="badge pago">pago</span></td><td><a class="mono" href="lancamentos.html">L-0035</a></td>
+              <td class="acao"><a class="btn pequeno secundario" href="#estorno-baixa">Ver baixas</a> <a class="btn pequeno fantasma" href="#estorno-baixa">Estornar baixa</a></td>
+            </tr>
+            <tr class="encerrado">
+              <td class="mono">30/09/2026</td><td>a pagar</td><td class="txt">Fornecedor Delta · cancelado pela empresa</td>
+              <td class="num">R$ 250,00</td><td class="num">—</td><td class="num">R$ 0,00</td>
+              <td><span class="badge cancelado">cancelado</span></td><td class="mono">—</td>
+              <td class="acao"><span class="mono" title="título quitado/cancelado não aceita nova baixa">sem ações</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <!-- linha de totais fixa no rodapé -->
+            <tr><td colspan="3">4 títulos (1 aberto · 1 parcial · 1 pago · 1 cancelado)</td><td class="num">R$ 2.450,00</td><td class="num">R$ 50,00</td><td class="num">R$ 800,00</td><td colspan="3">Totais conforme filtros ativos</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="msg info">
+    <div class="titulo">Badges de situação (padrão B/convencões).</div>
+    <div class="detalhe"><span class="badge aberto">aberto</span> <span class="badge parcial">parcialmente pago</span> <span class="badge pago">pago</span> <span class="badge cancelado">cancelado</span> — informação sempre em texto, nunca só por cor.</div>
+    <div class="acao">Fora do escopo, sem botão (F11): boleto, PIX, CNAB/remessa — aqui só se registra, dá baixa e cancela.</div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Formulário de baixa (padrão B) com impostos/multa/juros
+       Origem: RF-13 (baixa total/parcial H8) · RF-22 (retenção) · RF-23 (multa/juros) · RF-15 (vínculo)
+       ============================================================ -->
+  <div class="painel" id="baixa">
+    <div class="topo"><h2>2. Baixa de título — "Fornecedor Beta · aluguel" (saldo R$ 300,00) <span class="ref">RF-13</span><span class="ref">RF-23</span></h2><div class="acoes"><span class="papel-nota">somente contador</span></div></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="campo-linha-3">
+          <div class="campo">
+            <label for="b-data">Data do pagamento <span class="obrig">obrigatória</span></label>
+            <input id="b-data" type="text" value="20/10/2026">
+            <div class="ajuda">dd/mm/aaaa · dentro do período aberto</div>
+          </div>
+          <div class="campo num">
+            <label for="b-valor">Valor pago <span class="obrig">obrigatório</span></label>
+            <input id="b-valor" type="text" value="R$ 1.030,00" style="text-align:right">
+            <div class="ajuda">Aceita total ou parcial (H8), até o saldo.</div>
+          </div>
+          <div class="campo">
+            <label for="b-tab">Tabela de impostos/retenções</label>
+            <select id="b-tab"><option>ISS 5% (RF-22)</option><option>Sem retenção</option></select>
+            <div class="ajuda">Tabelas configuráveis em <a href="fiscal.html">Fiscal</a> (RF-20).</div>
+          </div>
+        </div>
+
+        <!-- Recusas de baixa (CE-07 / CA-16) — validação visível -->
+        <div class="msg erro">
+          <div class="titulo">Baixa não registrada: valor maior que o saldo do título.</div>
+          <div class="detalhe">Informado R$ 1.100,00 · saldo disponível R$ 1.000,00 (título em aberto). Nada foi alterado no título nem nos lançamentos. <span class="ref">CE-07</span><span class="ref">CA-16</span></div>
+          <div class="acao">Ação sugerida: <b>informar valor até o saldo</b> (valor ≤ 0, data inválida e título quitado/cancelado são recusados da mesma forma)</div>
+        </div>
+
+        <h3>Memória de cálculo (exibida antes de confirmar)</h3>
+        <table class="tabela-pequena" style="border:1px solid #c8c8c8">
+          <tbody>
+            <tr><td>Valor bruto do título</td><td class="num">R$ 1.000,00</td></tr>
+            <tr><td>Retenção na fonte — ISS 5% (RF-22)</td><td class="num">− R$ 50,00</td></tr>
+            <tr><td>Multa de atraso 2% (RF-23)</td><td class="num">+ R$ 20,00</td></tr>
+            <tr><td>Juros 1% a.m. pro rata diária, 30 dias (H18)</td><td class="num">+ R$ 10,00</td></tr>
+            <tr><td colspan="2" style="border-top:2px solid #9a9a9a"></td></tr>
+            <tr><td><b>Total devido</b> · líquido ao fornecedor R$ 980,00 · retenção R$ 50,00 a recolher</td><td class="num"><b>R$ 1.030,00</b></td></tr>
+          </tbody>
+        </table>
+        <p class="nota">Conferências: CA-48 (atraso 30 dias → total R$ 1.030,00) · CA-47 (retenção 5% → líquido 950,00 + 50,00 a recolher) · CA-06/CA-07 (dentro do vencimento <b>não</b> há multa/juros e há lançamento vinculado de R$ 500,00). Toda baixa gera/vincula lançamento contábil (RF-15).</p>
+
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn secundario" href="#lista">Cancelar</a>
+          <a class="btn primario" href="#lista">Confirmar baixa</a>
+        </div>
+      </form>
+
+      <!-- Situação resultante demonstrável (CA-41) -->
+      <div class="msg sucesso">
+        <div class="titulo">Baixa parcial demonstra a progressão do título (CA-41).</div>
+        <div class="detalhe">Título de R$ 500,00 com baixa de R$ 200,00 → <span class="badge parcial">parcialmente pago</span> saldo R$ 300,00; nova baixa de R$ 300,00 → <span class="badge pago">pago</span> saldo R$ 0,00 e lançamentos somando R$ 500,00.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Estorno de baixa (RF-24 / RK-4)
+       Origem: RF-24 (reabre título, lançamento imutável vinculado, auditado)
+       ============================================================ -->
+  <div class="overlay" id="estorno-baixa">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C) — estorno de baixa é rotina (F14/RK-4)</div>
+    <div class="dialogo">
+      <h2>Estornar a baixa de R$ 200,00 (20/10/2026)?</h2>
+      <p>O título <b>reabre</b> com o saldo anterior restaurado (volta a <span class="badge aberto">aberto</span> ou <span class="badge parcial">parcialmente pago</span> conforme o caso), um <b>lançamento de estorno imutável</b> é gerado e vinculado à baixa original, e tudo é registrado na trilha de auditoria.</p>
+      <div class="msg info" style="margin-top:8px">Demonstrado no CA-42 (volta a aberto com R$ 500,00 e novo pagamento funciona) e CA-43 (estorno parcial de R$ 200,00 → saldo R$ 300,00). Cada baixa pode ser estornada <b>uma vez</b>. <span class="ref">CA-42</span><span class="ref">CA-43</span><span class="ref">RF-24</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="#lista">Voltar</a>
+        <a class="btn primario" href="#lista">Confirmar estorno</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3b — Cancelamento de título em aberto (RF-13)
+       ============================================================ -->
+  <div class="overlay" id="cancelar">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C)</div>
+    <div class="dialogo">
+      <h2>Cancelar o título "Fornecedor Alfa · material de escritório" (R$ 500,00)?</h2>
+      <p>Só é possível cancelar <b>título em aberto</b>. O título sai da rotina financeira com situação <span class="badge cancelado">cancelado</span> — sem baixa, sem lançamento novo. Quitado ou cancelado não aceita nova baixa.</p>
+      <div class="msg info" style="margin-top:8px">O cancelamento é registrado na trilha de auditoria. <span class="ref">RF-13</span><span class="ref">RF-14</span><span class="ref">RF-05</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="#lista">Voltar</a>
+        <a class="btn primario" href="#lista">Confirmar cancelamento</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Recusas específicas do estorno de baixa
+       Origem: CE-18/CA-44 (conciliado) · CE-22/CA-55 (período encerrado) · CE-07/CA-16 (título quitado)
+       ============================================================ -->
+  <div class="painel" id="recusas">
+    <div class="topo"><h2>4. Recusas previstas nesta tela <span class="ref">CE-07</span><span class="ref">CE-18</span><span class="ref">CE-22</span></h2><div class="acoes"><span class="papel-nota">FB-3 · recusa de ação + ação sugerida</span></div></div>
+    <div class="corpo">
+
+      <div class="msg erro">
+        <div class="titulo">O lançamento vinculado a esta baixa está conciliado.</div>
+        <div class="detalhe">O estorno é recusado até que a desconciliação ocorra — nada muda no título. <span class="ref">CE-18</span><span class="ref">CA-44</span></div>
+        <div class="acoes"><a class="btn pequeno primario" href="conciliacao.html">Ir para conciliação</a><span class="mono">após desconciliar → estornar (RK-4)</span></div>
+      </div>
+
+      <div class="msg erro">
+        <div class="titulo">A baixa pertence ao período 03/2026 (encerrado): estorno recusado.</div>
+        <div class="detalhe">Nada escreve em período encerrado. O título permanece com estado e saldo inalterados, nenhum lançamento de estorno é gerado e a tentativa fica registrada na trilha. <span class="ref">CE-22</span><span class="ref">CA-55</span><span class="ref">RF-24</span></div>
+        <div class="acao">Ação sugerida: <b>avaliar com o contador o encerramento do exercício</b>; em período aberto o estorno é normal — a tentativa recusada não é um problema, apenas fica auditada.</div>
+      </div>
+
+      <div class="msg erro">
+        <div class="titulo">Título pago/cancelado não aceita nova baixa.</div>
+        <div class="detalhe">Recebido o valor total, o saldo zera e novas baixas são recusadas. <span class="ref">CE-07</span><span class="ref">CA-16</span></div>
+        <div class="acao">Ação sugerida: <b>Estornar a baixa</b> para reabrir o título, se houver erro no pagamento (RK-4)</div>
+      </div>
+
+      <div class="msg info">
+        <div class="titulo">Visibilidade nesta tela</div>
+        <div class="detalhe">Contador: novo título, baixa, estorno de baixa e cancelamento. Administrador: leitura com distintivo <span class="badge somente-leitura">somente leitura</span> — sem ações de escrita (F13 · CA-33). Título de empresa inativa: apenas consulta (CE-20).</div>
+      </div>
+
+      <p class="nota">Âncoras da tela: <a href="#lista">1. Lista</a> · <a href="#baixa">2. Baixa</a> · <a href="#estorno-baixa">3. Estorno de baixa</a> · <a href="#recusas">4. Recusas</a></p>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="lancamentos.html">6. Lançamentos</a> · próxima: <a href="conciliacao.html">8. Conciliação</a></p>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 3/11 — Usuários e atribuições · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 3/11</span></span>
+  <span class="empresa">Escritório: <b>Todos os clientes</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>administrador</b></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html" class="ativo">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html" class="">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Usuários e atribuições</h1>
+      <span class="ref">RF-02</span><span class="ref">RF-03</span><span class="ref">RF-19</span>
+      <span class="ref">CA-02</span><span class="ref">CA-21</span><span class="ref">CA-22</span><span class="ref">CA-50</span><span class="ref">CA-37</span>
+    </div>
+    <p class="sub">Somente administrador. Contador não encontra esta tela nem suas ações (CA-21).</p>
+  </div>
+
+  <!-- Barreira de papel -->
+  <div class="msg info">
+    <div class="titulo">Para o contador esta tela não existe no menu.</div>
+    <div class="detalhe">Tentativa direta (URL/requisição) é recusada sem dados <span class="ref">CA-21</span> <span class="ref">CE-12</span> — mensagem: "Você não tem permissão para esta ação."</div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Grid de usuários (padrão A)
+       Origem: RF-02 (papéis e atribuições) · RF-03 (desativar) · CA-52 (eventos de acesso)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo">
+      <h2>Usuários do escritório <span class="ref">RF-02</span></h2>
+      <div class="acoes"><a class="btn primario" href="#novo-usuario">+ Novo usuário</a></div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-nome">Busca</label><input id="f-nome" type="text" placeholder="nome ou e-mail"></div>
+        <div class="f"><label for="f-papel">Papel</label><select id="f-papel"><option>Todos</option><option>Administrador</option><option>Contador</option></select></div>
+        <div class="f"><label for="f-situ">Situação</label><select id="f-situ"><option>Todas</option><option>Ativo</option><option>Desativado</option></select></div>
+        <div class="direita">Filtros persistentes <span class="ref">padrão A</span></div>
+      </div>
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr><th>Nome</th><th>E-mail</th><th>Papel</th><th>Empresas atribuídas</th><th>Situação</th><th>Último acesso</th><th class="acao">Ações</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt"><b>Helena Dias</b></td><td class="mono">helena@escritorio.com.br</td>
+              <td>administrador</td><td>— (leitura global auditada)</td>
+              <td><span class="badge ativo">ativo</span></td><td class="mono">20/10/2026 08:41 (sucesso)</td>
+              <td class="acao"><a class="btn pequeno secundario" href="#novo-usuario">Editar</a> <a class="btn pequeno fantasma" href="#desativar">Desativar</a></td>
+            </tr>
+            <tr>
+              <td class="txt"><b>Marina Souza</b></td><td class="mono">marina@escritorio.com.br</td>
+              <td>contador</td><td>Alfa (X), Beta (Y)</td>
+              <td><span class="badge ativo">ativo</span></td><td class="mono">19/10/2026 17:02 (sucesso)</td>
+              <td class="acao"><a class="btn pequeno secundario" href="#novo-usuario">Editar</a> <a class="btn pequeno fantasma" href="#desativar">Desativar</a></td>
+            </tr>
+            <tr class="encerrado">
+              <td class="txt"><b>Caio Prado</b></td><td class="mono">caio@escritorio.com.br</td>
+              <td>contador</td><td>— (atribuição removida)</td>
+              <td><span class="badge inativo">desativado</span></td><td class="mono">15/10/2026 10:20 (falha — acesso revogado)</td>
+              <td class="acao"><a class="btn pequeno secundario" href="#novo-usuario">Editar</a> <a class="btn pequeno fantasma" href="#desativar">Reativar</a></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="6">3 usuários · 2 ativos · 1 desativado</td><td class="acao">Mostrando 1–3 de 3</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Formulário de usuário (padrão B, validação visível)
+       Origem: RF-02 (papel + atribuição) · RF-19/H15 (política de senha, CA-50)
+       ============================================================ -->
+  <div class="painel" id="novo-usuario">
+    <div class="topo"><h2>Novo usuário <span class="ref">RF-02</span><span class="ref">CA-02</span></h2><div class="acoes"><span class="papel-nota">apenas admin</span></div></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="grupo-campos">
+          <div class="campo">
+            <label for="u-nome">Nome completo <span class="obrig">obrigatório</span></label>
+            <input id="u-nome" type="text" placeholder="Marina Souza">
+          </div>
+          <div class="campo">
+            <label for="u-mail">E-mail (usuário) <span class="obrig">obrigatório</span></label>
+            <input id="u-mail" type="text" placeholder="marina@escritorio.com.br">
+          </div>
+          <div class="campo-linha">
+            <div class="campo">
+              <label for="u-papel">Papel</label>
+              <select id="u-papel"><option>Contador</option><option>Administrador</option></select>
+              <div class="ajuda">Contador escreve nas empresas atribuídas; administrador gere empresas/usuários e só lê dados (F13).</div>
+            </div>
+            <div class="campo">
+              <label for="u-senha">Senha provisória <span class="obrig">obrigatória</span></label>
+              <!-- validação visível campo a campo: política de senha (RF-19, H15) -->
+              <input id="u-senha" type="text" value="abc123">
+              <div class="erro"><b>Senha não atende à política:</b> mínimo de 8 caracteres. <span class="ref">CA-50</span></div>
+            </div>
+          </div>
+          <div class="campo">
+            <label>Empresas atribuídas <span class="obrig">obrigatório para contador</span></label>
+            <div class="duo" style="gap:16px;padding-top:4px">
+              <label style="font-weight:400"><input type="checkbox" checked> Alfa Serviços (X)</label>
+              <label style="font-weight:400"><input type="checkbox" checked> Beta Comércio (Y)</label>
+              <label style="font-weight:400"><input type="checkbox"> Gama Indústria (Z)</label>
+            </div>
+            <div class="ajuda">Remover uma atribuição tem efeito imediato, mesmo com sessão ativa (CA-37 · R10).</div>
+          </div>
+
+          <!-- PENDENTE: autorização de configuração fiscal — não inventada como requisito -->
+          <div class="campo" style="border:2px dashed #9a9a9a;padding:10px;background:#fafafa">
+            <label style="margin-bottom:2px">[ A DEFINIR — Q-UI-1 ] Autorização de configuração fiscal</label>
+            <div class="ajuda">RF-02/RF-20 permitem que "contador <b>autorizado</b>" configure o fiscal, mas não definem como a autorização é concedida. O campo existe aqui como marcador de decisão pendente (opções: flag por usuário, papel adicional ou por atribuição). <span class="ref">RF-20</span><span class="ref">CA-54</span></div>
+          </div>
+        </div>
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn secundario" href="#novo-usuario">Cancelar</a>
+          <a class="btn primario" href="#novo-usuario">Gravar</a>
+        </div>
+      </form>
+      <p class="nota">A criação de contador + atribuição é exatamente o caminho do <b>CA-02</b>: com o usuário criado, o contador passa a criar conta, lançar, ver balancete/razão/balanço da empresa.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Diálogo de desativação (padrão C) e efeito imediato
+       Origem: RF-03 (desativar) · CA-22 (acesso recusado na tentativa seguinte)
+       ============================================================ -->
+  <div class="overlay" id="desativar">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C)</div>
+    <div class="dialogo">
+      <h2>Desativar "Caio Prado"?</h2>
+      <p>O acesso é <b>revogado imediatamente</b>: a tentativa seguinte de login ou de uso de sessão já aberta será recusada, inclusive no meio de uma operação.</p>
+      <div class="msg info" style="margin-top:10px">A desativação e o evento de acesso recusado ficam registrados na trilha de auditoria. <span class="ref">RF-05</span><span class="ref">CA-22</span><span class="ref">CA-12</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="#novo-usuario">Voltar</a>
+        <a class="btn primario" href="#novo-usuario">Desativar acesso</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Padrão de senha criada por admin → contador primeiro acesso -->
+  <div class="msg">
+    <div class="titulo">Eventos de acesso acompanhados nesta tela</div>
+    <div class="detalhe">"Último acesso" reflete os eventos auditados (sucesso/falha/bloqueio — RF-19, CA-52). O detalhe completo fica na <a href="auditoria.html">Trilha de auditoria</a> (só admin).</div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="empresas.html">2. Empresas</a> · próxima: <a href="plano-contas.html">4. Plano de contas</a></p>
+
+</main>
+</div>
+</body>
+</html>

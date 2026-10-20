@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 6/11 — Lançamentos · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 6/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> · período <b>10/2026 (aberto)</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b> <span class="badge somente-leitura">admin: somente leitura</span></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html" class="ativo">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Lançamentos</h1>
+      <span class="ref">RF-07</span><span class="ref">RF-08</span><span class="ref">R9</span>
+      <span class="ref">CA-03</span><span class="ref">CA-04</span><span class="ref">CA-10 [D]</span><span class="ref">CA-13</span><span class="ref">CA-25</span><span class="ref">CA-26</span>
+    </div>
+    <p class="sub">
+      <a href="#lista">1. Lista</a> · <a href="#novo">2. Novo lançamento</a> · <a href="#estorno">3. Estorno (diálogo)</a> · <a href="#estados">4. Estados</a>
+    </p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Grid denso de lançamentos (padrão A)
+       Origem: RF-07 (partidas, débito/crédito) · FIX-01/CA-04 (totais)
+       ============================================================ -->
+  <div class="painel" id="lista">
+    <div class="topo">
+      <h2>1. Lista de lançamentos <span class="ref">RF-07</span><span class="ref">CA-04</span></h2>
+      <div class="acoes">
+        <span class="papel-nota">somente contador (admin: leitura — CA-33)</span>
+        <a class="btn primario" href="#novo">+ Novo lançamento</a>
+      </div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-per">Período</label><select id="f-per"><option>10/2026 (aberto)</option><option>09/2026 (aberto)</option><option>03/2026 (encerrado)</option></select></div>
+        <div class="f"><label for="f-de">De</label><input id="f-de" type="text" value="01/10/2026"></div>
+        <div class="f"><label for="f-ate">Até</label><input id="f-ate" type="text" value="20/10/2026"></div>
+        <div class="f"><label for="f-hist">Histórico</label><input id="f-hist" type="text" placeholder="buscar"></div>
+        <div class="f"><label for="f-sitl">Situação</label><select id="f-sitl"><option>Todos</option><option>Vigentes</option><option>Estornados</option></select></div>
+        <div class="direita">Filtros persistentes <span class="ref">padrão A</span></div>
+      </div>
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr><th>Data</th><th>Período</th><th>Histórico</th><th>Débito (conta)</th><th>Crédito (conta)</th><th class="num">Valor</th><th>Situação</th><th class="acao">Ações</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">02/10/2026</td><td class="mono">10/2026</td><td class="txt">Aporte de capital</td><td>1.1.1 Caixa</td><td>3.1.1 Capital</td><td class="num">R$ 1.000,00</td><td><span class="badge aberto">vigente</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <a class="btn pequeno fantasma" href="#estorno">Estornar</a></td></tr>
+            <tr><td class="mono">05/10/2026</td><td class="mono">10/2026</td><td class="txt">Despesa do mês</td><td>5 Despesas</td><td>2.1.1 Fornecedores</td><td class="num">R$ 600,00</td><td><span class="badge aberto">vigente</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <a class="btn pequeno fantasma" href="#estorno">Estornar</a></td></tr>
+            <tr><td class="mono">10/10/2026</td><td class="mono">10/2026</td><td class="txt">Pagamento a fornecedor</td><td>2.1.1 Fornecedores</td><td>1.1.1 Caixa</td><td class="num">R$ 400,00</td><td><span class="badge aberto">vigente</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <a class="btn pequeno fantasma" href="#estorno">Estornar</a></td></tr>
+            <tr><td class="mono">12/10/2026</td><td class="mono">10/2026</td><td class="txt">Venda a cliente</td><td>1.1.2 Clientes</td><td>4 Receita</td><td class="num">R$ 700,00</td><td><span class="badge aberto">vigente</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <a class="btn pequeno fantasma" href="#estorno">Estornar</a></td></tr>
+            <tr><td class="mono">15/10/2026</td><td class="mono">10/2026</td><td class="txt">Recebimento de cliente</td><td>1.1.1 Caixa</td><td>1.1.2 Clientes</td><td class="num">R$ 300,00</td><td><span class="badge aberto">vigente</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <a class="btn pequeno fantasma" href="#estorno">Estornar</a></td></tr>
+            <tr class="encerrado"><td class="mono">16/10/2026</td><td class="mono">10/2026</td><td class="txt">Estorno de L-0042 (orig.: pagamento a fornecedor)</td><td>1.1.1 Caixa</td><td>2.1.1 Fornecedores</td><td class="num">R$ 400,00</td><td><span class="badge cancelado">estorno</span></td><td class="acao"><a class="btn pequeno secundario" href="#estorno">Ver</a> <span class="mono" title="um lançamento só pode ser estornado uma vez">—</span></td></tr>
+          </tbody>
+          <tfoot>
+            <!-- linha de totais fixa no rodapé: débitos = créditos (RF-07/RF-10) -->
+            <tr><td colspan="5">Totais do período — débitos = créditos (garantia RF-07)</td><td class="num">R$ 3.000,00</td><td colspan="2">Débitos R$ 3.000,00 = Créditos R$ 3.000,00</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guarda RK-4 / CE-04: nenhuma ação de editar/excluir -->
+  <div class="msg info">
+    <div class="titulo">Não existem "Editar" nem "Excluir" nesta tela (R9 · CE-04).</div>
+    <div class="detalhe">Lançamento gravado é imutável; a única correção é <b>Estornar</b> — ação visível na linha e no detalhe. Tentativa direta de edição/exclusão responde com a orientação ao estorno. <span class="ref">CA-25</span><span class="ref">CE-04</span><span class="ref">RK-4</span></div>
+    <div class="acao">Ação sugerida: <b>Estornar</b> (caminho normal de correção, não um problema)</div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Formulário novo lançamento (padrão B + partidas)
+       Origem: RF-07 (partidas dobradas) · recusas CE-01/CE-02/CE-03
+       ============================================================ -->
+  <div class="painel" id="novo">
+    <div class="topo"><h2>2. Novo lançamento <span class="ref">RF-07</span><span class="ref">CA-03</span></h2><div class="acoes"><span class="papel-nota">somente contador</span></div></div>
+    <div class="corpo">
+
+      <!-- FB-2: banner de validação do formulário -->
+      <div class="msg erro">
+        <div class="titulo">Lançamento desbalanceado: nada foi gravado.</div>
+        <div class="detalhe">Débitos R$ 100,00 × Créditos R$ 90,00 — diferença de <b>R$ 10,00</b>. Um lançamento só é gravado se a soma dos débitos for igual à soma dos créditos. <span class="ref">CE-01</span><span class="ref">CA-13</span><span class="ref">RF-07</span></div>
+        <div class="acao">Ação sugerida: <b>ajustar as partidas até equilibrar</b> (o faixa inferior mostra a diferença em tempo real)</div>
+      </div>
+
+      <form class="form" style="max-width:980px">
+        <div class="campo-linha-3">
+          <div class="campo">
+            <label for="l-data">Data <span class="obrig">obrigatória</span></label>
+            <input id="l-data" type="text" value="20/10/2026">
+            <div class="ajuda">Máscara dd/mm/aaaa; o período contábil é derivado da data.</div>
+          </div>
+          <div class="campo">
+            <label for="l-per">Período contábil</label>
+            <input id="l-per" type="text" value="10/2026 — aberto" readonly>
+            <div class="ajuda">Data em período encerrado é recusada (CE-03).</div>
+          </div>
+          <div class="campo">
+            <label for="l-hist">Histórico geral <span class="obrig">obrigatório</span></label>
+            <input id="l-hist" type="text" placeholder="ex.: Aporte de capital">
+          </div>
+        </div>
+
+        <!-- Padrão B: tabela editorial densa de partidas dentro do formulário -->
+        <h3>Partidas <span class="ref">RF-07</span></h3>
+        <table class="grid" style="border:1px solid #c8c8c8">
+          <thead>
+            <tr><th class="sel">#</th><th>Conta</th><th>Histórico da partida</th><th class="num">Valor (R$)</th><th>Natureza</th><th class="acao"></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="num">1</td>
+              <td><select style="font:inherit;padding:4px"><option>1.1.1 — Caixa</option></select></td>
+              <td><input type="text" value="Aporte de capital" style="font:inherit;width:100%;padding:4px 6px"></td>
+              <td class="num"><input type="text" value="1.000,00" style="font:inherit;text-align:right;padding:4px 6px;width:120px"></td>
+              <td><b>Débito</b></td>
+              <td class="acao"><a class="btn pequeno fantasma" href="#novo">Remover</a></td>
+            </tr>
+            <tr>
+              <td class="num">2</td>
+              <td><select style="font:inherit;padding:4px"><option>3.1.1 — Capital social</option></select></td>
+              <td><input type="text" value="Aporte de capital" style="font:inherit;width:100%;padding:4px 6px"></td>
+              <td class="num"><input type="text" value="990,00" style="font:inherit;text-align:right;padding:4px 6px;width:120px"></td>
+              <td><b>Crédito</b></td>
+              <td class="acao"><a class="btn pequeno fantasma" href="#novo">Remover</a></td>
+            </tr>
+            <tr><td colspan="6" style="text-align:right;padding:6px 8px"><a class="btn pequeno secundario" href="#novo">+ Adicionar partida</a> <span class="mono">mínimo 2 partidas</span></td></tr>
+          </tbody>
+          <tfoot>
+            <!-- faixa de totais do formulário com indicador de equilíbrio -->
+            <tr><td colspan="3">Totais</td><td class="num">Débitos 1.000,00 / Créditos 990,00</td><td colspan="2"><span class="badge parcial">desbalanceado — diferença R$ 10,00</span></td></tr>
+          </tfoot>
+        </table>
+
+        <!-- validação campo a campo (CE-02) -->
+        <div class="campo-linha" style="margin-top:18px">
+          <div class="campo invalido">
+            <label>Valor da partida 2 <span class="obrig">obrigatório</span></label>
+            <input type="text" value="0,00" style="text-align:right">
+            <div class="erro"><b>O valor deve ser maior que zero.</b> Valores são sempre positivos; a natureza é dada pela coluna débito/crédito. <span class="ref">CE-02</span><span class="ref">CA-14</span><span class="ref">H7</span></div>
+          </div>
+          <div class="campo invalido">
+            <label>Data da partida 1</label>
+            <input type="text" value="15/03/2026">
+            <div class="erro"><b>Data inválida ou em período encerrado.</b> Use dd/mm/aaaa com data em período aberto. <span class="ref">CE-02</span><span class="ref">CE-03</span></div>
+          </div>
+        </div>
+
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn secundario" href="#lista">Cancelar</a>
+          <a class="btn primario" href="#lista">Gravar lançamento</a>
+        </div>
+      </form>
+      <p class="nota">Sem campos de "editar depois": o que é gravado aqui é imutável (R9). Gravação falha (banco indisponível) = nada parcial, mensagem + tentar novamente (CE-10/CA-29) — ver <a href="#estados">4. Estados</a>.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Diálogo de estorno (CA-10 [D], RK-4)
+       Origem: RF-08 (estorno inverso vinculado, uma única vez)
+       ============================================================ -->
+  <div class="overlay" id="estorno">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C) — estorno é rotina, não destruição (RK-4)</div>
+    <div class="dialogo">
+      <h2>Estornar o lançamento L-0001 (02/10/2026 — R$ 1.000,00)?</h2>
+      <p>Um <b>novo lançamento inverso</b> (crédito trocado com débito) será gerado, do mesmo valor, <b>vinculado ao original</b>, com data e período abertos. O original permanece na tela e no razão — nada é apagado.</p>
+      <div class="msg info" style="margin-top:8px">Efeito demonstrado (CA-10): razão de Caixa e de Capital passam a exibir o original e o estorno, com <b>efeito líquido zero</b> no saldo. O lançamento só pode ser estornado <b>uma vez</b>. <span class="ref">CA-10</span><span class="ref">RF-08</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="#lista">Voltar</a>
+        <a class="btn primario" href="#lista">Confirmar estorno</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recusa: estorno duplicado (CE-05) -->
+  <div class="msg erro">
+    <div class="titulo">Este lançamento já foi estornado em 16/10/2026 (L-0042).</div>
+    <div class="detalhe">Um lançamento só pode ser estornado uma vez. O estorno vinculado continua visível no razão e na trilha de auditoria. <span class="ref">CE-05</span><span class="ref">CA-26</span></div>
+    <div class="acao">Ação sugerida: <b>consultar o lançamento de estorno vinculado</b></div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Estados do grid
+       Origem: estados transversais (diretrizes §4.5) · CE-10/CA-29 (erro de dependência)
+       ============================================================ -->
+  <div class="painel" id="estados">
+    <div class="topo"><h2>4. Estados desta tela <span class="ref">CE-10</span><span class="ref">CA-29</span></h2><div class="acoes"><span class="papel-nota">vazio · carregando · erro</span></div></div>
+    <div class="corpo">
+      <div class="duo" style="gap:16px;align-items:stretch">
+        <div class="estado" style="flex:1">
+          <div class="titulo">Nenhum lançamento no período.</div>
+          <div class="texto">Ajuste os filtros ou registre o primeiro lançamento (contador).</div>
+          <a class="btn primario" href="#novo">+ Novo lançamento</a>
+        </div>
+        <div class="skeleton" style="flex:1">
+          <div class="linha media"></div><div class="linha"></div><div class="linha curta"></div><div class="linha"></div>
+          <div class="legenda">// estado: carregando — esqueleto de linhas no grid (não spinner genérico)</div>
+        </div>
+        <div style="flex:1">
+          <div class="msg erro" style="margin-top:0">
+            <div class="titulo">Falha ao gravar — nada foi registrado.</div>
+            <div class="detalhe">O sistema não estava disponível. Nenhum lançamento ficou salvo pela metade nem duplicado. <span class="ref">CE-10</span><span class="ref">CA-29</span></div>
+            <div class="acoes"><a class="btn pequeno primario" href="#novo">Tentar novamente</a></div>
+          </div>
+          <div class="msg info" style="margin-top:0">
+            <div class="titulo">Você não tem permissão para esta ação.</div>
+            <div class="detalhe">Escrita recusada (admin não escreve contabilidade; contador sem atribuição) — sem expor dados, evento auditado. <span class="ref">CE-12</span><span class="ref">CE-15</span><span class="ref">CA-33</span><span class="ref">CA-35</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="periodos.html">5. Períodos</a> · próxima: <a href="titulos.html">7. Títulos</a></p>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 8/11 — Conciliação bancária · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 8/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> · conta <b>Banco 001 · c/c 12345-6</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b> <span class="badge somente-leitura">admin: somente leitura (H-UI-4)</span></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html" class="ativo">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Conciliação bancária</h1>
+      <span class="ref">RF-16</span><span class="ref">F10 (manual + OFX/CSV)</span>
+      <span class="ref">CA-08 [D]</span><span class="ref">CA-28</span><span class="ref">CA-44</span><span class="ref">CA-53</span><span class="ref">CE-08</span><span class="ref">CE-09</span>
+    </div>
+    <p class="sub">Estilo internet banking: marcar item ↔ conciliar, item a item, estado parcial retomável. Sem integração por API de banco (F10).</p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Barra: conta, progresso e ações de entrada de extrato
+       Origem: RF-16 (itens manuais + importação OFX/CSV validada) · CA-08 (parcial retomável)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo">
+      <h2>Extrato da conta <span class="ref">RF-16</span></h2>
+      <div class="acoes">
+        <span class="papel-nota">somente contador</span>
+        <a class="btn secundario" href="#importacao">Importar extrato (OFX/CSV)</a>
+        <a class="btn secundario" href="#manual">+ Lançar item manual</a>
+        <a class="btn primario" href="#conciliar">Conciliar selecionados</a>
+      </div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-conta">Conta bancária da empresa</label><select id="f-conta"><option>Banco 001 · c/c 12345-6</option><option>Banco 999 · poupança 88888-0</option></select></div>
+        <div class="f"><label for="f-de2">De</label><input id="f-de2" type="text" value="01/10/2026"></div>
+        <div class="f"><label for="f-ate2">Até</label><input id="f-ate2" type="text" value="20/10/2026"></div>
+        <div class="f"><label for="f-estsit">Estado</label><select id="f-estsit"><option>Todos</option><option>Pendentes</option><option>Conciliados</option></select></div>
+        <!-- PENDENTE: cadastro de contas bancárias — ver Q-UI-2 -->
+        <div class="direita">[ A DEFINIR — Q-UI-2 ] criação/cadastro das contas bancárias <span class="ref">RF-16</span></div>
+      </div>
+
+      <!-- progresso do estado parcial, persistido entre sessões (CE-08) -->
+      <div class="msg info" style="margin:0;border-left-color:#555">
+        <div class="titulo">3 itens no período — <b>2 conciliados · 1 pendente</b> <span class="badge conciliado">conciliado</span><span class="badge pendente">pendente</span></div>
+        <div class="detalhe">Conciliação item a item e <b>retomável</b>: o progresso é salvo e permanece ao sair e voltar à tela; o item pendente pode ser conciliado depois. <span class="ref">CE-08</span><span class="ref">CA-08</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Duas colunas: extrato ↔ títulos/lançamentos (padrão D)
+       Origem: RF-16 (conciliar item a um título E/OU a um lançamento) · CA-08
+       ============================================================ -->
+  <div class="painel" id="conciliar">
+    <div class="topo"><h2>Confrontação item a item <span class="ref">RF-16</span></h2><div class="acoes"><span class="papel-nota">marcar em cada coluna → Conciliar</span></div></div>
+    <div class="corpo">
+      <div class="colunas">
+
+        <!-- COLUNA ESQUERDA: extrato -->
+        <div>
+          <h3>Itens do extrato <span class="ref">RF-16</span></h3>
+
+          <div class="item-extrato marcado">
+            <input type="checkbox" checked>
+            <div class="corpo">
+              <div class="desc">PIX RECEBIDO — CLIENTE GAMA</div>
+              <div class="meta">15/10/2026 · entrada</div>
+            </div>
+            <div class="valor">+ R$ 700,00</div>
+            <span class="marca">selecionado</span>
+          </div>
+
+          <div class="item-extrato bloqueado">
+            <input type="checkbox" checked disabled>
+            <div class="corpo">
+              <div class="desc">DEB AUT — ALUGUEL</div>
+              <div class="meta">18/10/2026 · saída · conciliado ao título "Fornecedor Beta" (20/10)</div>
+            </div>
+            <div class="valor">− R$ 1.000,00</div>
+            <span class="marca">conciliado</span>
+          </div>
+
+          <div class="item-extrato">
+            <input type="checkbox" checked>
+            <div class="corpo">
+              <div class="desc">PIX ENVIADO — FORNECEDOR ALFA</div>
+              <div class="meta">20/10/2026 · saída · pendente</div>
+            </div>
+            <div class="valor">− R$ 500,00</div>
+            <span class="marca">pendente</span>
+          </div>
+
+          <div class="msg info" style="margin-top:4px">Item conciliado é travado: só volta a ficar disponível por <b>desconciliar</b>. <span class="ref">CA-28</span></div>
+        </div>
+
+        <!-- COLUNA DIREITA: títulos e lançamentos correspondentes -->
+        <div>
+          <h3>Títulos e lançamentos correspondentes</h3>
+
+          <div class="item-objeto marcado">
+            <input type="checkbox" checked>
+            <div class="corpo">
+              <div class="desc">Título a receber — Cliente Gama · consultoria</div>
+              <div class="meta">venc. 15/10/2026 · <span class="badge pago">pago</span> · lanç. <a href="lancamentos.html">L-0035</a></div>
+            </div>
+            <div class="valor">R$ 700,00</div>
+          </div>
+
+          <div class="item-objeto">
+            <input type="checkbox" checked>
+            <div class="corpo">
+              <div class="desc">Título a pagar — Fornecedor Alfa · material</div>
+              <div class="meta">venc. 20/10/2026 · <span class="badge aberto">aberto</span></div>
+            </div>
+            <div class="valor">R$ 500,00</div>
+          </div>
+
+          <div class="item-objeto">
+            <input type="checkbox">
+            <div class="corpo">
+              <div class="desc">Lançamento avulso — pagamento a fornecedor (sem título)</div>
+              <div class="meta">10/10/2026 · <a href="lancamentos.html">L-0003</a></div>
+            </div>
+            <div class="valor">R$ 400,00</div>
+          </div>
+
+          <div class="msg info" style="margin-top:4px">O item pode ser conciliado a um título <b>e/ou</b> a um lançamento (CA-08 mostra os dois casos: um a um título, outro a lançamento avulso).</div>
+        </div>
+      </div>
+
+      <div class="duo" style="justify-content:flex-end;margin-top:10px">
+        <a class="btn secundario" href="#conciliar">Desconciliar selecionado</a>
+        <a class="btn primario" href="#conciliar">Conciliar selecionados (2)</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Recusa: dupla vinculação (CE-09) e importação (CA-53)
+       Origem: RF-16 · CA-28 (desconciliar antes) · CA-53 (arquivo inválido = 0 itens)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Recusas previstas <span class="ref">CE-09</span><span class="ref">CA-53</span></h2><div class="acoes"><span class="papel-nota">FB-3 + ação sugerida</span></div></div>
+    <div class="corpo">
+      <div class="msg erro">
+        <div class="titulo">O item já está conciliado ao lançamento L-0035.</div>
+        <div class="detalhe">Dupla vinculação é bloqueada: um item não pode conciliar a dois objetos sem antes ser desconciliado. <span class="ref">CE-09</span><span class="ref">CA-28</span></div>
+        <div class="acoes"><a class="btn pequeno primario" href="#conciliar">Desconciliar</a><span class="mono">a desconciliação preserva o histórico na trilha</span></div>
+      </div>
+      <div class="msg erro">
+        <div class="titulo">Arquivo não reconhecido: nenhum item foi criado.</div>
+        <div class="detalhe">Formatos aceitos: OFX e CSV (F10). A validação do arquivo é estrita — arquivo inválido não gera "meio item". <span class="ref">CA-53</span><span class="ref">F10</span></div>
+        <div class="acao">Ação sugerida: <b>exportar o extrato em OFX/CSV e importar novamente</b>, ou lançar os itens manualmente</div>
+      </div>
+      <div class="msg info">
+        <div class="titulo">Conciliação × estorno de baixa (dica de fluxo)</div>
+        <div class="detalhe">Se o lançamento vinculado a uma baixa estiver conciliado, o estorno da baixa é recusado até desconciliar — a recusa em <a href="titulos.html">Títulos</a> traz o link direto para cá. <span class="ref">CE-18</span><span class="ref">CA-44</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3b — Entradas de extrato: importação e item manual
+       Origem: RF-16 (lançamento manual + importação OFX/CSV) · F10 · CA-53
+       ============================================================ -->
+  <div class="painel" id="importacao">
+    <div class="topo"><h2>Importar extrato (OFX/CSV) <span class="ref">RF-16</span><span class="ref">CA-53</span></h2><div class="acoes"><span class="papel-nota">somente contador</span></div></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="campo">
+          <label for="i-arq">Arquivo do extrato <span class="obrig">obrigatório</span></label>
+          <input id="i-arq" type="text" value="extrato-out-2026.ofx" readonly>
+          <div class="ajuda">Formatos aceitos: OFX ou CSV. A validação é estrita: arquivo não reconhecido não gera nenhum item (CA-53).</div>
+        </div>
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn primario" href="#conciliar">Importar</a>
+        </div>
+      </form>
+      <div class="sep"></div>
+      <div id="manual">
+        <h3>Ou lançar item manual <span class="ref">RF-16</span></h3>
+        <form class="form">
+          <div class="campo-linha-3">
+            <div class="campo"><label for="m-data">Data</label><input id="m-data" type="text" placeholder="dd/mm/aaaa"></div>
+            <div class="campo"><label for="m-desc">Descrição</label><input id="m-desc" type="text" placeholder="ex.: PIX recebido cliente"></div>
+            <div class="campo num"><label for="m-valor">Valor</label><input id="m-valor" type="text" placeholder="R$ 0,00" style="text-align:right"></div>
+          </div>
+          <div class="campo">
+            <label>Tipo</label>
+            <div class="duo" style="gap:16px;padding-top:2px">
+              <label style="font-weight:400"><input type="radio" name="tipo" checked> Entrada</label>
+              <label style="font-weight:400"><input type="radio" name="tipo"> Saída</label>
+            </div>
+          </div>
+          <div class="duo" style="justify-content:flex-end"><a class="btn primario" href="#conciliar">Adicionar item</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Estados: vazio e carregando
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Estados desta tela</h2><div class="acoes"><span class="papel-nota">vazio · carregando</span></div></div>
+    <div class="corpo">
+      <div class="duo" style="align-items:stretch;gap:16px">
+        <div class="estado" style="flex:1">
+          <div class="titulo">Nenhum item de extrato no período.</div>
+          <div class="texto">Importe um arquivo OFX/CSV ou lance os itens manualmente para começar a conciliar.</div>
+          <a class="btn primario" href="#importacao">Importar extrato</a> <a class="btn secundario" href="#manual">+ Item manual</a>
+        </div>
+        <div class="skeleton" style="flex:1">
+          <div class="linha media"></div><div class="linha"></div><div class="linha curta"></div>
+          <div class="legenda">// estado: carregando — esqueleto de itens</div>
+        </div>
+      </div>
+      <p class="nota">Entradas desta tela: <b>importação de arquivo</b> (validação estrita, CA-53) e <b>lançamento manual de item</b> (data, descrição, valor, entrada/saída — RF-16). Sem API de banco, sem conciliação automática (F10 — fora do MVP).</p>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="titulos.html">7. Títulos</a> · próxima: <a href="relatorios.html">9. Relatórios</a></p>
+
+</main>
+</div>
+</body>
+</html>

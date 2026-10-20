@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 11/11 — Trilha de auditoria · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 11/11</span></span>
+  <span class="empresa">Escritório: <b>visão por empresa</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>administrador</b></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html" class="ativo">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Trilha de auditoria</h1>
+      <span class="ref">RF-05</span><span class="ref">R8</span><span class="ref">R11</span>
+      <span class="ref">CA-12</span><span class="ref">CA-38</span><span class="ref">CA-39</span><span class="ref">CA-52</span><span class="ref">CA-34</span>
+    </div>
+    <p class="sub">Somente administrador. Não editável, não removível por nenhuma interface ou ação do produto (R11 · CE-16).</p>
+  </div>
+
+  <!-- Barreira de papel -->
+  <div class="msg info">
+    <div class="titulo">Para o contador esta tela não existe no menu.</div>
+    <div class="detalhe">Tentativa direta é recusada sem dados <span class="ref">CA-21</span><span class="ref">CE-12</span>. O admin consulta por empresa e por período (CA-39).</div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Filtros obrigatórios: empresa + período (CA-39)
+       Origem: RF-05 (admin consulta por empresa e período)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Consulta da trilha <span class="ref">RF-05</span><span class="ref">CA-39</span></h2></div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="a-emp">Empresa</label><select id="a-emp"><option>Alfa Serviços (X)</option><option>Beta Comércio (Y)</option><option>Gama Indústria (Z)</option></select></div>
+        <div class="f"><label for="a-de">De</label><input id="a-de" type="text" value="01/10/2026"></div>
+        <div class="f"><label for="a-ate">Até</label><input id="a-ate" type="text" value="20/10/2026"></div>
+        <div class="f"><label for="a-tipo">Tipo de evento</label><select id="a-tipo"><option>Todos</option><option>Acessos (login)</option><option>Escritas contábeis</option><option>Financeiras</option><option>Conciliação</option><option>Encerramentos</option><option>Configuração fiscal</option><option>Gestão (empresas/usuários)</option></select></div>
+        <div class="f"><label for="a-user">Usuário</label><select id="a-user"><option>Todos</option><option>Helena Dias (admin)</option><option>Marina Souza (contador)</option></select></div>
+        <div class="direita">Consulta restrita ao filtro: só eventos da empresa e do período (CA-39)</div>
+      </div>
+
+      <div class="grid-scroll" style="max-height:440px">
+        <table class="grid">
+          <thead>
+            <tr><th>Data/hora</th><th>Usuário</th><th>Empresa</th><th>Ação</th><th>Objeto</th><th>Detalhe</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">20/10/2026 08:41:12</td><td>Helena Dias</td><td>— (acesso)</td><td>login — sucesso</td><td class="mono">sessão #8821</td><td class="txt">Evento de acesso (RF-19)</td></tr>
+            <tr><td class="mono">19/10/2026 17:05:44</td><td>Marina Souza</td><td>— (acesso)</td><td>login — falha</td><td class="mono">sessão negada</td><td class="txt">Senha incorreta (CA-52)</td></tr>
+            <tr><td class="mono">19/10/2026 17:07:03</td><td>Marina Souza</td><td>— (acesso)</td><td>login — bloqueio</td><td class="mono">controle H16</td><td class="txt">5 tentativas falhas consecutivas (CA-51, CA-52)</td></tr>
+            <tr><td class="mono">18/10/2026 10:22:31</td><td>Marina Souza</td><td>Alfa (X)</td><td>lancar lançamento</td><td class="mono">L-0042</td><td class="txt">Gravação de partidas (RF-07)</td></tr>
+            <tr><td class="mono">18/10/2026 10:31:09</td><td>Marina Souza</td><td>Alfa (X)</td><td>estornar lançamento</td><td class="mono">L-0042 → L-0048</td><td class="txt">Estorno vinculado (RF-08)</td></tr>
+            <tr><td class="mono">17/10/2026 14:12:55</td><td>Marina Souza</td><td>Alfa (X)</td><td>baixar título</td><td class="mono">T-0011 → L-0031</td><td class="txt">Baixa parcial R$ 200,00 (RF-13, RF-15)</td></tr>
+            <tr><td class="mono">17/10/2026 14:20:02</td><td>Marina Souza</td><td>Alfa (X)</td><td>estornar baixa</td><td class="mono">T-0011 / L-0031</td><td class="txt">Estorno de baixa (RF-24)</td></tr>
+            <tr><td class="mono">16/10/2026 09:03:40</td><td>Marina Souza</td><td>Alfa (X)</td><td>conciliar item</td><td class="mono">EX-0003 ↔ T-0014</td><td class="txt">Conciliação (RF-16)</td></tr>
+            <tr><td class="mono">15/10/2026 16:44:10</td><td>Helena Dias</td><td>Alfa (X)</td><td>alterar tabela de imposto</td><td class="mono">TBL-ISS → 5,00%</td><td class="txt">Configuração fiscal auditada (RF-20, CA-54)</td></tr>
+            <tr><td class="mono">14/10/2026 09:12:07</td><td>Helena Dias</td><td>Alfa (X)</td><td>alterar situação da empresa</td><td class="mono">EMP-0001</td><td class="txt">Ativa → inativa (RF-01, sem exclusão dura)</td></tr>
+            <tr><td class="mono">14/10/2026 11:50:22</td><td>Helena Dias</td><td>Beta (Y)</td><td>ler relatório (leitura global)</td><td class="mono">BALANCETE 09/2026</td><td class="txt">Leitura global auditada (F13, CA-34)</td></tr>
+            <tr><td class="mono">13/10/2026 18:02:15</td><td>Marina Souza</td><td>Alfa (X)</td><td>tentativa recusada (escrita)</td><td class="mono">empresa Y</td><td class="txt">Escrita fora da atribuição — negada, nada persistido (CA-35)</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="5">12 eventos no filtro (empresa + período)</td><td class="acao">Mostrando 1–12 de 12</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Somente leitura (CE-16 / CA-38 / R11)
+       ============================================================ -->
+  <div class="msg info">
+    <div class="titulo">Sem ações: a trilha é somente leitura.</div>
+    <div class="detalhe">Não existem botões de editar, remover ou limpar — em nenhuma tela do produto. Tentativa direta é recusada e os eventos originais (criação, estorno, estorno de baixa) permanecem, acrescidos de novos eventos. <span class="ref">CE-16</span><span class="ref">CA-38</span><span class="ref">R11</span></div>
+    <div class="acao">Ação sugerida (quem procura edição): <b>nenhuma — a trilha não pode ser alterada por desenho</b></div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Estados: vazio sem erro (CA-39) e carregando
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Estados desta tela</h2><div class="acoes"><span class="papel-nota">vazio · carregando</span></div></div>
+    <div class="corpo">
+      <div class="duo" style="align-items:stretch;gap:16px">
+        <div class="estado" style="flex:1">
+          <div class="titulo">Nenhum evento no período selecionado.</div>
+          <div class="texto">Período sem eventos retorna lista vazia <b>sem erro</b> — reflita o intervalo de datas ou escolha outra empresa.</div>
+          <a class="btn secundario" href="auditoria.html">Ajustar filtros</a>
+        </div>
+        <div class="skeleton" style="flex:1">
+          <div class="linha media"></div><div class="linha"></div><div class="linha curta"></div><div class="linha"></div>
+          <div class="legenda">// estado: carregando — esqueleto de linhas</div>
+        </div>
+      </div>
+      <p class="nota">O filtro padrão é obrigatório: a consulta mostra <b>apenas</b> eventos da empresa X naquele período — eventos de outras empresas/meses não aparecem (CA-39). Não há exportação nesta tela: RF-18 só prevê exportação de balancete, razão, balanço e fluxo de caixa (guarda RK-1).</p>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="fiscal.html">10. Fiscal</a> · fim das 11 telas.</p>
+
+</main>
+</div>
+</body>
+</html>

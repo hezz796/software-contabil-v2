@@ -2,7 +2,7 @@
   "id": "TASK-010",
   "title": "Fundação do monorepo e harness de teste",
   "objective": "Criar o esqueleto em sistema-contabil/ (workspaces npm, Fastify, React+Vite, Drizzle+SQLite WAL, migrações, harness de teste com banco temporário por teste) conforme ADR-0001, sem regra de negócio.",
-  "status": "todo",
+  "status": "done",
   "owner": "implementer",
   "depends_on": ["TASK-009"],
   "scope": {
@@ -37,7 +37,18 @@
       "method": "Confirmar journal_mode/synchronous/busy_timeout por query de diagnóstico em teste automatizado."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "ÁRVORE CRIADA (53 arquivos em sistema-contabil/): package.json (workspaces apps/* e packages/*), package-lock.json, .gitignore, README.md, tsconfig.base.json, scripts/dev.mjs; apps/api/{package.json, tsconfig.json, vitest.config.ts, drizzle.config.ts, drizzle/0000_right_archangel.sql + meta/}, src/{index.ts, app.ts, config.ts, db/{index.ts, schema.ts, migrations.ts, migrate.ts}, routes/health.ts, domain|services|middleware|exports|importers/.gitkeep}, tests/{harness.ts, setup.ts, unit/{sqlite-config, temp-db-harness, migrations}.test.ts, integration/health.test.ts, fixtures/.gitkeep}; apps/web/{package.json, tsconfig.json, vite.config.ts, index.html, src/{main.tsx, App.tsx, vite-env.d.ts, components/AppShell.tsx, pages/HomePage.tsx, api-client/client.ts, i18n/pt-BR.ts}}; packages/shared/{package.json, tsconfig.json, src/index.ts}.",
+    "CA1 — npm install: 1ª execução falhou com erro interno do npm (spawnSync em node:child_process, não reproduzido); reexecução 'added 122 packages in 29s' exit=0 e terceira 'up to date in 754ms' exit=0. Conferido com npm ls --depth=0 (sem erros/ausências); esbuild 0.28.2 transforma TS; better-sqlite3 13 carrega binário pré-compilado (SQLite 3.53.4) sem Python/node-gyp.",
+    "CA1 — npm run dev (raiz; scripts/dev.mjs orquestra os dois workspaces com saída prefixada): API Fastify log 'Server listening at http://127.0.0.1:3001' e GET http://127.0.0.1:3001/health → 200 {\"status\":\"ok\",\"database\":\"ok\"}; Vite 8 'ready in 243 ms' em http://localhost:5173 → index.html 200 com div#root e /src/main.tsx servido transformado (jsx). Porta configurável por env comprovada: PORT=4010 + WEB_PORT=5174 → API em 4010 respondeu /health e Vite em 5174. Encerramento verificado (derrubar um processo derruba a árvore via taskkill /T, sem processos órfãos nem portas residuais). Nenhum proxy configurado (UI não chama API nesta etapa; documentado no README).",
+    "CA2 — npm test: 'Test Files 4 passed (4) / Tests 8 passed (8)', vitest 5.0.5, exit=0. Harness (apps/api/tests/harness.ts) cria banco com fs.mkdtempSync(os.tmpdir()) por chamada (arquivo e diretório únicos) e destroy() fecha a conexão e apaga o diretório incluindo -wal/-shm; tests/setup.ts registra afterEach global que falha a suíte se activeTestDatabaseCount() != 0. Pós-suíte: nenhum diretório sistema-contabil-* restante em %TEMP% e só o .db de dev (gitignorado) no repo.",
+    "CA3 — Migração do zero e idempotência: com banco inexistente, npm run migrate criou apps/api/data/sistema-contabil.db com tabelas __drizzle_migrations e app_meta (1 migração, journal_mode persistido=wal); 2ª execução exit=0 sem mudar contagem (idempotente). As migrações também são aplicadas (idempotentes) na subida da API via npm run dev.",
+    "CA4 — Teste automatizado apps/api/tests/unit/sqlite-config.test.ts afirma a configuração REAL consultada na conexão aberta pelo harness: journal_mode='wal'; synchronous devolvido como 2 (FULL), aceitando também 'full'; busy_timeout>0 e igual a SQLITE_PRAGMAS.busyTimeoutMs (5000). Rodou dentro dos 8 testes verdes.",
+    "CA5 — TypeScript estrito: tsconfig.base.json com strict, noUncheckedIndexedAccess, noUnusedLocals/Parameters, noImplicitOverride, verbatimModuleSyntax, erasableSyntaxOnly, allowImportingTsExtensions+noEmit; npm run typecheck (tsc --noEmit) exit=0 nos 3 pacotes (api, web, shared); npm run build (vite build) também exit=0 (17 módulos, 88 ms).",
+    "CA6 — packages/shared publica './src/index.ts' em exports (types+default) e depende de zod: exporta healthResponseSchema/HealthResponse. Consumido em runtime pela API (routes/health.ts valida a resposta do /health pelo schema) e por tipo no web (apps/web/src/api-client/client.ts).",
+    "CA7 — git status --porcelain na raiz: todo o meu trabalho aparece apenas como '?? sistema-contabil/'; nenhum arquivo criado ou alterado fora dele (nada alterado em AGENTS.md, docs/, .opencode/, .squad/ além deste TASK-010.json, .squad/project-state.json, landpage/ ou docs do fluxo paralelo). Nenhum git add/commit/execução. node_modules/, dist/ e apps/api/data/ ficam fora do versionado pelo .gitignore de sistema-contabil/.",
+    "DESVIOS/DECISÕES (nenhuma dependência precisou ser substituída): (a) além do index.ts do ADR, criados src/app.ts (fábrica buildApp sem porta, para injeção nos testes) e src/db/migrations.ts + migrate.ts (aplicação/CLI de migrações) — infraestrutura, sem regra de negócio; (b) única tabela é app_meta (bootstrap de metadados), nenhuma tabela de domínio; (c) .gitkeep nos diretórios previstos pelo ADR e ainda vazios (domain, services, middleware, exports, importers, tests/fixtures); (d) scripts/dev.mjs porque npm run --workspaces não roda em paralelo de forma confiável; orquestrador com saída prefixada e taskkill /T no Windows; (e) versões instaladas: fastify 5.12.7, @fastify/cookie 11.1.3, drizzle-orm 0.45.4, drizzle-kit 0.31.11, better-sqlite3 13.0.3, vitest 5.0.5, vite 8.3.4, @vitejs/plugin-react 6.1.2, typescript 5.9.3, zod 4.6.7, react/react-dom 18.3.1 (brief: React 18; ADR: 18+); (f) sem tsx e sem ORM extra: a API roda em TypeScript nativo do Node 24 (type stripping), o que exige extensões .ts explícitas nos imports; (g) npm 11.17 não executou os install scripts de esbuild/better-sqlite3 (recurso allow-scripts) — os binários pré-compilados funcionam e foram verificados; (h) bug corrigido durante a verificação: API_ROOT em config.ts subia dois níveis demais (banco ia para apps/data/) — corrigido para apps/api e revalidado com migrate do zero."
+  ],
   "assumptions": [
     "Node 24 e npm 11 presentes no ambiente (medido em 2026-10-19, ADR-0001)."
   ],
@@ -45,6 +56,13 @@
   "worktree": null,
   "session_id": null,
   "estimate_hours": 5,
+  "session_id": "ses_ea4669c5effeR6SzTr0s8TGAdI",
+  "coordinator_verification": [
+    "Execucao independente do coordenador em 2026-10-20: npm test => 4 arquivos / 8 testes passando (1.02s); npm run typecheck => 0 erros nos 3 pacotes.",
+    "git status: 52 arquivos novos apenas em sistema-contabil/ (sem node_modules) + .squad/tasks/TASK-010.json; nenhum arquivo fora do escopo.",
+    "Teste de integracao inspecionado: GET /health via app.inject com corpo validado por schema Zod de packages/shared; cada teste usa banco temporario proprio (comparacao de caminhos).",
+    "Limitacao registrada: npm 11.17 nao executou install scripts de esbuild/better-sqlite3 (binarios pre-compilados verificados funcionando); rebuild forcerado dependeria de aprovacao de scripts."
+  ],
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "updated_at": "2026-10-20T23:50:00Z"
 }

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 2/11 — Empresas · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 2/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b> <span class="ref">RF-04</span></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador</b></span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html" class="ativo">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Empresas</h1>
+      <span class="ref">RF-01</span><span class="ref">RF-04</span><span class="ref">F13</span>
+      <span class="ref">CA-01</span><span class="ref">CA-15</span><span class="ref">CA-20</span><span class="ref">CA-23</span><span class="ref">CA-40</span><span class="ref">CA-34</span>
+    </div>
+    <p class="sub">Fluxo 1 (abertura de cliente). Contador: lista apenas as empresas atribuídas. Administrador: todas + criação/gestão (leitura global auditada).</p>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Barra de ações por papel + filtros persistentes
+       Origem: RF-01 (admin cadastra) · F13 (admin gestão; contador rotina)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo">
+      <h2>Lista de empresas <span class="ref">CA-01</span><span class="ref">CA-20</span></h2>
+      <div class="acoes">
+        <!-- Padrão A: filtros persistentes + uma ação primária por contexto -->
+        <a class="btn primario" href="#nova-empresa">+ Nova empresa</a>
+      </div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="filtros">
+        <div class="f"><label for="f-busca">Busca</label><input id="f-busca" type="text" placeholder="razão social ou CNPJ"></div>
+        <div class="f"><label for="f-sit">Situação</label><select id="f-sit"><option>Todas</option><option>Ativa</option><option>Inativa</option></select></div>
+        <div class="f"><label for="f-attr">Atribuição</label><select id="f-attr"><option>Todas</option><option>Atribuídas a mim</option></select></div>
+        <div class="direita">Filtros persistentes entre visitas à tela <span class="ref">CE-08</span></div>
+      </div>
+
+      <!-- Padrão A: grid denso com linha de totais fixa no rodapé -->
+      <div class="grid-scroll">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th>Razão social</th><th>CNPJ</th><th>Situação</th>
+              <th>Contadores atribuídos</th><th>Última alteração</th><th class="acao">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="txt"><b>Alfa Serviços Ltda</b></td><td class="mono">12.345.678/0001-90</td>
+              <td><span class="badge ativo">ativa</span></td><td>M. Souza, A. Lima</td><td class="mono">14/10/2026 09:12 — admin</td>
+              <td class="acao"><a class="btn pequeno secundario" href="lancamentos.html">abrir rotina</a> <a class="btn pequeno fantasma" href="#inativar">Inativar</a></td>
+            </tr>
+            <tr>
+              <td class="txt"><b>Beta Comércio ME</b></td><td class="mono">98.765.432/0001-11</td>
+              <td><span class="badge ativo">ativa</span></td><td>M. Souza</td><td class="mono">02/10/2026 15:40 — admin</td>
+              <td class="acao"><a class="btn pequeno secundario" href="lancamentos.html">abrir rotina</a> <a class="btn pequeno fantasma" href="#inativar">Inativar</a></td>
+            </tr>
+            <tr class="encerrado">
+              <td class="txt"><b>Gama Indústria Ltda</b></td><td class="mono">45.678.912/0001-05</td>
+              <td><span class="badge inativo">inativa</span></td><td>—</td><td class="mono">28/09/2026 11:03 — admin</td>
+              <!-- CE-20/CA-40: inativa não aceita escrita, mas continua consultável -->
+              <td class="acao"><a class="btn pequeno secundario" href="relatorios.html">consultar histórico</a> <a class="btn pequeno fantasma" href="#reativar">Reativar</a></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <!-- linha de totais fixa no rodapé (padrão A) -->
+            <tr><td colspan="5">3 empresas · 2 ativas · 1 inativa</td><td class="acao">Mostrando 1–3 de 3</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÁREA 1b — faixa de empresa inativa (recusa de escrita) -->
+  <div class="msg info">
+    <div class="titulo">Empresa inativa: não aceita novos lançamentos ou títulos.</div>
+    <div class="detalhe">O histórico (balancete, razão, títulos) permanece consultável. <span class="ref">CE-20</span><span class="ref">CE-14</span><span class="ref">CA-40</span></div>
+    <div class="acao">Ação sugerida: <b>consultar o histórico</b> ou, sendo administrador, <b>reativar a empresa</b> (RF-01).</div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Estado vazio (contador sem atribuição)
+       Origem: CA-23 (lista vazia, sem escrita possível)
+       ============================================================ -->
+  <div class="painel">
+    <div class="topo"><h2>Estado vazio <span class="ref">CA-23</span></h2><div class="acoes"><span class="papel-nota">estado: vazio</span></div></div>
+    <div class="corpo">
+      <div class="estado">
+        <div class="titulo">Nenhuma empresa atribuída a você.</div>
+        <div class="texto">Contadores só enxergam empresas atribuídas pelo administrador. Peça a atribuição para começar a trabalhar.</div>
+        <!-- sem ação de escrita: criar empresa é gestão do admin (RF-01) -->
+        <a class="btn secundario" href="usuarios.html">Ver quem gerencia atribuições (admin)</a>
+      </div>
+      <div class="msg info">
+        <div class="titulo">Atribuição removida com sessão ativa?</div>
+        <div class="detalhe">Remover a atribuição surte efeito imediato na tentativa seguinte, sem novo login — a empresa desaparece da lista e a escrita é recusada. <span class="ref">CA-37</span><span class="ref">R10</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Formulário Nova empresa (padrão B)
+       Origem: RF-01 · CA-01 (demonstração) · CE-06/CA-15 (recusas)
+       ============================================================ -->
+  <div class="painel" id="nova-empresa">
+    <div class="topo">
+      <h2>Nova empresa <span class="ref">RF-01</span><span class="ref">CA-01</span></h2>
+      <div class="acoes"><span class="papel-nota">apenas admin (gestão — F13)</span></div>
+    </div>
+    <div class="corpo">
+      <!-- validação visível: banner do formulário (erro que não é de um campo só) -->
+      <div class="msg erro">
+        <div class="titulo">Empresa não gravada — 2 pendências.</div>
+        <div class="detalhe">Corrija os campos destacados. Nada foi persistido. <span class="ref">CE-06</span><span class="ref">CA-15</span></div>
+        <div class="acao">Ação sugerida: <b>ajustar CNPJ e razão social</b></div>
+      </div>
+
+      <form class="form">
+        <div class="grupo-campos">
+          <div class="campo invalido">
+            <label for="razao">Razão social <span class="obrig">obrigatória</span></label>
+            <input id="razao" type="text">
+            <div class="erro"><b>Campo obrigatório.</b> Informe a razão social completa. <span class="ref">CE-06</span></div>
+          </div>
+          <div class="campo invalido">
+            <label for="cnpj">CNPJ <span class="obrig">obrigatório</span></label>
+            <input id="cnpj" type="text" value="12.345.678/0001-90">
+            <div class="erro"><b>CNPJ já cadastrado</b> na empresa "Alfa Serviços Ltda". Use outro CNPJ ou edite a empresa existente. <span class="ref">CE-06</span><span class="ref">CA-15</span></div>
+          </div>
+          <div class="campo">
+            <label for="sit">Situação</label>
+            <select id="sit"><option>Ativa</option><option>Inativa</option></select>
+            <div class="ajuda">Empresas nascem ativas; a rotina diária lista apenas ativas (RF-01).</div>
+          </div>
+        </div>
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn secundario" href="#nova-empresa">Cancelar</a>
+          <a class="btn primario" href="#nova-empresa">Gravar</a>
+        </div>
+      </form>
+      <p class="nota">Sem ação de <b>Excluir</b> em nenhuma hipótese: não existe exclusão dura de empresa no MVP (H13/RF-01) — apenas ativar/inativar.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Diálogo de confirmação de inativação (padrão C)
+       Origem: RF-01 (ativa/inativa) · sem exclusão dura (H13)
+       ============================================================ -->
+  <div class="overlay" id="inativar">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C) — estático no wireframe</div>
+    <div class="dialogo">
+      <h2>Inativar "Beta Comércio ME"?</h2>
+      <p>A empresa deixará de aceitar <b>novos lançamentos e títulos</b>. O histórico permanece consultável e nada é excluído.</p>
+      <div class="msg info" style="margin-top:10px">A ação é registrada na trilha de auditoria com usuário, empresa, data e hora. <span class="ref">RF-05</span><span class="ref">CA-12</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="#nova-empresa">Voltar</a>
+        <a class="btn primario" href="#nova-empresa">Inativar empresa</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diálogo de reativação (espelho da ativação, RF-01) -->
+  <div class="overlay" id="reativar">
+    <div class="rotulo-dialogo">// diálogo de confirmação (padrão C)</div>
+    <div class="dialogo">
+      <h2>Reativar "Gama Indústria Ltda"?</h2>
+      <p>A empresa volta a aceitar <b>novos lançamentos e títulos</b> e retorna à rotina diária. O histórico permanece o mesmo — nada foi excluído.</p>
+      <div class="msg info" style="margin-top:10px">A reativação é registrada na trilha de auditoria com usuário, empresa, data e hora. <span class="ref">RF-01</span><span class="ref">RF-05</span><span class="ref">CA-12</span></div>
+      <div class="acoes">
+        <a class="btn secundario" href="empresas.html">Voltar</a>
+        <a class="btn primario" href="empresas.html">Reativar empresa</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nota de visibilidade: o que o admin vê que o contador não vê -->
+  <div class="msg">
+    <div class="titulo">Visibilidade nesta tela</div>
+    <div class="detalhe">Admin: vê todas as empresas + <b>Nova empresa</b> + Inativar/Reativar (gestão — RF-01). Contador: só as atribuídas, em modo leitura, sem botão de criação (F13). <b>Leitura global do admin é auditada</b> — cada consulta aparece na trilha (RF-05, CA-34).</div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="login.html">1. Login</a> · próxima: <a href="usuarios.html">3. Usuários e atribuições</a></p>
+
+</main>
+</div>
+</body>
+</html>

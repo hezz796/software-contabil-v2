@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Wireframe 10/11 — Fiscal · Sistema Contábil</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframe 10/11</span></span>
+  <span class="empresa">Empresa: <b>Alfa Serviços Ltda (X)</b></span>
+  <span class="spacer"></span>
+  <span class="papel">Tela vista como: <b>contador autorizado</b> · admin também configura (CA-54)</span>
+  <a class="link-topo" href="index.html">Índice</a>
+  <a class="link-topo" href="login.html">Sair</a>
+</header>
+
+<div class="layout">
+
+<nav class="sidebar">
+  <div class="grupo">Escritório</div>
+  <a href="empresas.html">Empresas <em class="quem">ambos</em></a>
+  <a href="usuarios.html">Usuários e atribuições <em class="quem">só admin</em></a>
+  <div class="grupo">Contabilidade</div>
+  <a href="plano-contas.html">Plano de contas <em class="quem">admin: lê</em></a>
+  <a href="periodos.html">Períodos contábeis <em class="quem">admin: lê</em></a>
+  <a href="lancamentos.html">Lançamentos <em class="quem">admin: lê</em></a>
+  <div class="grupo">Financeiro</div>
+  <a href="titulos.html">Títulos <em class="quem">admin: lê</em></a>
+  <a href="conciliacao.html">Conciliação <em class="quem">admin: lê</em></a>
+  <div class="grupo">Saídas e configuração</div>
+  <a href="relatorios.html">Relatórios <em class="quem">ambos</em></a>
+  <a href="fiscal.html" class="ativo">Fiscal <em class="quem">ambos</em></a>
+  <div class="grupo">Controle</div>
+  <a href="auditoria.html">Auditoria <em class="quem">só admin</em></a>
+  <div class="legenda">ambos · só admin (oculto do contador — CA-21) · admin: lê = admin vê sem escrita contábil (F13/CA-33)</div>
+</nav>
+
+<main class="main">
+
+  <div class="cabecalho">
+    <div class="linha1">
+      <h1>Fiscal configurável</h1>
+      <span class="ref">RF-20</span><span class="ref">RF-21</span><span class="ref">RF-22</span><span class="ref">RF-23</span>
+      <span class="ref">CA-45</span><span class="ref">CA-46</span><span class="ref">CA-47</span><span class="ref">CA-48</span><span class="ref">CA-49</span><span class="ref">CA-54</span>
+    </div>
+    <p class="sub">
+      <a href="#tabelas">1. Tabelas e alíquotas</a> · <a href="#regime">2. Regime e DAS</a> · <a href="#multajuros">3. Multa e juros</a> · <a href="#permissao">4. Permissões</a>
+    </p>
+  </div>
+
+  <!-- Fronteira de permissão (RF-02 / fluxo 2) -->
+  <div class="msg info">
+    <div class="titulo">Configuração fiscal = configuração administrativa do escritório, não escrita contábil.</div>
+    <div class="detalhe">Pode ser feita por <b>administrador</b> e por <b>contador autorizado</b>, com toda alteração auditada (RF-02, RF-20, CA-54). Operações que escrevem no razão/financeiro (apuração do DAS, geração de lançamento) continuam exigindo contador com escrita contábil ativa (F13). <span class="ref">RF-02</span><span class="ref">CA-54</span></div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 1 — Tabelas e alíquotas (RF-20 / CA-45 / CE-19)
+       ============================================================ -->
+  <div class="painel" id="tabelas">
+    <div class="topo">
+      <h2>1. Tabelas de impostos e retenções <span class="ref">RF-20</span><span class="ref">RF-22</span></h2>
+      <div class="acoes"><a class="btn primario" href="#nova-tabela">+ Nova tabela</a></div>
+    </div>
+    <div class="corpo" style="padding:0">
+      <div class="grid-scroll" style="max-height:220px">
+        <table class="grid">
+          <thead><tr><th>Nome</th><th class="num">Alíquota</th><th>Aplicação</th><th>Última alteração</th><th class="acao">Ações</th></tr></thead>
+          <tbody>
+            <tr><td class="txt">ISS retenção</td><td class="num">5,00%</td><td>Retenção em títulos a receber (RF-22)</td><td class="mono">12/10/2026 14:02 — admin</td><td class="acao"><a class="btn pequeno secundario" href="#nova-tabela">Editar</a></td></tr>
+            <tr><td class="txt">IRRF retenção</td><td class="num">1,50%</td><td>Retenção em títulos a pagar</td><td class="mono">01/10/2026 09:30 — M. Souza</td><td class="acao"><a class="btn pequeno secundario" href="#nova-tabela">Editar</a></td></tr>
+          </tbody>
+          <tfoot><tr><td colspan="4">2 tabelas configuradas</td><td class="acao">Toda alteração é auditada (RF-05)</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="painel" id="nova-tabela">
+    <div class="topo"><h2>Nova/editar tabela <span class="ref">CA-45</span></h2></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="campo-linha">
+          <div class="campo">
+            <label for="t-nome">Nome <span class="obrig">obrigatório</span></label>
+            <input id="t-nome" type="text" placeholder="ex.: ISS retenção">
+          </div>
+          <div class="campo invalido">
+            <label for="t-aliq">Alíquota (%) <span class="obrig">obrigatória</span></label>
+            <input id="t-aliq" type="text" value="-4" style="text-align:right">
+            <div class="erro"><b>A alíquota deve ser um número maior ou igual a zero.</b> Valor não numérico ou negativo é recusado e nada é gravado. <span class="ref">CE-19</span><span class="ref">CA-45</span></div>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="t-apl">Aplicação</label>
+          <select id="t-apl"><option>Retenção em títulos (baixa)</option><option>Cálculo sobre faturamento</option></select>
+          <div class="ajuda">A tabela fica disponível para associação a títulos e baixas (CA-45).</div>
+        </div>
+        <div class="duo" style="justify-content:flex-end">
+          <a class="btn secundario" href="#tabelas">Cancelar</a>
+          <a class="btn primario" href="#tabelas">Gravar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 2 — Regime e DAS (RF-21 / CA-46 / CA-49)
+       ============================================================ -->
+  <div class="painel" id="regime">
+    <div class="topo"><h2>2. Regime e Simples Nacional (DAS) <span class="ref">RF-21</span></h2><div class="acoes"><span class="papel-nota">apuração/lançamento: somente contador (F13)</span></div></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="campo-linha-3">
+          <div class="campo">
+            <label for="rg-regime">Regime da empresa</label>
+            <select id="rg-regime"><option>Simples Nacional</option><option>Não configurado</option></select>
+          </div>
+          <div class="campo num">
+            <label for="rg-aliq">Alíquota do regime (%)</label>
+            <input id="rg-aliq" type="text" value="6,00" style="text-align:right">
+          </div>
+          <div class="campo">
+            <label for="rg-per">Período</label>
+            <select id="rg-per"><option>10/2026</option></select>
+          </div>
+        </div>
+      </form>
+
+      <div class="kpis">
+        <div class="kpi"><div class="rotulo">Faturamento do período (base)</div><div class="valor">R$ 10.000,00</div><div class="extra">base = receitas lançadas no período (H17)</div></div>
+        <div class="kpi"><div class="rotulo">DAS apurado (6%)</div><div class="valor">R$ 600,00</div><div class="extra">CA-46</div></div>
+      </div>
+
+      <div class="duo">
+        <a class="btn secundario" href="#regime">Apurar DAS do período</a>
+        <a class="btn primario" href="#regime">Gerar lançamento do DAS</a>
+        <span class="mono">gera lançamento vinculado → é escrita contábil (RF-15), só contador</span>
+      </div>
+
+      <div class="msg erro">
+        <div class="titulo">DAS não apurado: empresa sem regime Simples Nacional configurado.</div>
+        <div class="detalhe">Nenhum valor é calculado nem lançamento gerado. <span class="ref">CE-19</span><span class="ref">CA-49</span></div>
+        <div class="acao">Ação sugerida: <b>configurar o regime nesta tela</b> e apurar novamente</div>
+      </div>
+
+      <div class="msg info">
+        <div class="titulo">Escopo fiscal do MVP (F12 · R1)</div>
+        <div class="detalhe">Alíquotas configuráveis, Simples Nacional (DAS), retenções na fonte e multa/juros de atraso. <b>Fora:</b> PIS/COFINS/IRPJ/CSLL por período, SPED, ECD/ECF (seção 11 dos requisitos — guarda RK-1).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 3 — Multa e juros (RF-23 / CA-48)
+       ============================================================ -->
+  <div class="painel" id="multajuros">
+    <div class="topo"><h2>3. Multa e juros de atraso <span class="ref">RF-23</span></h2></div>
+    <div class="corpo">
+      <form class="form">
+        <div class="campo-linha-3">
+          <div class="campo num">
+            <label for="mj-multa">Multa (%)</label>
+            <input id="mj-multa" type="text" value="2,00" style="text-align:right">
+            <div class="ajuda">ex.: 2% — CA-48</div>
+          </div>
+          <div class="campo num">
+            <label for="mj-juros">Juros (% a.m.)</label>
+            <input id="mj-juros" type="text" value="1,00" style="text-align:right">
+            <div class="ajuda">pro rata diária até a data da baixa (H18)</div>
+          </div>
+          <div class="campo">
+            <label for="mj-escopo">Aplicação</label>
+            <select id="mj-escopo"><option>Por título/contrato</option><option>Padrão da empresa</option></select>
+          </div>
+        </div>
+        <div class="duo" style="justify-content:flex-end"><a class="btn primario" href="#multajuros">Gravar</a></div>
+      </form>
+      <p class="nota">O efeito aparece na <a href="titulos.html">baixa de títulos</a>: multa, juros e total devido são exibidos antes da confirmação (CA-48: R$ 1.000,00 vencido há 30 dias → 20,00 + 10,00 = total R$ 1.030,00). Baixa dentro do vencimento não gera multa/juros (CA-06).</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ÁREA 4 — Permissões e recusa (CA-54 / CE-21)
+       ============================================================ -->
+  <div class="painel" id="permissao">
+    <div class="topo"><h2>4. Quem pode alterar esta tela <span class="ref">CA-54</span></h2><div class="acoes"><span class="papel-nota">FB-3 · recusa de permissão</span></div></div>
+    <div class="corpo">
+      <table class="tabela-pequena" style="border:1px solid #c8c8c8">
+        <thead><tr><th>Usuário</th><th>Configurar tabelas/regime/multa</th><th>Apurar DAS / gerar lançamento</th></tr></thead>
+        <tbody>
+          <tr><td>Administrador</td><td>✔ permitido (configuração administrativa)</td><td>— não: exige escrita contábil (F13)</td></tr>
+          <tr><td>Contador autorizado</td><td>✔ permitido</td><td>✔ permitido</td></tr>
+          <tr><td>Contador sem autorização / outra empresa</td><td>— recusado (CE-21)</td><td>— recusado (CE-15)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="msg erro">
+        <div class="titulo">Você não tem permissão para alterar a configuração fiscal desta empresa.</div>
+        <div class="detalhe">Nada foi persistido; a tentativa fica registrada na trilha de auditoria (usuário, empresa, objeto, data/hora). <span class="ref">CE-21</span><span class="ref">CA-54</span><span class="ref">RF-05</span></div>
+        <div class="acao">Ação sugerida: <b>solicitar acesso ao administrador</b> (ele próprio pode alterar — CA-54b)</div>
+      </div>
+
+      <p class="nota">Como a autorização do "contador autorizado" é concedida ainda depende de decisão — marcador na tela de <a href="usuarios.html">Usuários</a>: <b>[ A DEFINIR — Q-UI-1 ]</b>.</p>
+    </div>
+  </div>
+
+  <p class="legenda-tela">← <a href="index.html">Índice</a> · anterior: <a href="relatorios.html">9. Relatórios</a> · próxima: <a href="auditoria.html">11. Auditoria</a></p>
+
+</main>
+</div>
+</body>
+</html>

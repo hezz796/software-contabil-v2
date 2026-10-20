@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Índice de wireframes — Sistema Contábil (T023)</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="marca">Sistema Contábil <span>· wireframes estruturais (T023)</span></span>
+  <span class="spacer"></span>
+  <span class="papel">Aprovação: <b>humana antes da T020</b></span>
+</header>
+
+<main class="main" style="max-width:1100px">
+
+  <div class="cabecalho">
+    <div class="linha1"><h1>Wireframes — 11 telas do MVP</h1></div>
+    <p class="sub">HTML + CSS puro. Abra este arquivo por <span class="mono">file://</span> — sem servidor, sem build, sem JavaScript de aplicação (apenas âncoras nativas).</p>
+  </div>
+
+  <div class="nota">
+    <b>Base documental:</b> docs/design/UIUX-DIRETRIZES.md (arquitetura de informação, matriz de visibilidade por papel, padrões e mapeamento CE-01..CE-22).
+    <b>Tom de cinza:</b> paleta, tipografia e acabamento visual são fase de estilo DEPOIS desta aprovação.
+    <b>Guarda de escopo (RK-1):</b> cada área carrega chip <span class="ref">RF-xx · CA-xx</span> — nenhuma ação existe sem requisito de RF-01..RF-24.
+  </div>
+
+  <div class="painel">
+    <div class="topo"><h2>As 11 telas</h2></div>
+    <div class="corpo thing">
+      <table class="grid">
+        <thead>
+          <tr><th class="sel">#</th><th>Tela</th><th>RF principal</th><th>CA demonstrados</th><th class="acao">Abrir</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="txt">Login e acesso</td><td class="mono">RF-03, RF-19</td><td class="mono">CA-19, CA-51, CA-52 · CE-11, CE-17</td><td class="acao"><a class="btn pequeno secundario" href="login.html">abrir</a></td></tr>
+          <tr><td class="num">2</td><td class="txt">Empresas</td><td class="mono">RF-01, RF-04</td><td class="mono">CA-01, CA-15, CA-40 · CE-06, CE-20</td><td class="acao"><a class="btn pequeno secundario" href="empresas.html">abrir</a></td></tr>
+          <tr><td class="num">3</td><td class="txt">Usuários e atribuições <span class="badge inativo">só admin</span></td><td class="mono">RF-02, RF-03</td><td class="mono">CA-02, CA-22, CA-50, CA-21</td><td class="acao"><a class="btn pequeno secundario" href="usuarios.html">abrir</a></td></tr>
+          <tr><td class="num">4</td><td class="txt">Plano de contas</td><td class="mono">RF-06</td><td class="mono">CA-17, CA-27 · CE-13</td><td class="acao"><a class="btn pequeno secundario" href="plano-contas.html">abrir</a></td></tr>
+          <tr><td class="num">5</td><td class="txt">Períodos contábeis</td><td class="mono">RF-09</td><td class="mono">CA-31, CA-32 [D], CA-24 · CE-03, CE-22</td><td class="acao"><a class="btn pequeno secundario" href="periodos.html">abrir</a></td></tr>
+          <tr><td class="num">6</td><td class="txt">Lançamentos (lista + novo)</td><td class="mono">RF-07, RF-08</td><td class="mono">CA-03, CA-10 [D], CA-13, CA-25 · CE-01..CE-05</td><td class="acao"><a class="btn pequeno secundario" href="lancamentos.html">abrir</a></td></tr>
+          <tr><td class="num">7</td><td class="txt">Títulos (lista + baixa/estorno)</td><td class="mono">RF-13..RF-15, RF-22..RF-24</td><td class="mono">CA-06, CA-07 [D], CA-41..43, CA-47, CA-48 · CE-07, CE-18, CE-22</td><td class="acao"><a class="btn pequeno secundario" href="titulos.html">abrir</a></td></tr>
+          <tr><td class="num">8</td><td class="txt">Conciliação bancária</td><td class="mono">RF-16</td><td class="mono">CA-08, CA-28, CA-44, CA-53 · CE-08, CE-09</td><td class="acao"><a class="btn pequeno secundario" href="conciliacao.html">abrir</a></td></tr>
+          <tr><td class="num">9</td><td class="txt">Relatórios (4 abas + exportar)</td><td class="mono">RF-10..RF-12, RF-17, RF-18</td><td class="mono">CA-04, CA-05, CA-09, CA-11, CA-34</td><td class="acao"><a class="btn pequeno secundario" href="relatorios.html">abrir</a></td></tr>
+          <tr><td class="num">10</td><td class="txt">Fiscal (tabelas/regime/DAS)</td><td class="mono">RF-20..RF-23</td><td class="mono">CA-45..CA-49, CA-54 · CE-19, CE-21</td><td class="acao"><a class="btn pequeno secundario" href="fiscal.html">abrir</a></td></tr>
+          <tr><td class="num">11</td><td class="txt">Trilha de auditoria <span class="badge inativo">só admin</span></td><td class="mono">RF-05</td><td class="mono">CA-12, CA-38, CA-39, CA-52 · CE-16</td><td class="acao"><a class="btn pequeno secundario" href="auditoria.html">abrir</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="painel">
+    <div class="topo"><h2>Como revisar (também no fim de UIUX-DIRETRIZES.md)</h2></div>
+    <div class="corpo">
+      <ul>
+        <li><b>Estrutura:</b> menu, ações e campos existem para cada papel? (matriz §5 das diretrizes)</li>
+        <li><b>Escopo:</b> falta ou sobra algum botão/ação sem requisito? (chips RF/CA em cada área)</li>
+        <li><b>Erros:</b> as recusas CE-01..CE-22 aparecem com mensagem específica + ação sugerida, orientando ao estorno? (RK-4)</li>
+        <li><b>Densidade:</b> grids densos com totais fixos no rodapé e formulários respiados com validação visível?</li>
+      </ul>
+      <p class="legenda-tela">Legendas de papel no menu: <span class="quem" style="font-style:normal;font-size:9.5px;border:1px solid #c8c8c8;border-radius:8px;padding:0 5px;background:#fafafa">ambos</span> = dois papéis · <span style="font-size:9.5px;border:1px solid #c8c8c8;border-radius:8px;padding:0 5px;background:#fafafa">só admin</span> = oculto do contador (CA-21) · <span style="font-size:9.5px;border:1px solid #c8c8c8;border-radius:8px;padding:0 5px;background:#fafafa">admin: lê</span> = admin vê somente leitura, sem escrita contábil (F13/CA-33).</p>
+    </div>
+  </div>
+
+  <p class="nota">Arquivos: <span class="mono">index.html</span> (este) · 11 telas · <span class="mono">estilos.css</span> (compartilhado, cinzas). Documento: <span class="mono">../UIUX-DIRETRIZES.md</span>.</p>
+
+</main>
+</body>
+</html>

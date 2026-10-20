@@ -2,7 +2,7 @@
   "id": "TASK-023",
   "title": "Direção de UI/UX e wireframes do sistema contábil",
   "objective": "Definir arquitetura de informação, padrões de tela e wireframes low-fi das 9-11 telas do MVP, com checklist de revisão para aprovacao humana ANTES da TASK-020 (frontend), evitando retrabalho na maior tarefa do plano.",
-  "status": "todo",
+  "status": "in_review",
   "owner": "product-analyst",
   "depends_on": ["TASK-009"],
   "scope": {
@@ -38,15 +38,27 @@
       "method": "Usuario revisa telas por meio do checklist e registra aprovacao ou pedidos de ajuste (aprovacao e obrigatoria antes de T020)."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "Sessao do product-analyst: ses_ea4669c60ffefEozQvEVmsLvKT.",
+    "docs/design/UIUX-DIRETRIZES.md (~29,8 KB): densidade 'denso no dado, calmo na forma', grid com tfoot sticky, estados (vazio/carregando/erro/sem permissao/sessao expirada/somente leitura), desktop-first min-width 1280px, 7 padroes de feedback (FB-1..FB-7), tabela CE-01..CE-22 -> padrao + mensagem-exemplo + acao sugerida (§6.3 anti-RK-4: toda recusa de lancamento/baixa aponta 'Estornar'), matriz de visibilidade papel x acao (21 linhas, verificada contra F13 e CA-21), hipoteses H-UI-1..6 e perguntas Q-UI-1..3, checklist §12 (G1..G7 + T1..T11).",
+    "docs/design/wireframes/: 11 telas + index.html + estilos.css (14 arquivos, ~166 KB), HTML+CSS puro, zero <script> (verificado por Select-String do coordenador), navegaacao por anchors/links relativos, chips RF/CA visiveis e comentarios HTML de origem por area; nenhuma acao fora de RF-01..RF-24.",
+    "Verificacao do coordenador (2026-10-20): 14 arquivos em docs/design; nenhum <script>; §12 'Checklist de revisao para o usuario' presente com G7 apontando Q-UI-1..3; git status mostra apenas docs/design/ novo deste fluxo; nenhum arquivo fora do escopo alterado.",
+    "Perguntas bloqueantes de produto registradas SEM alterar requisitos: Q-UI-1 ('contador autorizado' da RF-02/RF-20 nao definido), Q-UI-2 (cadastro de contas bancarias do RF-16 sem RF proprio), Q-UI-3 (tela inicial inexistente nos requisitos; nao criada, guarda RK-1)."
+  ],
   "assumptions": [
     "Referencia hibrida por componente adotada (grid denso / conciliacao estilo internet banking / formularios modernos), decidida pelo coordenador em 2026-10-20 e aprovada pelo usuario ('Prossiga de acordo com suas recomendacoes').",
     "Tarefa paralela segura a T010 e T011 (escreve apenas em docs/design/)."
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Aprovacao humana dos wireframes e respostas as Q-UI-1..3 e necessaria antes de iniciar a TASK-020 (frontend).",
+      "owner": "usuario",
+      "required_action": "Revisar docs/design/wireframes/index.html com o checklist §12 de UIUX-DIRETRIZES.md e responder Q-UI-1, Q-UI-2 e Q-UI-3."
+    }
+  ],
   "worktree": null,
-  "session_id": null,
+  "session_id": "ses_ea4669c60ffefEozQvEVmsLvKT",
   "estimate_hours": 4,
   "created_at": "2026-10-20T23:10:00Z",
-  "updated_at": "2026-10-20T23:10:00Z"
+  "updated_at": "2026-10-20T23:50:00Z"
 }
