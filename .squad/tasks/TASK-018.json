@@ -7,7 +7,7 @@
   "depends_on": ["TASK-017"],
   "scope": {
     "include": [
-      "conta_bancaria com saldo inicial; item_extrato manual (data, descricao, valor, origem)",
+      "conta_bancaria com saldo inicial; cadastro MINIMO de conta bancaria (nome, saldo_inicial, data_saldo_inicial) como pre-condicao do extrato — Q-UI-2/ADR-0004, implicito no RF-16; item_extrato manual (data, descricao, valor, origem)",
       "importacao_extrato + parser OFX/CSV proprio, validacao estrita (arquivo nao reconhecido => 0 itens)",
       "conciliacao: um item <-> um objeto (titulo OU lancamento) por vez, desconciliacao restaura",
       "regra: estorno de baixa recusado enquanto o lancamento vinculado estiver conciliado (CA-44)"
@@ -20,6 +20,7 @@
     ]
   },
   "acceptance_criteria": [
+    "Cadastro minimo de conta bancaria existe (nome, saldo inicial, data) e e pre-condicao para ter itens de extrato: sem conta nao ha onde registrar item (ADR-0004, Q-UI-2).",
     "CA-08 tres itens, dois conciliados (um a titulo, um a lancamento avulso): 2 conciliados + 1 pendente; estado persiste entre sessoes e o pendente pode ser conciliado depois.",
     "CA-28 desconciliar devolve o item a pendente com historia na trilha; item conciliado nao concilia a dois objetos sem desconciliar antes.",
     "CA-53 importacao de arquivo de exemplo com 3 itens gera 3 itens conciliaveis; arquivo em formato nao reconhecido e recusado com mensagem e NENHUM item criado.",

@@ -10,6 +10,8 @@
       "telas: login, empresas, usuarios/atribuicoes, plano de contas, periodos, lancamentos, titulos, conciliacao, relatorios (com export), fiscal, auditoria",
       "packages/shared: cliente API tipado + tipos Zod compartilhados api<->web",
       "exibicao das mensagens de recusa previstas (CE-1..CE-22) e ausencia de acoes indevidas por papel",
+      "docs/design/ESTILO.md: fase de estilo (paleta de cores, tipografia, aplicacao) APOS a aprovacao da estrutura — wireframes em cinza nao significam produto preto e branco (ADR-0004); estilo sujeito a aprovacao humana",
+      "flag 'pode_configurar_fiscal' na tela de usuarios (Q-UI-1, ADR-0004) e seletor de conta bancaria na conciliacao (Q-UI-2)",
       "layout responsivo minimo para navegador desktop (R12); textos em pt-BR (H1)"
     ],
     "exclude": [
@@ -25,6 +27,7 @@
     "CA-12 apos lancamento, baixa e conciliacao, a tela de auditoria mostra usuario, empresa, acao, objeto e data/hora.",
     "CA-21 e CA-33 na UI: contador nao ve acoes de gestao/auditoria; admin nao ve acoes de escrita contabil (e a tentativa direta ja e recusada pelo servidor).",
     "Demonstracoes [D] prontas para inspecao: CA-06, CA-07, CA-31, CA-32 na interface.",
+    "docs/design/ESTILO.md criado e o estilo aplicado ao app; aprovacao humana do estilo registrada antes de dar a T020 como concluida.",
     "npm run dev do web consome a API local sem proxy manual nao documentado."
   ],
   "verification_plan": [

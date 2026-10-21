@@ -101,7 +101,7 @@ T009 (plano) ─┬─ T010 fundação
 - Aceite (CA): **CA-45, CA-46, CA-47, CA-48, CA-49, CA-54**.
 
 **T018 — Conciliação e importação**
-- Contas bancárias, itens manuais, importação OFX/CSV validada estritamente (inválido ⇒ 0 itens), conciliação item↔objeto (título **ou** lançamento), desconciliação, retomável; estorno de baixa exige desconciliar.
+- Contas bancárias (**cadastro mínimo explícito: nome, saldo inicial, data — ADR-0004/Q-UI-2, implícito no RF-16**), itens manuais, importação OFX/CSV validada estritamente (inválido ⇒ 0 itens), conciliação item↔objeto (título **ou** lançamento), desconciliação, retomável; estorno de baixa exige desconciliar.
 - Aceite (CA): **CA-08, CA-28, CA-44, CA-53**.
 
 **T019 — Fluxo de caixa e exportação**
@@ -110,6 +110,7 @@ T009 (plano) ─┬─ T010 fundação
 
 **T020 — Frontend pt-BR**
 - Telas: login, empresas, usuários/atribuições, plano de contas, períodos, lançamentos, títulos, conciliação, relatórios, fiscal, auditoria; cliente API tipado (`packages/shared`), erros de recusa exibidos com as mensagens previstas, sem ações proibidas nos papéis errados.
+- **Fase de estilo:** `docs/design/ESTILO.md` (paleta, tipografia, estados) aplicado ao app — os wireframes são baixa fidelidade em cinza, o produto **não** é preto e branco (ADR-0004); estilo sujeito a aprovação humana junto com a T020. Wireframes aprovados em 2026-10-20 (gate da T023 cumprido).
 - Aceite (CA [D]/[I]): **CA-01, CA-02, CA-10, CA-12** (trilha na UI), demonstração em UI dos cenários [D] (CA-06, CA-07, CA-31, CA-32), inexistência de ações de gestão para contador (CA-21) e de escrita para admin (CA-33).
 
 **T021 — Verificação integral e reviews**

@@ -2,7 +2,7 @@
   "id": "TASK-023",
   "title": "Direção de UI/UX e wireframes do sistema contábil",
   "objective": "Definir arquitetura de informação, padrões de tela e wireframes low-fi das 9-11 telas do MVP, com checklist de revisão para aprovacao humana ANTES da TASK-020 (frontend), evitando retrabalho na maior tarefa do plano.",
-  "status": "in_review",
+  "status": "done",
   "owner": "product-analyst",
   "depends_on": ["TASK-009"],
   "scope": {
@@ -49,16 +49,13 @@
     "Referencia hibrida por componente adotada (grid denso / conciliacao estilo internet banking / formularios modernos), decidida pelo coordenador em 2026-10-20 e aprovada pelo usuario ('Prossiga de acordo com suas recomendacoes').",
     "Tarefa paralela segura a T010 e T011 (escreve apenas em docs/design/)."
   ],
-  "blockers": [
-    {
-      "description": "Aprovacao humana dos wireframes e respostas as Q-UI-1..3 e necessaria antes de iniciar a TASK-020 (frontend).",
-      "owner": "usuario",
-      "required_action": "Revisar docs/design/wireframes/index.html com o checklist §12 de UIUX-DIRETRIZES.md e responder Q-UI-1, Q-UI-2 e Q-UI-3."
-    }
-  ],
+  "blockers": [],
   "worktree": null,
   "session_id": "ses_ea4669c60ffefEozQvEVmsLvKT",
   "estimate_hours": 4,
+  "approval": {
+    "human": "Aprovado pelo usuario em 2026-10-20: '(1) Eu aprovo com ressalvas (sera preto e branco?); (2) Aprovado'. Recessa esclarecida: wireframes em cinza = baixa fidelidade; fase de estilo (paleta/tipografia) vem na T020 via docs/design/ESTILO.md. Q-UI-1..3 resolvidas em docs/decisions/ADR-0004-decisoes-interface-q-ui.md."
+  },
   "created_at": "2026-10-20T23:10:00Z",
-  "updated_at": "2026-10-20T23:50:00Z"
+  "updated_at": "2026-10-21T00:05:00Z"
 }

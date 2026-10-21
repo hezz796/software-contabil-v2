@@ -9,7 +9,7 @@
     "phase": "implementation",
     "status": "in_progress",
     "current_task_id": "TASK-011",
-    "next_action": "Duas trilhas agora: (1) EXECUCAO — iniciar TASK-011 (seguranca base: sessao, papeis, tenant, auditoria append-only; 9 CA) sobre a fundacao da T010 ja verificada; (2) REVISAO HUMANA — o usuario abre docs/design/wireframes/index.html com o checklist §12 de docs/design/UIUX-DIRETRIZES.md e responde Q-UI-1 (como conceder 'contador autorizado' da RF-20), Q-UI-2 (cadastro de contas bancarias do RF-16) e Q-UI-3 (exigir tela inicial ou nao). A aprovacao dos wireframes e gate da T020 (frontend), nao bloqueia T011..T019. Pendencias de produto restantes: v4 de seguranca, H9, RK-8. Pendencias de coordenacao: colisao de IDs com a landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing."
+    "next_action": "T011 (seguranca base) em execucao em background (ses_ea447776dffenwladNTJCzG32L). Gate da T020 CUMPRIDO: wireframes aprovados em 2026-10-20 e Q-UI-1..3 resolvidas em ADR-0004 (flag 'pode_configurar_fiscal'; cadastro minimo de conta bancaria agora no escopo da T018; sem dashboard). T020 pode iniciar apos T011 e deve incluir docs/design/ESTILO.md (fase de estilo: produto nao e preto e branco). Apos T011: seguir T012. Pendencias de produto restantes: v4 de seguranca, H9, RK-8. Pendencias de coordenacao: colisao de IDs com a landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing."
   },
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
@@ -33,12 +33,13 @@
     { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "todo", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
     { "id": "TASK-021", "title": "Verificação integral CA-01..55 + reviews", "status": "todo", "path": ".squad/tasks/TASK-021.json", "owner": "qa" },
     { "id": "TASK-022", "title": "Implantação: backup/restore, runbook, checklist", "status": "todo", "path": ".squad/tasks/TASK-022.json", "owner": "implementer" },
-    { "id": "TASK-023", "title": "Direção de UI/UX e wireframes (aprov. humana antes de T020)", "status": "in_review", "path": "docs/design/", "owner": "product-analyst" }
+    { "id": "TASK-023", "title": "Direção de UI/UX e wireframes (aprov. humana antes de T020)", "status": "done", "path": "docs/design/", "owner": "product-analyst" }
   ],
   "decisions": [
     { "id": "ADR-0001", "title": "Stack e arquitetura do sistema contábil (MVP) — aceita em 2026-10-20", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md" },
     { "id": "ADR-0002", "title": "Stack da landing page (HTML/CSS/JS estático) — proposta do fluxo paralelo, aguardando aprovação", "path": "docs/decisions/ADR-0002-landing-page-stack.md" },
-    { "id": "ADR-0003", "title": "Implantação na web: VPS em São Paulo + SQLite — aceita em 2026-10-20", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md" }
+    { "id": "ADR-0003", "title": "Implantação na web: VPS em São Paulo + SQLite — aceita em 2026-10-20", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md" },
+    { "id": "ADR-0004", "title": "Decisões de produto da interface (Q-UI-1..3) e aprovação dos wireframes — aceita em 2026-10-20", "path": "docs/decisions/ADR-0004-decisoes-interface-q-ui.md" }
   ],
   "active_work": [],
   "last_verified": {
@@ -75,6 +76,11 @@
         "evidence": "docs/design/UIUX-DIRETRIZES.md + 14 arquivos em docs/design/wireframes/ (11 telas, index, estilos CSS). Verificacao do coordenador: zero <script> (Select-String), checklist §12 presente com G7/Q-UI-1..3, nenhum arquivo fora do escopo alterado, nenhum commit pelo agente. 6/6 criterios confirmados pelo agente; mapeamento CE-01..CE-22 e matriz de papel conferidos por busca. Pendente: aprovacao do usuario (gate da T020) e respostas Q-UI-1..3. Sessao: ses_ea4669c60ffefEozQvEVmsLvKT."
       },
       {
+        "name": "Aprovacao humana dos wireframes e decisoes Q-UI-1..3 (T023 + ADR-0004)",
+        "result": "passed",
+        "evidence": "Usuario em 2026-10-20: '(1) Eu aprovo com ressalvas (sera preto e branco?); (2) Aprovado'. Recessa esclarecida (nao e preto e branco: fase de estilo na T020 via docs/design/ESTILO.md). Q-UI-1 = flag pode_configurar_fiscal por usuario; Q-UI-2 = cadastro minimo de conta bancaria implicito no RF-16 (escopo movido para T018); Q-UI-3 = sem dashboard. Registrado em docs/decisions/ADR-0004-decisoes-interface-q-ui.md; gate da T020 cumprido; TASK-023 concluida."
+      },
+      {
         "name": "Colisão de identificadores entre fluxos (contábil x landing page)",
         "result": "passed",
         "evidence": "Resolvida em .squad/handoffs/HANDOFF-001-id-collision.json (ADR de implantação -> ADR-0003; task -> TASK-008; IDs TASK-004..007 e ADR-0002 cedidos ao fluxo da landing page)."
@@ -94,5 +100,5 @@
       "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
     }
   ],
-  "updated_at": "2026-10-20T23:55:00Z"
+  "updated_at": "2026-10-21T00:10:00Z"
 }
