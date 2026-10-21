@@ -32,6 +32,20 @@ A memória persistente resume o trabalho e aponta para evidências; ela não sub
 - Se não for possível executar uma verificação, registre o motivo e o que ainda precisa ser confirmado.
 - Não permita que agentes paralelos editem os mesmos arquivos ou atualizem simultaneamente o mesmo arquivo de estado geral.
 
+## Regras contra reincidência
+
+Registradas em 2026-10-21 a partir de falhas que aconteceram de fato. O incidente concreto fica junto porque regra abstrata não é lembrada no momento em que é necessária. Onde dá para trocar uma regra por um arranjo que torna o erro impossível, prefira o arranjo.
+
+1. **Nunca escreva nome de coluna, campo, token, rota ou variável de ambiente de memória. Leia a fonte antes** (schema, `tokens.css`, rotas, `config`). Falhas que motivaram: `empresa.situacao` (real: `ativo`), `--espaco-base` (real: `--espacamento-*`), `/plano-de-contas` (rota inexistente — o proxy devolvia o HTML do SPA no lugar do JSON e parecia sucesso), `API_PORT` vs `PORT`.
+
+2. **Verificação sem pré-condição comprovada não é evidência.** Todo teste negativo precisa: (a) assegurar que **existe dado** para o caso — em banco vazio o INSERT órfão falha por `undefined` e o UPDATE casa com 0 linhas, nenhum trigger dispara, e os dois parecem defeitos do produto sem ser; (b) casar a **causa específica** do erro (`/FOREIGN KEY/`), não apenas "lançou exceção"; (c) conferir o estado depois. Se (a) não for possível, registre a limitação em vez de relatar um achado.
+
+3. **Busca de conteúdo usa a ferramenta de grep, não o shell.** O escape de backtick do PowerShell quebra padrões contendo `` ` `` e `"` (falhou em 2026-10-21).
+
+4. **Invariante de que o domínio depende é garantida NO BANCO, não na aplicação** (RF-08/R9 generalizado): triggers e constraints valem quando a aplicação tem bug; validação só na camada de serviço não. **Conveniência de fixture ou teste nunca enfraquece schema de produção** — caso concreto: `partida.lancamento_id` ficou sem foreign key na T014 rodada 1 para preservar uma fixture da T013, e foi revertido na rodada 2.
+
+5. **Arquivos de estado em `.squad/` são alterados por leitura e escrita programática (ler JSON → modificar → gravar), nunca por âncora de texto.** Âncora de texto falhou duas vezes no mesmo dia; a abordagem programática elimina a classe de erro e ainda garante que o JSON continue válido.
+
 ## Paralelismo e sessões
 
 - Use subagents em background para pesquisa, análise ou revisão independente que não bloqueie o próximo trabalho.

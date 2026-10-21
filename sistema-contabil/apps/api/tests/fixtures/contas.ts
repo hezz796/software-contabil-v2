@@ -1,8 +1,11 @@
-import { sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { AppDb } from '../../src/db/index.ts';
 import {
   conta,
+  lancamento,
+  partida,
   periodoContabil,
+  usuario,
   type Conta,
   type PeriodoContabil,
   type TipoConta,
@@ -66,25 +69,58 @@ export function criarPeriodoTeste(db: AppDb, opcoes: OpcoesPeriodoTeste): Period
 /**
  * Simula um lançamento lançado na conta (CA-17/CA-27: "conta com lançamentos").
  *
- * A tabela `partida` será criada pela TASK-014; até lá esta fixture cria uma
- * versão MÍNIMA com as mesmas colunas do ADR-0001 (`lancamento_id`,
- * `conta_id`, `natureza`, `valor_centavos`) e insere uma partida — permite
- * exercitar as regras de "tem lançamentos" já na T013. Quando a T014 existir,
- * `CREATE TABLE IF NOT EXISTS` vira no-op e a fixture passa a usar a tabela
- * real.
+ * Usa as tabelas REAIS da T014: cria um lançamento (com período aberto de
+ * referência 01/2026 e o primeiro usuário do banco de teste como autor) e uma
+ * partida D na conta informada — FK `partida.lancamento_id` é satisfeita por
+ * construção (achado T014-F-1: partida sem lançamento é recusada pelo banco).
+ * Exige que exista ao menos um usuário no banco de teste (as fixtures de
+ * segurança sempre criam antes dos call sites).
  */
-export function simularLancamentoEmConta(db: AppDb, contaId: number): void {
-  db.run(sql`
-    CREATE TABLE IF NOT EXISTS partida (
-      id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-      lancamento_id integer NOT NULL,
-      conta_id integer NOT NULL,
-      natureza text NOT NULL,
-      valor_centavos integer NOT NULL
+export function simularLancamentoEmConta(db: AppDb, contaId: number, empresaId: number): void {
+  const autor = db.select().from(usuario).orderBy(usuario.id).limit(1).all()[0];
+  if (!autor) {
+    throw new Error('simularLancamentoEmConta: crie um usuário de teste antes de usar a fixture.');
+  }
+
+  const periodoExistente = db
+    .select()
+    .from(periodoContabil)
+    .where(
+      and(
+        eq(periodoContabil.empresaId, empresaId),
+        eq(periodoContabil.ano, 2026),
+        eq(periodoContabil.mes, 1),
+      ),
     )
-  `);
-  db.run(sql`
-    INSERT INTO partida (lancamento_id, conta_id, natureza, valor_centavos)
-    VALUES (1, ${contaId}, 'D', 100000)
-  `);
+    .limit(1)
+    .all()[0];
+  const periodo =
+    periodoExistente ??
+    db
+      .insert(periodoContabil)
+      .values({ empresaId, ano: 2026, mes: 1 })
+      .returning()
+      .all()[0]!;
+
+  const criado = db
+    .insert(lancamento)
+    .values({
+      empresaId,
+      periodoId: periodo.id,
+      data: '2026-01-15',
+      historico: 'Simulação de lançamento (fixture de teste)',
+      estornoDeId: null,
+      criadoPor: autor.id,
+    })
+    .returning()
+    .all()[0]!;
+
+  db.insert(partida)
+    .values({
+      lancamentoId: criado.id,
+      contaId,
+      natureza: 'D',
+      valorCentavos: 100_000,
+    })
+    .run();
 }

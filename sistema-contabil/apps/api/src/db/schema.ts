@@ -1,5 +1,7 @@
+import { sql } from 'drizzle-orm';
 import {
   type AnySQLiteColumn,
+  check,
   index,
   integer,
   primaryKey,
@@ -254,3 +256,97 @@ export const periodoContabil = sqliteTable(
 );
 
 export type PeriodoContabil = typeof periodoContabil.$inferSelect;
+
+/**
+ * Naturezas da partida (RF-07, H7): débito (`D`) ou crédito (`C`). O valor é
+ * sempre positivo; a natureza é dada pela coluna D/C.
+ */
+export const NATUREZAS = ['D', 'C'] as const;
+export type Natureza = (typeof NATUREZAS)[number];
+
+/**
+ * Lançamento contábil em partidas dobradas (RF-07, ADR-0001, TASK-014).
+ *
+ * - `periodo_id` é resolvido NO SERVIDOR a partir da `data` (nunca vem do
+ *   cliente); lançamento/estorno só são aceitos em período **aberto**
+ *   (CA-24/CE-3) — validação de serviço;
+ * - `estorno_de_id`: `NULL` = lançamento original; id do original quando este
+ *   lançamento É um estorno (RF-08). O índice único `lancamento_estorno_de_uk`
+ *   garante no banco o "estornado uma única vez" (CA-26/CE-5);
+ * - **Imutabilidade** (RF-08/R9/CA-25): o produto não expõe edição/exclusão e
+ *   triggers `BEFORE UPDATE/DELETE` com `RAISE(ABORT)` (migração 0005) abortam
+ *   qualquer alteração/remoção direta — mesmo caminho provado em
+ *   `audit_event_append_only` (CA-38).
+ */
+export const lancamento = sqliteTable(
+  'lancamento',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** Período de `data` (resolvido no servidor). */
+    periodoId: integer('periodo_id')
+      .notNull()
+      .references(() => periodoContabil.id),
+    /** `YYYY-MM-DD` (validado na camada de entrada). */
+    data: text('data').notNull(),
+    historico: text('historico').notNull(),
+    /** `NULL` = original; id do original quando este lançamento é um estorno. */
+    estornoDeId: integer('estorno_de_id').references((): AnySQLiteColumn => lancamento.id),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    /** Uma origem só pode ter UM estorno (CA-26; NULLs não colidem no SQLite). */
+    uniqueIndex('lancamento_estorno_de_uk').on(t.estornoDeId),
+    index('lancamento_empresa_data_idx').on(t.empresaId, t.data),
+    index('lancamento_periodo_idx').on(t.periodoId),
+  ],
+);
+
+export type Lancamento = typeof lancamento.$inferSelect;
+export type NovoLancamento = typeof lancamento.$inferInsert;
+
+/**
+ * Partida de um lançamento (RF-07, ADR-0001).
+ *
+ * - colunas com os MESMOS nomes consumidos pelos clientes da T013
+ *   (`fixtures/contas.ts:simularLancamentoEmConta` e
+ *   `services/contas.ts:contaTemLancamentos`) — decisão T014: manter os nomes
+ *   para não churnar a T013;
+ * - FK `lancamento_id -> lancamento.id` (achado T014-F-1): partida sem
+ *   lançamento é dado corrompido — a referência é garantida NO BANCO, na mesma
+ *   filosofia dos triggers de imutabilidade (a fixture da T013 foi atualizada
+ *   para criar um lançamento real antes da partida);
+ * - `conta_id` tem FK real e os CHECKs reforçam H7 no banco: valor > 0 e
+ *   natureza em ('D','C').
+ */
+export const partida = sqliteTable(
+  'partida',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    lancamentoId: integer('lancamento_id')
+      .notNull()
+      .references(() => lancamento.id),
+    contaId: integer('conta_id')
+      .notNull()
+      .references(() => conta.id),
+    natureza: text('natureza', { enum: NATUREZAS }).notNull(),
+    /** Sempre positivo em centavos (H7); a natureza dá o sentido. */
+    valorCentavos: integer('valor_centavos').notNull(),
+  },
+  (t) => [
+    index('partida_lancamento_idx').on(t.lancamentoId),
+    index('partida_conta_idx').on(t.contaId),
+    check('partida_valor_positivo', sql`${t.valorCentavos} > 0`),
+    check('partida_natureza_valida', sql`${t.natureza} IN ('D', 'C')`),
+  ],
+);
+
+export type Partida = typeof partida.$inferSelect;
+export type NovaPartida = typeof partida.$inferInsert;

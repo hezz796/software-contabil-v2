@@ -399,3 +399,106 @@ export const listaPeriodosResponseSchema = z.object({
 });
 
 export type ListaPeriodosResponse = z.infer<typeof listaPeriodosResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Lançamentos em partidas dobradas, imutabilidade e estorno (TASK-014)        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Natureza da partida (RF-07, H7): débito (`D`) ou crédito (`C`). Valores são
+ * sempre positivos; o sentido vem da natureza.
+ */
+export const naturezaSchema = z.enum(['D', 'C'], {
+  error: 'A natureza da partida deve ser débito (D) ou crédito (C).',
+});
+export type NaturezaDTO = z.infer<typeof naturezaSchema>;
+
+/**
+ * Valor da partida em centavos (inteiros, nunca float — ADR-0001): obrigatório
+ * e **maior que zero** (CA-14b/c: zero e negativo são recusados com mensagem).
+ */
+export const valorPartidaSchema = z
+  .number({ error: 'Informe o valor da partida em centavos.' })
+  .int('O valor da partida deve ser um número inteiro de centavos.')
+  .positive('O valor da partida deve ser maior que zero (em centavos).');
+
+/** Partida enviada na gravação (RF-07): conta, natureza e valor. */
+export const partidaRequestSchema = z.object({
+  conta_id: z
+    .number({ error: 'Informe a conta de cada partida.' })
+    .int('O id da conta da partida deve ser um número inteiro.')
+    .positive('Informe a conta de cada partida.'),
+  natureza: naturezaSchema,
+  valor_centavos: valorPartidaSchema,
+});
+
+export type PartidaRequest = z.infer<typeof partidaRequestSchema>;
+
+/** Data de lançamento/estorno: `AAAA-MM-DD` real (CA-14e: formato inválido recusado). */
+export const dataLancamentoSchema = z.iso.date({
+  error: 'Informe a data no formato AAAA-MM-DD.',
+});
+
+/** Histórico do lançamento (RF-07): obrigatório. */
+export const historicoSchema = z
+  .string({ error: 'Informe o histórico do lançamento.' })
+  .trim()
+  .min(1, 'Informe o histórico do lançamento.')
+  .max(200, 'O histórico do lançamento deve ter no máximo 200 caracteres.');
+
+/**
+ * Gravação de lançamento (RF-07): `partidas` com no mínimo DUAS (CA-14a) e o
+ * servidor ainda exige Σ débitos = Σ créditos (CA-13), contas da empresa e
+ * data em período contábil aberto (CA-24).
+ */
+export const criarLancamentoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema,
+  historico: historicoSchema,
+  partidas: z
+    .array(partidaRequestSchema)
+    .min(2, 'O lançamento deve ter ao menos duas partidas (uma de débito e outra de crédito).'),
+});
+
+export type CriarLancamentoRequest = z.infer<typeof criarLancamentoRequestSchema>;
+
+/** Partida devolvida pela API. */
+export const partidaSchema = z.object({
+  conta_id: z.number().int(),
+  natureza: naturezaSchema,
+  valor_centavos: z.number().int(),
+});
+
+export type PartidaDTO = z.infer<typeof partidaSchema>;
+
+/**
+ * Lançamento devolvido pela API (imutável após gravação — RF-08/R9).
+ * `estorno_de_id` nulo = original; id do original quando este É um estorno.
+ */
+export const lancamentoSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  /** Período contábil resolvido no SERVIDOR a partir da data. */
+  periodo_id: z.number().int(),
+  data: dataLancamentoSchema,
+  historico: z.string(),
+  estorno_de_id: z.number().int().nullable(),
+  partidas: z.array(partidaSchema),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type LancamentoDTO = z.infer<typeof lancamentoSchema>;
+
+/**
+ * Estorno (RF-08): gera novo lançamento INVERSO vinculado ao original. `data`
+ * opcional (padrão do servidor: hoje) e deve cair em período **aberto**
+ * (CA-24); um lançamento só é estornado uma vez (CA-26).
+ */
+export const estornarLancamentoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema.optional(),
+});
+
+export type EstornarLancamentoRequest = z.infer<typeof estornarLancamentoRequestSchema>;

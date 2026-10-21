@@ -3,6 +3,43 @@
 
   "default_agent": "coordinator",
 
+  // Instrumento de verificação visual da squad. NÃO é dependência do produto:
+  // nada aqui entra em package.json, em `npm test` ou em CI (é ferramenta de
+  // sessão, registrada em .squad/project-state.json). A suite E2E com
+  // `@playwright/test` é decisão separada e continua adiada para a T021.
+  "mcp": {
+    "servers": {
+      "playwright": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@playwright/mcp@latest",
+          // Chrome já instalado na máquina: dispensa os ~400 MB de navegador
+          // gerenciado pelo Playwright (o pacote não tem postinstall).
+          "--browser",
+          "chrome",
+          // Headless: a verificação não abre janela sobre a área do usuário.
+          "--headless",
+          // Perfil em memória: nada persiste em disco e duas sessões não
+          // disputam o mesmo perfil.
+          "--isolated",
+          // Piso do R12 (>= 1280px): testar no limite força a densidade
+          // desktop a caber de verdade.
+          "--viewport-size",
+          "1280x800"
+        ],
+        // Ferramentas nativas em vez de Code Mode: manter no tool list do
+        // provedor é o que faz o resultado de screenshot chegar como imagem.
+        "codemode": false,
+        // Primeira execução baixa o pacote via npx — acima do default de 30 s.
+        "timeout": {
+          "startup": 60000
+        }
+      }
+    }
+  },
+
   "agents": {
     "coordinator": {
       "description": "Coordena o ciclo de desenvolvimento, mantém o estado da squad e delega tarefas.",

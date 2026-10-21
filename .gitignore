@@ -28,3 +28,7 @@ coverage/
 # Arquivos de sistema
 .DS_Store
 Thumbs.db
+
+# Artefatos do Playwright MCP (snapshots, console logs e capturas de tela
+# gerados pela squad durante a verificação visual — nunca são fonte de verdade)
+.playwright-mcp/

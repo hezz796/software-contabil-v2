@@ -9,8 +9,22 @@
     "phase": "implementation",
     "status": "in_progress",
     "current_task_id": "TASK-014",
-    "next_action": "T012, T013 e o incremento 2 da T020 entregues, verificados e commitados (e2759d6, fc76a37, e o commit do incremento 2 da T020). Duas correcoes do coordenador no incremento 2: ROTAS_API do vite.config.ts ('/plano-de-contas' inexistente -> '/contas', que devolvia HTML do SPA em vez de JSON) e secao do README da raiz sobre proxy. PROXIMO: T014 (lancamentos em partidas dobradas e estorno) — ATENCAO: DEVE usar o preHandler exigirEscritaContabil (T012) nas rotas de escrita; a tabela partida ja e esperada por contaTemLancamentos (T013) e pela fixture simularLancamentoEmConta. Depois, proximos incrementos da T020 (telas de negocio usando tokens, placeholders TelaPendente). Pendencias de produto: RK-8 adiado (aguarda caso real do escritorio). Pendencia de coordenacao: aprovacao do ADR-0002 da landing."
+    "next_action": "T012, T013, o incremento 2 da T020 e a T014 entregues e verificados; commitados ate agora apenas e2759d6 (T012), fc76a37 (T013) e 6eb90f8 (T020 inc.2). A T014 esta PRONTA E NAO COMMITADA, aguardando ordem do usuario para entrar no proximo commit de marco. Duas correcoes do coordenador no incremento 2: ROTAS_API do vite.config.ts ('/plano-de-contas' inexistente -> '/contas', que devolvia HTML do SPA em vez de JSON) e secao do README da raiz sobre proxy. PROXIMO: T014 (lancamentos em partidas dobradas e estorno) — ATENCAO: DEVE usar o preHandler exigirEscritaContabil (T012) nas rotas de escrita; a tabela partida ja e esperada por contaTemLancamentos (T013) e pela fixture simularLancamentoEmConta. Depois, proximos incrementos da T020 (telas de negocio usando tokens, placeholders TelaPendente). Pendencias de produto: RK-8 adiado (aguarda caso real do escritorio). Pendencia de coordenacao: aprovacao do ADR-0002 da landing. INSTRUMENTO NOVO em 2026-10-21: Playwright MCP configurado no opencode.jsonc (mcp.servers.playwright) para fechar a limitacao de verificacao visual registrada na T020 inc.2 — ferramenta de sessao da squad, nao dependencia do produto; ver campo 'tooling'. O opencode.jsonc esta alterado e NAO commitado (aguarda ordem). MCP-PLAYWRIGHT EM USO REAL em 2026-10-21: verificacao visual do login e do shell concluida pelo coordenador (tokens medidos no navegador, fluxo real pela interface, 5 achados novos V-1..V-5 em TASK-020.json); as ferramentas estao disponiveis NA SESSAO ATUAL, sem reiniciar. PROXIMO PASSO (aguardando ordem do usuario): T015 (relatorios contabeis e encerramentos, FIX-01) e T016 (financeiro: titulos, baixas e estorno de baixa) — ambas desbloqueadas pela T014, que ja gravacao o razao e ja garante no banco imutabilidade e integridade do par lancamento/partida. ATENCAO ao paralelismo: T015 e T016 mexem em areas diferentes de codigo mas AMBAS alteram schema.ts e geram migracao — rodar as duas ao mesmo tempo na mesma arvore produz colisao de migracao 0006; escolher uma por vez ou coordenar a numeracao. T016 deve usar exigirEscritaContabil e respeitar que nada escreve em periodo encerrado (RF-09). Alternativa valida: proximo incremento da T020 (telas de negocio nos placeholders TelaPendente), que ja consome a API de lancamentos existente. Pendencias de produto abertas: (1) chips de rastreabilidade RF/CA visiveis na UI (V-2) — decidir se sao removidos ou filtrados por ambiente antes da release; (2) RK-8 adiado (aguarda caso real do escritorio); (3) ADR-0002 da landing aguarda aprovacao. Pendencia de coordenacao: commit do opencode.jsonc aguarda ordem do usuario."
   },
+  "tooling": [
+    {
+      "id": "MCP-PLAYWRIGHT",
+      "aprovado_por": "usuario",
+      "data": "2026-10-21",
+      "arquivo": "opencode.jsonc (mcp.servers.playwright)",
+      "finalidade": "Verificacao visual do front pela squad: snapshots de acessibilidade, clique/navegacao e screenshot como evidencia dos criterios [D] e da aplicacao do ESTILO.md. Fecha a limitacao registrada em TASK-020 inc.2 ('sem navegador headless').",
+      "configuracao": "type local; npx -y @playwright/mcp@latest --browser chrome --headless --isolated --viewport-size 1280x800; codemode false; timeout.startup 60000.",
+      "por_que_cada_flag": "--browser chrome usa o Chrome 156 ja instalado (dispensa ~400 MB; o pacote playwright@1.64.1 nao tem postinstall, verificado no package.json); --headless nao abre janela na area do usuario; --isolated mantem o perfil em memoria (nada em disco, sem disputa entre sessoes); --viewport-size 1280x800 testa o piso do R12 (>=1280px); codemode false mantem as ferramentas nativas para o screenshot chegar como imagem; timeout de startup acomoda o download frio do npx.",
+      "verificacao": "opencode mcp list => 'playwright connected' (2026-10-21). Previa: npx -y @playwright/mcp@latest --help executa (primeiro 1 falhou com ERR_SSL_CIPHER_OPERATION_FAILED no unpack — transitório, retry OK). EM USO REAL em 2026-10-21: verificacao visual do login e do shell da T020 inc.2 pelo coordenador, com servidores de verdade — ver check 'MCP-PLAYWRIGHT em uso real'. As ferramentas estao disponiveis na SESSAO ATUAL, sem reiniciar (handshake novo nao foi necessario).",
+      "limites": "Nao e dependencia do produto: nao esta em package.json, nao entra em 'npm test' nem em CI. Nao substitui a aprovacao humana de UX (o MCP prova que a tela renderiza e que o token aplicado e o aprovado; nao prova que ficou intuitivo). Suite E2E do projeto com @playwright/test continua ADIADA para a T021 (hoje 9 das 11 telas sao placeholders) e exigira ADR nova — ADR-0001 linha 162 marca Playwright como opcional.",
+      "alternativa_rejeitada": "Extensao 'Playwright Test for VSCode' (do usuario) ajuda a autoria humana no editor, nao da acesso a mim — nao resolve a limitacao. MCP dentro do repositorio como dependencia rejeitado para nao misturar instrumento de sessao com produto."
+    }
+  ],
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
     { "id": "TASK-002", "title": "Levantar requisitos do sistema contábil (intake -> requisitos)", "status": "done", "path": "docs/requirements/SISTEMA-CONTABIL.md", "owner": "product-analyst" },
@@ -24,13 +38,13 @@
     { "id": "TASK-011", "title": "Segurança base: sessão, papéis, tenant e auditoria", "status": "done", "path": ".squad/tasks/TASK-011.json", "owner": "implementer" },
     { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "done", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
     { "id": "TASK-013", "title": "Plano de contas e períodos contábeis", "status": "done", "path": ".squad/tasks/TASK-013.json", "owner": "implementer" },
-    { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "todo", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
+    { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "done", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
     { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "todo", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
     { "id": "TASK-016", "title": "Financeiro: títulos, baixas e estorno de baixa", "status": "todo", "path": ".squad/tasks/TASK-016.json", "owner": "implementer" },
     { "id": "TASK-017", "title": "Fiscal configurável: tabelas, retenções, multa/juros, DAS", "status": "todo", "path": ".squad/tasks/TASK-017.json", "owner": "implementer" },
     { "id": "TASK-018", "title": "Conciliação bancária e importação OFX/CSV", "status": "todo", "path": ".squad/tasks/TASK-018.json", "owner": "implementer" },
     { "id": "TASK-019", "title": "Fluxo de caixa e exportação CSV/PDF", "status": "todo", "path": ".squad/tasks/TASK-019.json", "owner": "implementer" },
-    { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "todo", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
+    { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "in_progress", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
     { "id": "TASK-021", "title": "Verificação integral CA-01..55 + reviews", "status": "todo", "path": ".squad/tasks/TASK-021.json", "owner": "qa" },
     { "id": "TASK-022", "title": "Implantação: backup/restore, runbook, checklist", "status": "todo", "path": ".squad/tasks/TASK-022.json", "owner": "implementer" },
     { "id": "TASK-023", "title": "Direção de UI/UX e wireframes (aprov. humana antes de T020)", "status": "done", "path": "docs/design/", "owner": "product-analyst" }
@@ -48,6 +62,21 @@
   "last_verified": {
     "commit": null,
     "checks": [
+      {
+        "name": "Playwright MCP configurado e conectado (instrumento de verificacao visual)",
+        "result": "passed",
+        "evidence": "opencode.jsonc ganhou mcp.servers.playwright (type local; npx -y @playwright/mcp@latest --browser chrome --headless --isolated --viewport-size 1280x800; codemode false; timeout.startup 60000), com comentario justificando cada escolha. Verificacoes: (1) sintaxe V2 confirmada em opencode.ai/v2/docs/mcp-servers/ — o exemplo do README do Playwright para OpenCode ainda usa a forma V1 (mcp.playwright) e foi rejeitado; (2) npm view playwright@latest scripts vazio + package.json de unpkg confirma ausencia de postinstall, logo o npx nao baixa navegador; (3) Chrome 156 e Edge presentes na maquina; (4) pre-aquecimento 'npx -y @playwright/mcp@latest --help' exibiu a tela de opcoes (o 1o. download falhou com ERR_SSL_CIPHER_OPERATION_FAILED no unpack — transitório, retry OK); (5) 'opencode mcp list' => 'playwright connected'. Zero dependencia nova em package.json; 'npm test' e CI inalterados. Pendente de ordem: commit do opencode.jsonc."
+      },
+      {
+        "name": "MCP-PLAYWRIGHT em uso real — verificacao visual do login e do shell da T020 inc.2",
+        "result": "passed",
+        "evidence": "2026-10-21, coordenador, Chrome headless 1280x800, com API (3111) e Vite (5273) em execucao real e banco descartavel em %TEMP% (encerrado e apagado ao final). As ferramentas do MCP estao disponiveis NA SESSAO ATUAL (sem reiniciar). O que ficou comprovado: (a) tela de login renderiza de verdade e o ESTILO.md esta aplicado byte a byte — --cor-primaria-900=#162567 medido na topbar, --cor-primaria-600=#2143D1 (PA-1), --cor-foco=#3A5CE8 idem ESTILO.md:385, fonte do sistema sem CDN (PA-2), lang=pt-BR, 0 estilos inline; (b) foco visivel com outline 2px #3A5CE8, contraste 5.4:1 (WCAG 1.4.11 pede 3:1); (c) fluxo real pela interface: login -> #/empresas (ADR-0004 Q-UI-3), shell completo, logout, e senha errada renderizando role=alert sem enumerar usuarios; (d) 5 achados novas que o nivel HTTP nao podia pegar (V-1..V-5, detalhes em TASK-020.json). LIMITES CONFIRMADOS: o MCP prova renderizacao e aplicacao de token; nao prova que a tela ficou intuitiva (isso continua sendo aprovacao humana de UX). Capturas em .playwright-mcp/, agora gitignorado."
+      },
+      {
+        "name": "TASK-014 — lancamentos em partidas dobradas, imutabilidade e estorno entregue e verificada pelo coordenador",
+        "result": "passed",
+        "evidence": "Sessao ses_ea081101effeTNXeuLKEabQC5D, duas rodadas. Migração 0005 (lancamento + partida + 4 triggers de imutabilidade reaplicados a mao, precedente 0002). Rotas POST /lancamentos e POST /lancamentos/:id/estorno com exigirEscritaContabil, empresa_id resolvido no servidor (RF-04); PATCH/DELETE sempre 405 auditado orientando ao estorno (CA-25/RK-4). Verificacao INDEPENDENTE do coordenador: npm test 12 arquivos/51 testes; typecheck raiz exit 0; migracao do zero com DADOS REAIS — integrity_check ok, foreign_key_check [], foreign_key_list(partida) com conta_id->conta(id) e lancamento_id->lancamento(id), 6 triggers; garantias provadas direta no banco (partida orfa abortada por FK; UPDATE/DELETE em partida e lancamento abortados pelos 4 triggers; 2o estorno abortado por UNIQUE; CHECKs de valor e natureza abortando). CA cobertos por teste nomeado: 13, 14, 24, 25, 26, 29. ACHADO T014-F-1 levantado pelo coordenador e CORRIGIDO na rodada 2: a rodada 1 deixou partida.lancamento_id SEM foreign key para preservar uma fixture da T013 — integridade referencial do par e garantia do banco, nao da aplicacao (mesma filosofia que motivou os triggers de imutabilidade); fixtures provisorias nao podem forrar schema de producao. Base da T013 (43 testes) sem regressao. Nenhum commit."
+      },
       {
         "name": "TASK-002 — requisitos concluídos e revisados (2 rodadas independentes)",
         "result": "passed",
@@ -148,5 +177,5 @@
       "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-21T10:30:00Z"
+  "updated_at": "2026-10-21T16:10:00Z"
 }

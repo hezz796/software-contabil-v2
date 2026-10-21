@@ -28,9 +28,9 @@ function periodosNoBanco(t: Awaited<ReturnType<typeof createTestApp>>) {
 /**
  * Plano de contas hierárquico e períodos contábeis (RF-06, RF-09, CA-17/CA-27).
  *
- * A tabela `partida` (lançamentos) vem na T014; a fixture
- * `simularLancamentoEmConta` cria uma versão mínima para exercitar as regras
- * de "conta com lançamentos" (CA-17/CA-27) com o caminho de produção real.
+ * A fixture `simularLancamentoEmConta` (T014) grava lançamento + partida nas
+ * tabelas REAIS para exercitar as regras de "conta com lançamentos"
+ * (CA-17/CA-27) pelo caminho de produção.
  */
 describe('plano de contas hierárquico (RF-06, CA-17, CA-27)', () => {
   test('CA-17 criação de conta recusa código duplicado na empresa, tipo ausente e exclusão de conta com lançamentos — apenas inativar é oferecido; nada persistido', async () => {
@@ -88,7 +88,7 @@ describe('plano de contas hierárquico (RF-06, CA-17, CA-27)', () => {
       expect(erroResponseSchema.parse(semTipo.json()).erro).toMatch(/tipo da conta/i);
 
       // exclusão de conta COM LANÇAMENTOS: recusada com orientação a inativar
-      simularLancamentoEmConta(t.database.db, caixa.id);
+      simularLancamentoEmConta(t.database.db, caixa.id, x.id);
       const exclusao = await t.app.inject({
         method: 'DELETE',
         url: `/contas/${caixa.id}?empresa_id=${x.id}`,
@@ -164,7 +164,7 @@ describe('plano de contas hierárquico (RF-06, CA-17, CA-27)', () => {
       expect(filha.conta_pai_id).toBe(pai.id);
 
       // a pai tem lançamentos: excluir continua recusado (inativar é o caminho)
-      simularLancamentoEmConta(t.database.db, pai.id);
+      simularLancamentoEmConta(t.database.db, pai.id, x.id);
       const exclusao = await t.app.inject({
         method: 'DELETE',
         url: `/contas/${pai.id}?empresa_id=${x.id}`,
