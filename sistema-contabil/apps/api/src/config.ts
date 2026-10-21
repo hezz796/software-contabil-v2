@@ -4,6 +4,9 @@ import { z } from 'zod';
 /** Raiz do pacote da API (`apps/api`), usada para resolver caminhos relativos. */
 const API_ROOT = path.resolve(import.meta.dirname, '..');
 
+/** Aceita `true|false|1|0`; ausente => valor derivado de `NODE_ENV`. */
+const booleanEnv = z.enum(['true', 'false', '1', '0']).transform((valor) => valor === 'true' || valor === '1');
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('127.0.0.1'),
@@ -13,7 +16,14 @@ const envSchema = z.object({
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
   SESSION_SECRET: z.string().min(16).default('segredo-de-desenvolvimento-trocar'),
-  SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(720),
+  /** Expiração da sessão por inatividade (H14): ~30 min, configurável. */
+  SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(30),
+  /** `Secure` no cookie de sessão: padrão ligado só em produção. */
+  SESSION_COOKIE_SECURE: booleanEnv.optional(),
+  /** Tentativas de login falhas antes do bloqueio (H16). */
+  LOGIN_MAX_TENTATIVAS: z.coerce.number().int().positive().default(5),
+  /** Duração do bloqueio temporário de login em minutos (H16). */
+  LOGIN_BLOQUEIO_MINUTOS: z.coerce.number().int().positive().default(15),
 });
 
 export type NodeEnv = z.infer<typeof envSchema>['NODE_ENV'];
@@ -26,10 +36,16 @@ export interface AppConfig {
   /** Caminho absoluto do arquivo SQLite. Relativos são resolvidos a partir de `apps/api`. */
   databasePath: string;
   logLevel: LogLevel;
-  /** Usado na autenticação por sessão em cookie assinado (H14) — vem na TASK-011. */
+  /** Usado para assinar o cookie de sessão (ADR-0001/H14). */
   sessionSecret: string;
-  /** Expiração da sessão em minutos (H14) — usado na TASK-011. */
+  /** Expiração da sessão em minutos (H14: ~30 min de inatividade). */
   sessionTtlMinutes: number;
+  /** `Secure` no cookie de sessão (ligado por env; padrão em produção). */
+  sessionCookieSecure: boolean;
+  /** Tentativas de login falhas antes do bloqueio (H16: 5). */
+  loginMaxTentativas: number;
+  /** Duração do bloqueio temporário de login, em minutos (H16). */
+  loginBloqueioMinutos: number;
 }
 
 /**
@@ -56,5 +72,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     logLevel: dados.LOG_LEVEL,
     sessionSecret: dados.SESSION_SECRET,
     sessionTtlMinutes: dados.SESSION_TTL_MINUTES,
+    sessionCookieSecure: dados.SESSION_COOKIE_SECURE ?? dados.NODE_ENV === 'production',
+    loginMaxTentativas: dados.LOGIN_MAX_TENTATIVAS,
+    loginBloqueioMinutos: dados.LOGIN_BLOQUEIO_MINUTOS,
   };
 }

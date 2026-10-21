@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-011",
-    "next_action": "T011 (seguranca base) em execucao em background (ses_ea447776dffenwladNTJCzG32L). Gate da T020 CUMPRIDO: wireframes aprovados em 2026-10-20 e Q-UI-1..3 resolvidas em ADR-0004 (flag 'pode_configurar_fiscal'; cadastro minimo de conta bancaria agora no escopo da T018; sem dashboard). T020 pode iniciar apos T011 e deve incluir docs/design/ESTILO.md (fase de estilo: produto nao e preto e branco). Apos T011: seguir T012. Pendencias de produto restantes: v4 de seguranca, H9, RK-8. Pendencias de coordenacao: colisao de IDs com a landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing."
+    "current_task_id": "TASK-012",
+    "next_action": "T011 (seguranca base) em execucao quando o usuario encerrou a sessao; T011 concluida e verificada pelo coordenador (20/20 testes, commit pendente deste fechamento). Gate da T020 CUMPRIDO: wireframes aprovados em 2026-10-20 e Q-UI-1..3 resolvidas em ADR-0004 (flag 'pode_configurar_fiscal'; cadastro minimo de conta bancaria agora no escopo da T018; sem dashboard). T020 pode iniciar apos T011 e deve incluir docs/design/ESTILO.md (fase de estilo: produto nao e preto e branco). Ao retomar (/resume): iniciar TASK-012 (empresas, usuarios e atribuicoes — cria a tabela empresa e adiciona FK em usuario_empresa); T020 ja liberada e pode rodar em worktree paralela a partir de T012 (inclui docs/design/ESTILO.md). Pendencias de produto restantes: v4 de seguranca, H9, RK-8. Pendencias de coordenacao: colisao de IDs com a landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing."
   },
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
@@ -21,7 +21,7 @@
     { "id": "TASK-008", "title": "Definir estratégia de implantação web (ADR-0003)", "status": "done", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md", "owner": "coordinator" },
     { "id": "TASK-009", "title": "Plano de implementação do sistema contábil", "status": "done", "path": "docs/plans/PLAN-IMPLEMENTACAO.md", "owner": "coordinator" },
     { "id": "TASK-010", "title": "Fundação do monorepo e harness de teste", "status": "done", "path": "sistema-contabil/", "owner": "implementer" },
-    { "id": "TASK-011", "title": "Segurança base: sessão, papéis, tenant e auditoria", "status": "todo", "path": ".squad/tasks/TASK-011.json", "owner": "implementer" },
+    { "id": "TASK-011", "title": "Segurança base: sessão, papéis, tenant e auditoria", "status": "done", "path": ".squad/tasks/TASK-011.json", "owner": "implementer" },
     { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "todo", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
     { "id": "TASK-013", "title": "Plano de contas e períodos contábeis", "status": "todo", "path": ".squad/tasks/TASK-013.json", "owner": "implementer" },
     { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "todo", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
@@ -81,6 +81,11 @@
         "evidence": "Usuario em 2026-10-20: '(1) Eu aprovo com ressalvas (sera preto e branco?); (2) Aprovado'. Recessa esclarecida (nao e preto e branco: fase de estilo na T020 via docs/design/ESTILO.md). Q-UI-1 = flag pode_configurar_fiscal por usuario; Q-UI-2 = cadastro minimo de conta bancaria implicito no RF-16 (escopo movido para T018); Q-UI-3 = sem dashboard. Registrado em docs/decisions/ADR-0004-decisoes-interface-q-ui.md; gate da T020 cumprido; TASK-023 concluida."
       },
       {
+        "name": "TASK-011 — seguranca base entregue e verificada pelo coordenador",
+        "result": "passed",
+        "evidence": "4 tabelas (usuario, sessao, usuario_empresa, audit_event) + triggers append-only (BEFORE UPDATE/DELETE => RAISE(ABORT)); sessao em banco validada por requisicao (TTL 30min conforme H14, cookie assinado HttpOnly/SameSite); argon2id via @node-rs/argon2 (binarios NAPI pre-compilados, sem install scripts; nome do ADR-0001 corrigido — @node-rs/argonaut nao existe no registry); bloqueio de login (5 falhas, H16); middleware de papel e escopo de tenant sobrescrito pelo servidor; GET /auditoria restrito a admin com filtros empresa+periodo. Verificacao independente 2026-10-21: npm test = 20/20 (9 testes nomeados CA-18/19/21/22/38/39/50/51/52), typecheck 0 erros, migracao do zero testada com abort dos triggers. Sessao: ses_ea447776dffenwladNTJCzG32L. Decisao para nota formal: sessao default 30min (H14) e argon2 via @node-rs/argon2; ver TASK-011.json evidence."
+      },
+      {
         "name": "Colisão de identificadores entre fluxos (contábil x landing page)",
         "result": "passed",
         "evidence": "Resolvida em .squad/handoffs/HANDOFF-001-id-collision.json (ADR de implantação -> ADR-0003; task -> TASK-008; IDs TASK-004..007 e ADR-0002 cedidos ao fluxo da landing page)."
@@ -100,5 +105,5 @@
       "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
     }
   ],
-  "updated_at": "2026-10-21T00:10:00Z"
+  "updated_at": "2026-10-21T00:30:00Z"
 }

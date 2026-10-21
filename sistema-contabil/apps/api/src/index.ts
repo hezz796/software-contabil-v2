@@ -15,7 +15,7 @@ async function main(): Promise<void> {
     throw error;
   }
 
-  const app = await buildApp({ db, logger: { level: config.logLevel } });
+  const app = await buildApp({ db, logger: { level: config.logLevel }, config });
 
   const encerrar = (sinal: string): void => {
     app.log.info({ sinal }, 'encerrando API');

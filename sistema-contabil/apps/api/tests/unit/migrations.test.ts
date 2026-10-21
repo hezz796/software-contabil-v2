@@ -1,7 +1,16 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { MIGRATIONS_FOLDER, applyMigrations } from '../../src/db/migrations.ts';
 import { createTestDatabase, type TestDatabase } from '../harness.ts';
+
+/** Quantidade de entradas do journal do drizzle (uma por migração gerada). */
+function contarMigrationsNoJournal(): number {
+  const journal = JSON.parse(
+    fs.readFileSync(path.join(MIGRATIONS_FOLDER, 'meta', '_journal.json'), 'utf8'),
+  ) as { entries: unknown[] };
+  return journal.entries.length;
+}
 
 function contarTabela(t: TestDatabase, nome: string): number {
   const linha = t.sqlite
@@ -34,7 +43,9 @@ describe('migrações', () => {
       applyMigrations(t.db);
       expect(contarTabela(t, 'app_meta')).toBe(1);
       const aplicadas = contarMigrationsAplicadas(t);
-      expect(aplicadas).toBe(1);
+      // uma linha por migração do journal (conta cresce conforme o domínio)
+      expect(aplicadas).toBe(contarMigrationsNoJournal());
+      expect(aplicadas).toBeGreaterThan(0);
 
       // segunda execução no mesmo banco: no-op, sem duplicar nem falhar
       applyMigrations(t.db);

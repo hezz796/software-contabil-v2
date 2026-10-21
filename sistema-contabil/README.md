@@ -24,7 +24,10 @@ Sobe os dois processos em paralelo com saída prefixada (`[api]` / `[web]`):
 
 - API: `http://127.0.0.1:3001/health` — porta/host configuráveis por env
   (`PORT`, `HOST`; outros: `DATABASE_PATH`, `LOG_LEVEL`, `NODE_ENV`,
-  `SESSION_SECRET`, `SESSION_TTL_MINUTES`).
+  `SESSION_SECRET`, `SESSION_TTL_MINUTES` [padrão 30 min, H14],
+  `SESSION_COOKIE_SECURE` [`true|false`, padrão `true` só em produção],
+  `LOGIN_MAX_TENTATIVAS` [padrão 5, H16], `LOGIN_BLOQUEIO_MINUTOS`
+  [padrão 15, H16]).
 - Web: `http://localhost:5173` — porta por `WEB_PORT` (o Vite escuta em
   `localhost`).
 

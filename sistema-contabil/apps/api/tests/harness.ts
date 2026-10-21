@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.ts';
+import type { AppConfig } from '../src/config.ts';
 import { createDb, type AppDb, type Sqlite } from '../src/db/index.ts';
 import { applyMigrations } from '../src/db/migrations.ts';
 
@@ -74,9 +75,18 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-export async function createTestApp(): Promise<TestApp> {
+export interface CreateTestAppOptions {
+  /**
+   * Configuração da API para o app de teste (TTL de sessão, `Secure` do
+   * cookie, limite de tentativas...). Quando omitida, `buildApp` carrega
+   * `loadConfig()` do ambiente — mesmos defaults de produção/dev.
+   */
+  config?: AppConfig;
+}
+
+export async function createTestApp(options: CreateTestAppOptions = {}): Promise<TestApp> {
   const database = createTestDatabase();
-  const app = await buildApp({ db: database.db, logger: false });
+  const app = await buildApp({ db: database.db, logger: false, config: options.config });
 
   return {
     app,
