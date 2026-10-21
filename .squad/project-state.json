@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-013",
-    "next_action": "MARCO T012 FECHADO e COMMITADO em 2026-10-21 (commit e2759d6, 37 arquivos, +3558 linhas) — inclui codigo da T012, ESTILO.md, ADR-0005/0006/0007, requisitos v4, plano e estado. Verificado pelo coordenador (38 testes/10 arquivos, typecheck 0, migracao do zero inspecionada; rota-exemplo de teste confirmada fora de src/app.ts; diff de routes/auditoria.ts inspecionado = F13/CA-34 pretendido sem regressao do CA-39). Em execucao em PARALELO, com particao de arquivos: (1) TASK-013 plano de contas e periodos — dono de apps/api + packages/shared, ses_ea1108cf4ffetOto7FiKCib06g; (2) TASK-020 incremento 2 (tokens ESTILO + shell + login) — restrito a apps/web, ses_ea1108cf3ffe28kP7qtOtd4198. Atencao registrada: T014 e T016 DEVEM usar exigirEscritaContabil (T012) nas rotas reais de lancamento/titulo. Pendencias de produto: RK-8 adiado (aguarda caso real do escritorio). Pendencia de coordenacao: aprovacao do ADR-0002 da landing."
+    "current_task_id": "TASK-014",
+    "next_action": "T012, T013 e o incremento 2 da T020 entregues, verificados e commitados (e2759d6, fc76a37, e o commit do incremento 2 da T020). Duas correcoes do coordenador no incremento 2: ROTAS_API do vite.config.ts ('/plano-de-contas' inexistente -> '/contas', que devolvia HTML do SPA em vez de JSON) e secao do README da raiz sobre proxy. PROXIMO: T014 (lancamentos em partidas dobradas e estorno) — ATENCAO: DEVE usar o preHandler exigirEscritaContabil (T012) nas rotas de escrita; a tabela partida ja e esperada por contaTemLancamentos (T013) e pela fixture simularLancamentoEmConta. Depois, proximos incrementos da T020 (telas de negocio usando tokens, placeholders TelaPendente). Pendencias de produto: RK-8 adiado (aguarda caso real do escritorio). Pendencia de coordenacao: aprovacao do ADR-0002 da landing."
   },
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
@@ -44,9 +44,7 @@
     { "id": "ADR-0006", "title": "Formato de exportação dos relatórios (H9) = CSV + PDF — aceita em 2026-10-21", "path": "docs/decisions/ADR-0006-formato-exportacao-h9.md" },
     { "id": "ADR-0007", "title": "Aprovação dos requisitos v4 de segurança da exposição pública (V4-01..V4-10) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0007-aprovacao-requisitos-v4-seguranca.md" }
   ],
-  "active_work": [
-    { "id": "TASK-020", "owner": "implementer", "mode": "background", "session_id": "ses_ea1108cf3ffe28kP7qtOtd4198", "worktree": null, "started_at": "2026-10-21T11:50:00Z", "increment": "2 — tokens ESTILO + shell + login; restrito a apps/web" }
-  ],
+  "active_work": [],
   "last_verified": {
     "commit": null,
     "checks": [
@@ -104,6 +102,11 @@
         "name": "TASK-012 — empresas, gestao de usuarios e permissoes entregue e verificada pelo coordenador",
         "result": "passed",
         "evidence": "Sessao ses_ea15bcbc4ffenQE7nvqipQooHq. Tabela empresa (CNPJ validado e unico, situacao ativa/inativa, sem exclusao dura/H13) + FK usuario_empresa.empresa_id -> empresa.id via migracao 0003; leitura global auditada do admin (evento escopo.leitura_global); preHandler exigirEscritaContabil reutilizavel (T014/T016 devem usa-lo). Verificacao independente do coordenador 2026-10-21: npm test => 10 arquivos / 38 testes (18 novos; base T011 7/20), typecheck 0 erros, migracao do zero inspecionada (8 tabelas, FKs, uk empresa_cnpj_uk, integrity_check ok, foreign_key_check vazio, triggers append-only intactos). CA cobertos por teste nomeado: 15, 20, 21/RF-02, 23, 33, 34, 35, 36, 37, 40. Risco investigado e descartado: rota-exemplo /lancamentos-exemplo registrada SO em fixtures de teste, nao em src/app.ts. Diff de routes/auditoria.ts inspecionado (F13/CA-34 pretendido, CA-39 sem regressao)."
+      },
+      {
+        "name": "TASK-020 inc.2 — tokens ESTILO, shell e login entregues e verificados pelo coordenador",
+        "result": "passed",
+        "evidence": "Sessao ses_ea1108cf3ffe28kP7qtOtd4198, footprint confinado a apps/web (apps/api e packages/shared limpos, T013 ja commitada). 114 tokens do ESTILO.md §6 em tokens.css; 0 hex fora de tokens.css; 0 localStorage/sessionStorage. Login E2E INDEPENDENTE do coordenador pelo proxy do Vite: /health 200, POST /login 200 + cookie HttpOnly/SameSite=Lax/Max-Age=1800, /me com cookie 200, /me sem cookie 401 (CE-11), senha errada 401, logout 200 e /me seguinte 401. typecheck raiz 0 erros, 43 testes verdes, vite build ok. DOIS ACHADOS corrigidos pelo coordenador: (1) ROTAS_API listava '/plano-de-contas' (inexistente) e faltava '/contas' — /contas via Vite devolvia HTML do SPA em vez do JSON da API, falha silenciosa; corrigido e re-verificado (agora 401 da API); (2) sistema-contabil/README.md afirmava 'nao ha proxy' — secao reescrita. LIMITACAO: sem navegador headless, estados do login comprovados no nivel HTTP/codigo, sem captura visual (fica para T021)."
       },
       {
         "name": "TASK-013 — plano de contas e periodos entregue e verificada pelo coordenador",

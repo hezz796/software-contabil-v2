@@ -1,0 +1,146 @@
+/* =========================================================================
+   Tokens de estilo — contrato de ADR-0005 (docs/design/ESTILO.md §6).
+   Fonte única de valores: NENHUM hex, rgba ou medida de cor pode ser
+   escrito fora deste bloco — o resto do app usa apenas `var(--...)`.
+   ========================================================================= */
+
+:root {
+  /* ===== 1. PRIMÁRIA (azul institucional) ===== */
+  --cor-primaria-50:  #EEF3FF;
+  --cor-primaria-100: #DCE5FF;
+  --cor-primaria-200: #BFCFFF;
+  --cor-primaria-300: #93AAF9;   /* foco sobre superfície escura */
+  --cor-primaria-400: #6283F2;   /* só gráfico */
+  --cor-primaria-500: #3A5CE8;   /* --cor-foco */
+  --cor-primaria-600: #2143D1;   /* PRIMÁRIA: botão/link/marcador */
+  --cor-primaria-700: #1A35A8;   /* hover/pressed */
+  --cor-primaria-800: #172C84;   /* texto de destaque */
+  --cor-primaria-900: #162567;   /* barra superior */
+  --cor-primaria-950: #0F1B4B;   /* hover da barra */
+
+  /* ===== 2. SECUNDÁRIA (teal — só dados/progresso) ===== */
+  --cor-secundaria-100: #CCFBF1;
+  --cor-secundaria-600: #0F766E;
+  --cor-secundaria-700: #115E59;
+
+  /* ===== 3. NEUTROS ===== */
+  --cor-fundo:            #F5F7FA;
+  --cor-superficie:       #FFFFFF;
+  --cor-superficie-2:     #EEF1F6;   /* cabeçalho de grid, faixas */
+  --cor-superficie-hover: #F2F4F7;
+  --cor-texto:            #101828;
+  --cor-texto-2:          #475467;
+  --cor-texto-3:          #667085;
+  --cor-texto-desabilitado: #667085;
+  --cor-borda-controle:   #667085;   /* 3:1 (WCAG 1.4.11) */
+  --cor-borda:            #D0D5DD;   /* decorativa */
+  --cor-borda-suave:      #E4E7EC;   /* linhas de célula */
+  --cor-barra:            #162567;
+  --cor-barra-hover:      #0F1B4B;
+  --cor-barra-texto:      #FFFFFF;
+  --cor-barra-texto-2:    #E7EDFF;
+
+  /* ===== 4. SEMÂNTICAS ===== */
+  --cor-sucesso:           #15803D;
+  --cor-sucesso-texto:     #146C43;
+  --cor-sucesso-fundo:     #DCFCE7;
+  --cor-sucesso-fundo-suave: #F0FDF4;
+  --cor-aviso:             #B45309;
+  --cor-aviso-texto:       #92400E;
+  --cor-aviso-fundo:       #FEF3C7;
+  --cor-aviso-fundo-suave: #FFFBEB;
+  --cor-erro:              #B91C1C;
+  --cor-erro-texto:        #B91C1C;
+  --cor-erro-fundo:        #FEE2E2;
+  --cor-erro-fundo-suave:  #FEF2F2;
+  --cor-info:              #1D4ED8;
+  --cor-info-fundo:        #DBEAFE;
+  --cor-info-fundo-suave:  #EFF6FF;
+  --cor-neutro-fundo:      #F2F4F7;
+  --cor-neutro-borda:      #475467;
+  --cor-progresso:         #0F766E;
+  --cor-progresso-fundo:   #CCFBF1;
+
+  /* ===== 5. GRÁFICOS E TABELAS ===== */
+  --cor-grafico-debito:   #0F766E;
+  --cor-grafico-credito:  #6D28D9;
+  --cor-grafico-neutro:   #667085;
+  --cor-fluxo-positivo:   #15803D;
+  --cor-fluxo-negativo:   #B91C1C;
+  --cor-saldo-debito:     #0F766E;
+  --cor-saldo-credito:    #6D28D9;
+
+  /* ===== 6. FOCO ===== */
+  --cor-foco:        #3A5CE8;
+  --cor-foco-escuro: #93AAF9;
+
+  /* ===== 7. TIPOGRAFIA ===== */
+  --fonte-corpo: "Segoe UI", system-ui, -apple-system, "Roboto", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --fonte-mono:  ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", "Courier New", monospace;
+  --fonte-tamanho-display: 22px;
+  --fonte-tamanho-titulo:  16px;
+  --fonte-tamanho-subtitulo: 15px;
+  --fonte-tamanho-corpo:   14px;
+  --fonte-tamanho-tabela:  13px;
+  --fonte-tamanho-pequeno: 12px;
+  --fonte-tamanho-micro:   10.5px;
+  --fonte-peso-regular: 400;
+  --fonte-peso-medio:   600;
+  --fonte-peso-forte:   700;
+  --fonte-entrelinha-corpo: 1.55;
+  --fonte-entrelinha-tabela: 1.5;
+  --fonte-numeros: tabular-nums;   /* aplicar como font-variant-numeric */
+
+  /* ===== 8. ESPAÇAMENTO (base 4px) ===== */
+  --espacamento-0-5: 2px;
+  --espacamento-1:   4px;
+  --espacamento-1-5: 6px;
+  --espacamento-2:   8px;
+  --espacamento-3:   12px;
+  --espacamento-4:   16px;
+  --espacamento-5:   20px;
+  --espacamento-6:   24px;
+  --espacamento-8:   32px;
+  --espacamento-12:  48px;
+  /* estruturais herdados dos wireframes aprovados */
+  --espacamento-painel:   14px;
+  --espacamento-campo:    18px;   /* respiro entre campos (UIUX §4.2) */
+  --espacamento-grupo:    22px;
+  --espacamento-celula-y: 4px;
+  --espacamento-celula-x: 8px;
+
+  /* ===== 9. RAIOS ===== */
+  --raio-1: 3px;      /* botões, inputs, abas (wireframe) */
+  --raio-2: 6px;      /* cards, banners */
+  --raio-3: 10px;     /* diálogo, painel de estado */
+  --raio-pilula: 999px; /* badges, chips */
+
+  /* ===== 10. SOMBRAS ===== */
+  --sombra-1: 0 1px 2px rgba(16, 24, 40, .06);
+  --sombra-2: 0 4px 12px rgba(16, 24, 40, .10);
+  --sombra-3: 0 10px 30px rgba(16, 24, 40, .30); /* diálogo */
+
+  /* ===== 11. MEDIDAS DE BORDA E MOVIMENTO ===== */
+  --largura-borda-controle: 1px;
+  --largura-borda-foco:     2px;
+  --largura-borda-destaque: 3px;   /* marcador lateral do menu ativo */
+  --duracao-rapida: 120ms;
+
+  /* ===== 12. ALIASES POR COMPONENTE (contrato de uso) ===== */
+  --botao-primario-fundo:     var(--cor-primaria-600);
+  --botao-primario-fundo-hover: var(--cor-primaria-700);
+  --botao-primario-texto:     #FFFFFF;
+  --botao-secundario-fundo:   var(--cor-superficie);
+  --botao-secundario-borda:   var(--cor-borda-controle);
+  --menu-ativo-fundo:         var(--cor-primaria-50);
+  --menu-ativo-texto:         #172C84;
+  --menu-ativo-marcador:      var(--cor-primaria-600);
+  --grid-cabecalho-fundo:     var(--cor-superficie-2);
+  --grid-cabecalho-texto:     var(--cor-texto-2);
+  --grid-linha-hover:         var(--cor-superficie-hover);
+  --grid-totais-fundo:        var(--cor-primaria-50);
+  --grid-totais-texto:        #172C84;
+  --campo-borda:              var(--cor-borda-controle);
+  --campo-borda-invalida:     var(--cor-erro);
+  --campo-fundo-invalido:     var(--cor-erro-fundo-suave);
+}

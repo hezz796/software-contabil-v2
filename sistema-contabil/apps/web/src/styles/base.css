@@ -1,0 +1,524 @@
+/* =========================================================================
+   Regras transversais e componentes da fundação visual (T020, incremento 2).
+   Todo valor de cor/medida vem de `tokens.css` (ESTILO.md §6).
+   Estados conforme ESTILO.md §5.1/§5.2; densidade UIUX "denso no dado,
+   calmo na forma"; desktop-first >=1280px (R12); textos pt-BR (H1).
+   ========================================================================= */
+
+/* ------------------------------- reset -------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-width: 1280px; /* desktop-first >= 1280px (R12) */
+  font-family: var(--fonte-corpo);
+  font-size: var(--fonte-tamanho-corpo);
+  line-height: var(--fonte-entrelinha-corpo);
+  font-weight: var(--fonte-peso-regular);
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+}
+
+h1 {
+  margin: 0 0 var(--espacamento-0-5);
+  font-size: var(--fonte-tamanho-display);
+  font-weight: var(--fonte-peso-medio);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--fonte-tamanho-titulo);
+  font-weight: var(--fonte-peso-medio);
+}
+
+h3 {
+  margin: 0 0 var(--espacamento-2);
+  font-size: var(--fonte-tamanho-pequeno);
+  font-weight: var(--fonte-peso-medio);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cor-texto-2);
+}
+
+p {
+  margin: var(--espacamento-1-5) 0;
+}
+
+ul {
+  margin: var(--espacamento-1-5) 0;
+  padding-left: 18px;
+}
+
+a {
+  color: var(--cor-primaria-600);
+}
+
+/* --------------------------- foco visível ------------------------------ */
+/* WCAG 2.4.7/1.4.11: nunca `outline: none` sem substituto (§5.1). */
+:focus-visible {
+  outline: var(--largura-borda-foco) solid var(--cor-foco);
+  outline-offset: 2px;
+}
+
+/* Sobre a barra escura o anel usa o tom claro (6,26:1 — §3.8 item 32). */
+.topbar :focus-visible {
+  outline-color: var(--cor-foco-escuro);
+}
+
+/* ------------------- números tabulares (§4.3, obrigatório) ------------ */
+td.num,
+th.num,
+.num {
+  text-align: right;
+  font-variant-numeric: var(--fonte-numeros);
+  font-feature-settings: "tnum";
+}
+
+/* ------------------- movimento (§5.3 reduced-motion) ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ========================= barra superior ============================== */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--espacamento-4);
+  padding: var(--espacamento-2) var(--espacamento-4);
+  background: var(--cor-barra);
+  color: var(--cor-barra-texto);
+  font-size: var(--fonte-tamanho-tabela);
+  line-height: var(--fonte-entrelinha-tabela);
+}
+
+.topbar .marca {
+  font-weight: var(--fonte-peso-forte);
+  letter-spacing: 0.02em;
+}
+
+.topbar .apoio {
+  color: var(--cor-barra-texto-2);
+}
+
+.topbar .spacer {
+  flex: 1;
+}
+
+.topbar .usuario {
+  color: var(--cor-barra-texto-2);
+}
+
+.topbar .papel {
+  border: var(--largura-borda-controle) solid var(--cor-barra-texto-2);
+  border-radius: var(--raio-pilula);
+  padding: var(--espacamento-0-5) var(--espacamento-2);
+  font-weight: var(--fonte-peso-medio);
+  color: var(--cor-barra-texto);
+  white-space: nowrap;
+}
+
+/* ====================== layout: menu + conteúdo ======================== */
+.layout {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 40px);
+}
+
+.sidebar {
+  width: 232px;
+  flex: 0 0 232px;
+  background: var(--cor-superficie);
+  border-right: var(--largura-borda-controle) solid var(--cor-borda);
+  padding: var(--espacamento-2) 0 var(--espacamento-5);
+}
+
+.sidebar .grupo {
+  padding: var(--espacamento-painel) var(--espacamento-4) var(--espacamento-1);
+  font-size: var(--fonte-tamanho-micro);
+  font-weight: var(--fonte-peso-medio);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto-2);
+}
+
+.sidebar .item-menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espacamento-1-5);
+  padding: var(--espacamento-2) var(--espacamento-painel);
+  font-size: var(--fonte-tamanho-tabela);
+  line-height: var(--fonte-entrelinha-tabela);
+  color: var(--cor-texto);
+  text-decoration: none;
+  border-left: var(--largura-borda-destaque) solid transparent;
+  transition: background var(--duracao-rapida) ease;
+}
+
+.sidebar .item-menu:hover {
+  background: var(--cor-superficie-hover);
+}
+
+/* Item ativo: fundo de destaque calmo + marcador lateral (§5.1). */
+.sidebar .item-menu.ativo {
+  background: var(--menu-ativo-fundo);
+  color: var(--menu-ativo-texto);
+  border-left-color: var(--menu-ativo-marcador);
+  font-weight: var(--fonte-peso-medio);
+}
+
+.sidebar .quem {
+  flex: none;
+  font-style: normal;
+  font-size: var(--fonte-tamanho-micro);
+  line-height: 1.6;
+  color: var(--cor-texto-3);
+  background: var(--cor-superficie);
+  border: var(--largura-borda-controle) dashed var(--cor-borda-controle);
+  border-radius: var(--raio-1);
+  padding: 0 var(--espacamento-1);
+  white-space: nowrap;
+}
+
+.sidebar .legenda {
+  margin-top: var(--espacamento-4);
+  padding: var(--espacamento-2) var(--espacamento-4) 0;
+  border-top: var(--largura-borda-controle) solid var(--cor-borda);
+  font-size: var(--fonte-tamanho-pequeno);
+  line-height: 1.5;
+  color: var(--cor-texto-3);
+}
+
+.conteudo {
+  flex: 1;
+  min-width: 0;
+  max-width: 1680px;
+  padding: var(--espacamento-5) var(--espacamento-6) var(--espacamento-12);
+}
+
+.cabecalho {
+  margin-bottom: var(--espacamento-painel);
+}
+
+.cabecalho .linha1 {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espacamento-2);
+  flex-wrap: wrap;
+}
+
+.cabecalho .sub {
+  margin-top: var(--espacamento-0-5);
+  font-size: var(--fonte-tamanho-tabela);
+  color: var(--cor-texto-2);
+}
+
+/* chip de referência de requisito (mono, como nos wireframes) */
+.ref {
+  display: inline-block;
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-tamanho-micro);
+  line-height: 1.6;
+  color: var(--cor-texto-2);
+  background: var(--cor-superficie-2);
+  border: var(--largura-borda-controle) dashed var(--cor-borda-controle);
+  border-radius: var(--raio-1);
+  padding: 0 var(--espacamento-1);
+  white-space: nowrap;
+}
+
+/* ============================== painéis ================================ */
+.painel {
+  background: var(--cor-superficie);
+  border: var(--largura-borda-controle) solid var(--cor-borda);
+  border-radius: var(--raio-2);
+  margin-bottom: var(--espacamento-4);
+}
+
+.painel > .topo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacamento-3);
+  padding: var(--espacamento-2) var(--espacamento-painel);
+  background: var(--cor-superficie-2);
+  border-bottom: var(--largura-borda-controle) solid var(--cor-borda-suave);
+  border-radius: var(--raio-2) var(--raio-2) 0 0;
+}
+
+.painel > .topo .acoes {
+  margin-left: auto;
+  display: flex;
+  gap: var(--espacamento-2);
+  align-items: center;
+}
+
+.painel .corpo {
+  padding: var(--espacamento-painel);
+}
+
+/* ============================= botões ================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacamento-1-5);
+  min-height: 32px;
+  padding: var(--espacamento-1-5) var(--espacamento-4);
+  font-family: inherit;
+  font-size: var(--fonte-tamanho-tabela);
+  line-height: var(--fonte-entrelinha-tabela);
+  font-weight: var(--fonte-peso-medio);
+  border: var(--largura-borda-controle) solid transparent;
+  border-radius: var(--raio-1);
+  cursor: pointer;
+  transition:
+    background var(--duracao-rapida) ease,
+    border-color var(--duracao-rapida) ease;
+}
+
+.btn.primario {
+  background: var(--botao-primario-fundo);
+  border-color: var(--botao-primario-fundo);
+  color: var(--botao-primario-texto);
+}
+
+.btn.primario:hover:not(:disabled) {
+  background: var(--botao-primario-fundo-hover);
+  border-color: var(--botao-primario-fundo-hover);
+}
+
+.btn.secundario {
+  background: var(--botao-secundario-fundo);
+  border-color: var(--botao-secundario-borda);
+  color: var(--cor-texto);
+}
+
+.btn.secundario:hover:not(:disabled) {
+  background: var(--cor-superficie-hover);
+}
+
+/* Desabilitado: token legível, sem `opacity` (§5.1). */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--cor-superficie-hover);
+  border-color: var(--cor-borda);
+  color: var(--cor-texto-desabilitado);
+  cursor: not-allowed;
+}
+
+/* Botão sobre a barra escura (topbar). */
+.btn-topo {
+  background: transparent;
+  border-color: var(--cor-barra-texto-2);
+  color: var(--cor-barra-texto);
+}
+
+.btn-topo:hover:not(:disabled) {
+  background: var(--cor-barra-hover);
+  border-color: var(--cor-barra-texto);
+}
+
+/* =========================== formulários =============================== */
+.formulario {
+  max-width: 440px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacamento-1);
+  margin-bottom: var(--espacamento-campo);
+}
+
+.campo label {
+  font-size: var(--fonte-tamanho-tabela);
+  font-weight: var(--fonte-peso-medio);
+  color: var(--cor-texto);
+}
+
+.campo .obrig {
+  font-size: var(--fonte-tamanho-pequeno);
+  font-weight: var(--fonte-peso-regular);
+  color: var(--cor-texto-3);
+}
+
+.campo input {
+  height: 34px;
+  padding: var(--espacamento-1-5) var(--espacamento-2);
+  font-family: inherit;
+  font-size: var(--fonte-tamanho-corpo);
+  color: var(--cor-texto);
+  background: var(--cor-superficie);
+  border: var(--largura-borda-controle) solid var(--campo-borda);
+  border-radius: var(--raio-1);
+}
+
+/* Erro de campo (FB-1, §5.1): borda 2px + fundo claro + mensagem. */
+.campo input[aria-invalid="true"] {
+  border: var(--largura-borda-foco) solid var(--campo-borda-invalida);
+  background: var(--campo-fundo-invalido);
+}
+
+.campo .erro-campo {
+  font-size: var(--fonte-tamanho-pequeno);
+  color: var(--cor-erro-texto);
+}
+
+.acoes-formulario {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacamento-2);
+  margin-top: var(--espacamento-3);
+}
+
+.nota {
+  margin-top: var(--espacamento-4);
+  padding-top: var(--espacamento-3);
+  border-top: var(--largura-borda-controle) solid var(--cor-borda-suave);
+  font-size: var(--fonte-tamanho-pequeno);
+  color: var(--cor-texto-3);
+}
+
+/* ======================= mensagens de recusa =========================== */
+/* FB-2/FB-5 (§5.2): título + detalhe + ação sugerida. */
+.msg {
+  padding: var(--espacamento-3) var(--espacamento-4);
+  margin-bottom: var(--espacamento-3);
+  border: var(--largura-borda-controle) solid transparent;
+  border-left-width: 4px;
+  border-radius: var(--raio-2);
+  font-size: var(--fonte-tamanho-corpo);
+}
+
+.msg .titulo {
+  font-weight: var(--fonte-peso-medio);
+}
+
+.msg .detalhe {
+  margin-top: var(--espacamento-1);
+  font-size: var(--fonte-tamanho-pequeno);
+  color: var(--cor-texto);
+}
+
+.msg .acao {
+  margin-top: var(--espacamento-2);
+  font-size: var(--fonte-tamanho-pequeno);
+  color: var(--cor-texto);
+}
+
+.msg .acao b {
+  font-weight: var(--fonte-peso-medio);
+}
+
+/* recusa/falha (CE-17, credencial, falha de conexão) */
+.msg.erro {
+  background: var(--cor-erro-fundo);
+  border-color: var(--cor-erro);
+}
+
+.msg.erro .titulo {
+  color: var(--cor-erro-texto); /* 5,30:1 — §3.8 item 16 */
+}
+
+/* negação sem exposição (CE-11, CE-12) e condições sem dados */
+.msg.neutro {
+  background: var(--cor-neutro-fundo);
+  border-color: var(--cor-neutro-borda);
+}
+
+.msg.neutro .titulo {
+  color: var(--cor-texto); /* 16,11:1 — §3.8 item 27 */
+}
+
+/* ========================= estados de sistema ========================== */
+.carregando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacamento-2);
+  min-height: 60vh;
+  color: var(--cor-texto-2);
+  font-size: var(--fonte-tamanho-tabela);
+}
+
+.esqueleto {
+  width: 320px;
+  height: 14px;
+  background: var(--cor-superficie-2);
+  border-radius: var(--raio-1);
+  animation: pulso 1.1s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* estado vazio (§5.1): painel tracejado + título forte + texto suave */
+.estado-vazio {
+  background: var(--cor-superficie);
+  border: var(--largura-borda-controle) dashed var(--cor-borda);
+  border-radius: var(--raio-2);
+  padding: var(--espacamento-6);
+  text-align: center;
+}
+
+.estado-vazio .titulo {
+  margin: 0 0 var(--espacamento-2);
+  font-size: var(--fonte-tamanho-subtitulo);
+  font-weight: var(--fonte-peso-forte);
+  color: var(--cor-texto);
+}
+
+.estado-vazio .descricao {
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--cor-texto-3);
+}
+
+.estado-vazio .chip-pendencia {
+  display: inline-block;
+  margin-top: var(--espacamento-3);
+  padding: var(--espacamento-0-5) var(--espacamento-2);
+  font-size: var(--fonte-tamanho-micro);
+  font-weight: var(--fonte-peso-medio);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cor-texto-2);
+  background: var(--cor-superficie-hover);
+  border: var(--largura-borda-controle) dashed var(--cor-borda-controle);
+  border-radius: var(--raio-pilula);
+}
+
+/* ============================== login ================================== */
+.pagina-login {
+  max-width: 520px;
+  margin: var(--espacamento-8) auto var(--espacamento-12);
+  padding: 0 var(--espacamento-4);
+}
+
+.pagina-login .painel {
+  box-shadow: var(--sombra-2);
+}

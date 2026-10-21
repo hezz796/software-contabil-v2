@@ -31,9 +31,21 @@ Sobe os dois processos em paralelo com saída prefixada (`[api]` / `[web]`):
 - Web: `http://localhost:5173` — porta por `WEB_PORT` (o Vite escuta em
   `localhost`).
 
-**Não há proxy entre web e API nesta etapa.** O cliente HTTP tipado fica em
-`apps/web/src/api-client/` e passa a ser usado nas próximas tarefas; quando a
-UI chamar a API, o proxy do Vite (ou CORS) será documentado aqui.
+**Há proxy entre web e API em dev.** O `apps/web/vite.config.ts` declara
+`server.proxy` para os prefixos de rota da API (`ROTAS_API`), de modo que
+`npm run dev` no web consome a API local **sem CORS e sem passo manual** —
+mesma origem no dev e no deploy (ADR-0003). O alvo do proxy é `API_URL`
+(ex.: `http://127.0.0.1:4000`) ou, na ausência, `API_HOST`/`API_PORT` (ou
+`PORT`) com default `http://127.0.0.1:3001`, que casa com o default da API.
+
+Verificação rápida, com os dois processos no ar:
+
+```powershell
+Invoke-RestMethod http://localhost:5173/health   # deve responder {"status":"ok","database":"ok"}
+```
+
+Detalhes, env vars e estrutura do front: `apps/web/README.md`. Quando a API
+ganhar rotas novas, acrescente o prefixo em `ROTAS_API` no `vite.config.ts`.
 
 ## Testar
 

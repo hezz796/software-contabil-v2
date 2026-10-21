@@ -1,6 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
+// Ordem importa: tokens primeiro (variáveis), depois as regras que as usam.
+import './styles/tokens.css';
+import './styles/base.css';
 
 const container = document.getElementById('root');
 if (!container) {
