@@ -8,11 +8,16 @@ import * as schema from './schema.ts';
  * Parâmetros exigidos por toda conexão (ADR-0001): WAL para leitura
  * concorrente, synchronous=FULL para durabilidade das transações contábeis e
  * busy_timeout explícito para falhar com espera em vez de "database is locked".
+ *
+ * `foreignKeys` (TASK-012): FKs verificadas em runtime (integridade referencial
+ * de `usuario_empresa -> empresa`); antes eram só declarativas (default do
+ * better-sqlite3 é OFF).
  */
 export const SQLITE_PRAGMAS = {
   journalMode: 'wal',
   synchronous: 'full',
   busyTimeoutMs: 5000,
+  foreignKeys: true,
 } as const;
 
 /** Abre (ou cria) o arquivo SQLite e aplica os pragmas do projeto. */
@@ -25,6 +30,7 @@ export function openSqlite(filePath: string) {
   sqlite.pragma(`journal_mode = ${SQLITE_PRAGMAS.journalMode}`);
   sqlite.pragma(`synchronous = ${SQLITE_PRAGMAS.synchronous}`);
   sqlite.pragma(`busy_timeout = ${SQLITE_PRAGMAS.busyTimeoutMs}`);
+  sqlite.pragma(`foreign_keys = ${SQLITE_PRAGMAS.foreignKeys ? 'ON' : 'OFF'}`);
   return sqlite;
 }
 

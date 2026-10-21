@@ -8,6 +8,8 @@ import { ErroAplicacao } from './errors.ts';
 import { registrarAutenticacao } from './middleware/auth.ts';
 import { auditoriaRoutes } from './routes/auditoria.ts';
 import { authRoutes } from './routes/auth.ts';
+import { empresaRoutes } from './routes/empresas.ts';
+import { gestaoUsuariosRoutes } from './routes/gestao-usuarios.ts';
 import { healthRoutes } from './routes/health.ts';
 
 declare module 'fastify' {
@@ -41,6 +43,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   app.decorate('db', options.db);
   app.decorate('config', config);
   registrarAutenticacao(app);
+  // Decorator usado pelo preHandler de escrita contábil (TASK-012); null = não resolvido.
+  app.decorateRequest('escritaContabilEmpresaId', null);
 
   // Resposta de erro padrão `{ erro }`; detalhes internos só no log.
   app.setErrorHandler((erro: unknown, request, reply) => {
@@ -64,6 +68,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   await app.register(authRoutes);
   await app.register(auditoriaRoutes);
+  await app.register(empresaRoutes);
+  await app.register(gestaoUsuariosRoutes);
   await app.register(healthRoutes);
 
   return app;

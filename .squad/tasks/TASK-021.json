@@ -12,13 +12,13 @@
       "re-execucao da su inteira do zero em banco limpo",
       "code review independente e correcao de achados relevantes",
       "security review (RK-6): tenant, sessao/cookies, CSRF, rate limit, headers (HSTS/CSP), CORS, HTTPS da ADR-0003",
-      "consolidacao das lacunas de seguridad da exposicao publica como proposta de requisitos v4 (para aprovacao humana)"
+      "IMPLEMENTACAO e verificacao dos requisitos v4 APROVADOS (V4-01..10, docs/requirements/v4-SEGURANCA-EXPOSICAO-PUBLICA.md + ADR-0007): rate limit (V4-04), headers/CSP (V4-05), CORS negado em producao (V4-02), guarda fail-fast do SESSION_SECRET (V4-07/PA-4, fecha o achado A-1), e decisao final do CSP style-src com o build na mao (V4-PA-5)"
     ],
     "exclude": [
       "alterar requisitos aprovados sem aprovacao humana",
       "compra de VPS, deploy ou publicacao",
       "corrigir escopo do fluxo da landing page",
-      "arquivos fora de sistema-contabil/ + docs/ (v4 proposta) e .squad/tasks/TASK-021.json"
+      "arquivos fora de sistema-contabil/ + docs/requirements/v4-SEGURANCA-EXPOSICAO-PUBLICA.md e .squad/tasks/TASK-021.json"
     ]
   },
   "acceptance_criteria": [
@@ -29,7 +29,8 @@
     "CA-34: admin sem atribuicao le o balancete de X e a leitura aparece auditada.",
     "Su inteira verde em banco limpo, com FIX-01 reproduzindo os numeros canonicos.",
     "Code review e security review executados com relatorio; nenhum achado critico/em alto aberto.",
-    "Proposta de requisitos v4 (CSRF, HTTPS, rate limit, headers, CORS) entregue como documento separado para aprovacao."
+    "Proposta de requisitos v4 (CSRF, HTTPS, rate limit, headers, CORS) entregue como documento separado para aprovacao.",
+    "V4 aprovada (ADR-0007): V4-01..10 implementados ou verificados; guarda fail-fast do SESSION_SECRET em producao (achado A-1 fechado); CSRF sem token conforme V4-PA-3; decisao do CSP style-src registrada (V4-PA-5)."
   ],
   "verification_plan": [
     {
@@ -52,7 +53,7 @@
   "blockers": [],
   "worktree": null,
   "session_id": null,
-  "estimate_hours": 10,
+  "estimate_hours": 16,
   "created_at": "2026-10-20T22:55:00Z",
   "updated_at": "2026-10-20T22:55:00Z"
 }

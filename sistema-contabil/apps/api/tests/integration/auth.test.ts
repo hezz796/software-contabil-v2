@@ -47,10 +47,12 @@ describe('autenticação e sessão (RF-03, RF-19, H14, H16)', () => {
         expect(resposta.headers['set-cookie']).toBeUndefined();
       }
 
-      // tentativa de pegar "tela de dados" direto pela URL também não existe
+      // tela de dados exige sessão (a rota GET /empresas nasceu na TASK-012 —
+      // RF-01; antes ela nem existia e retornava 404; sem sessão continua 401
+      // sem vazar conteúdo)
       const semRota = await t.app.inject({ method: 'GET', url: '/empresas' });
-      expect(semRota.statusCode).toBe(404);
-      expect(semRota.body).not.toMatch(/empresa_ids|eventos/);
+      expect(semRota.statusCode).toBe(401);
+      expect(semRota.body).not.toMatch(/empresa_ids|eventos|razao_social/);
 
       // nenhum usuário sem sessão: estado preservado
       expect(usuarioPorId(t.database.db, usuarioTeste.id)?.ativo).toBe(true);

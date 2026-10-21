@@ -8,19 +8,19 @@
   "scope": {
     "include": [
       "fluxo de caixa por intervalo: saldo inicial, entradas/saidas realizadas (baixas) e previstas (titulos em aberto por vencimento), saldo final",
-      "exportacao CSV e PDF dos 4 relatorios (bibliotecas abertas, ADR-0001)",
+      "exportacao CSV e PDF dos 4 relatorios (formato definido no ADR-0006; bibliotecas abertas csv-stringify/pdfkit ou equivalentes, ADR-0001)",
       "mesmos valores da tela e do arquivo (sem divergencia de arredondamento: centavos)"
     ],
     "exclude": [
       "front-end (T020) — aqui fica a API/gerador de arquivo; o botao de export na tela chega em T020/T021",
-      "decisao final de formato H9 (pendencia de produto; CSV+PDF recomendado, cobertura de CA-11 independe do formato escolhido)",
       "arquivos fora de sistema-contabil/ alem de .squad/tasks/TASK-019.json"
     ]
   },
   "acceptance_criteria": [
     "CA-09 com saldo inicial 10.000,00 (D-2), recebimento 1.500,00 (D-2), titulo 2.000,00 aberto (D+5) e titulo 3.000,00 aberto (D+10): entradas/saidas exibidas nas datas certas e saldo final 10.500,00 = 10.000 + 1.500 + 2.000 - 3.000.",
     "CA-11 os 4 relatorios possuem acao de exportacao e o arquivo gerado contem os mesmos valores da tela (conferencia linha a linha em teste).",
-    "Teste de exportacao compara arquivo (CSV) com a resposta da API do relatorio, campo a campo."
+    "Teste de exportacao compara arquivo (CSV) com a resposta da API do relatorio, campo a campo.",
+    "ADR-0006: CSV em UTF-8 com BOM, separador ';' e decimal com virgula; PDF com empresa, periodo e data/hora de emissao; nenhum dos dois diverge da tela (centavos)."
   ],
   "verification_plan": [
     {

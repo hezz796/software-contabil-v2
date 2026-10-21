@@ -13,8 +13,9 @@ import { ErroAplicacao } from '../errors.ts';
  * recusada com resposta genérica (sem expor dados de outra empresa) e pode ser
  * auditada pelo chamador.
  *
- * A leitura global do administrador (sem atribuição) é implementada na
- * TASK-012 — aqui o mecanismo é somente recusa.
+ * A leitura global auditada do administrador (F13/CA-34) e as recusas
+ * auditadas de escrita contábil estão em `services/permissoes.ts` (TASK-012);
+ * `resolverEscopoEmpresa` permanece como utilitário síncrono de escopo puro.
  */
 
 export interface EscopoUsuario {

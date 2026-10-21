@@ -4,13 +4,14 @@ import type { LoginResponse } from '@sistema-contabil/shared';
 import type { AppDb } from '../../src/db/index.ts';
 import { usuarioEmpresa, usuario, type Papel, type Usuario } from '../../src/db/schema.ts';
 import { criarUsuario } from '../../src/services/usuarios.ts';
+import { garantirEmpresaTeste } from './empresas.ts';
 
 /**
  * Fixtures mínimas de segurança para os testes da TASK-011.
  *
  * Usuários são criados pelo serviço interno (`criarUsuario`, que também aplica
- * a política de senha e audita a criação); não existe seed de produção nesta
- * etapa — o CRUD de usuários/atribuições vem na TASK-012.
+ * a política de senha e audita a criação); o CRUD HTTP de
+ * usuários/atribuições vem na TASK-012 (`routes/gestao-usuarios.ts`).
  */
 
 /** Senha padrão das fixtures (>= 8 caracteres, conforme H15). */
@@ -44,6 +45,9 @@ export async function criarUsuarioTeste(
   });
 
   for (const empresaId of opcoes.empresas ?? []) {
+    // FK `usuario_empresa -> empresa` é verificada em runtime (TASK-012):
+    // a atribuição só entra se a empresa existir — garante antes de inserir.
+    garantirEmpresaTeste(db, empresaId);
     db.insert(usuarioEmpresa)
       .values({ usuarioId: usuario.id, empresaId })
       .prepare()

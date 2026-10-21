@@ -58,10 +58,10 @@ T009 (plano) ─┬─ T010 fundação
 | **T018** | Conciliação bancária e importação OFX/CSV | T017 | 7 |
 | **T019** | Fluxo de caixa e exportação CSV/PDF | T017 | 5 |
 | **T020** | Frontend completo pt-BR (todas as telas) | T011* **+ T023 aprovada** | 14 |
-| **T021** | Verificação integral CA-01..55, FIX-01, code review e security review (RK-6) | T015..T020 | 10 |
-| **T022** | Implantação: backup/restore testado, runbook e checklist de publicação | T021 | 3 |
+| **T021** | Verificação integral CA-01..55, FIX-01, code review e security review (RK-6) + v4 aprovada | T015..T020 | 16 |
+| **T022** | Implantação: backup/restore testado, runbook e checklist de publicação | T021 | 5,5 |
 | **T023** | Direção de UI/UX e wireframes (paralela a T010/T011; aprovação humana antes de T020) | T009 | 4 |
-| | **Total** | | **97** |
+| | **Total** | | **106** |
 
 \* T020 inicia após T011 **e após a aprovação humana dos wireframes da T023**, evoluindo incrementalmente em worktree paralela; cada endpoint entregue pela cadeia do núcleo vira tela correspondente. Integração e correção final em T021.
 
@@ -152,7 +152,7 @@ Conferência: 55 CA, todos atribuídos; CA-12/21/33/34 aparecem em duas tarefas 
 
 ## 4. Estimativas e prazo
 
-- **Somatório das tarefas: ≈97 h de trabalho de agente** (T010..T023; revisada para cima em relação à faixa pré-plano de 50–80 h — o plano detalhou testes, reviews e UI/UX que antes estavam estimados por palpite).
+- **Somatório das tarefas: ≈106 h de trabalho de agente** (T010..T023; revisada para cima em relação à faixa pré-plano de 50–80 h — o plano detalhou testes, reviews e UI/UX que antes estavam estimados por palpite). **+9 h em 2026-10-21** pela v4 de segurança aprovada (ADR-0007: T021 10→16 h, T022 3→5,5 h).
 - **Calendário:** 3 a 4 semanas com paralelismo (2–3 agentes em worktrees) e 1 rodada de revisão humana por dia; até 5 semanas se correções pós-review, a verificação dos 55 CA e a revisão dos wireframes renderem o lado de cima.
 - **Marcos:** fim da semana 1 ≈ T011 (login funcional); semana 2 ≈ T015 (relatórios com FIX-01); semana 3 ≈ T018/T019 + frontend avançado; semana 4 ≈ T021/T022.
 

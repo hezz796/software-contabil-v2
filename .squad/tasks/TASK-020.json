@@ -2,7 +2,7 @@
   "id": "TASK-020",
   "title": "Frontend completo pt-BR (todas as telas)",
   "objective": "Implementar a interface web React+Vite em pt-BR com todas as telas do MVP consumindo a API tipada, sem acoes proibidas para os papéis e exibindo as recusas previstas.",
-  "status": "todo",
+  "status": "in_progress",
   "owner": "implementer",
   "depends_on": ["TASK-011", "TASK-023"],
   "scope": {
@@ -40,13 +40,17 @@
       "method": "Cliente tipado compartilhado; divergencia de contrato quebra em tempo de compilacao."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "Incremento 1 (fase de estilo) ENTREGUE em 2026-10-21, sessao ses_ea15bcbc4ffdedlyZF2ekdH7Sw: docs/design/ESTILO.md (45.6 KB, 10 secoes). Verificacao do coordenador: git status mostra apenas docs/design/ESTILO.md como arquivo novo do agente (nada fora do escopo, nenhum commit); 116 tokens nomeados; tabela de contraste WCAG com ~40 pares (108 celulas hex); mapeamento CE-01..CE-22 -> estado visual; correspondencia das 11 telas dos wireframes a tokens; decisoes D-1..D-12 e pendencias PA-1..PA-7 documentadas. Alinhamento confirmado: fonte do sistema sem CDN (ADR-0003/R4), tabular-nums obrigatorio, borda de controle #667085 (4.97:1 >= 3:1 do WCAG 1.4.11), --cor-erro fora do dialogo de estorno (RK-4). CONTRASTE CALCULADO POR FORMULA, NAO MEDIDO EM NAVEGADOR (limitacao registrada no doc §8.3; medicao fica para a aplicacao + T021). AGUARDANDO aprovacao humana de PA-1..PA-7 (gate do critério 'aprovacao humana do estilo registrada').",
+    "APROVACAO HUMANA REGISTRADA em 2026-10-21 via docs/decisions/ADR-0005-aprovacao-direcao-visual-estilo.md: PA-1 (paleta), PA-2 (fonte do sistema) e PA-6 (10,5px) aprovadas pelo usuario; PA-3/4/5 aprovadas pelos defaults recomendados; PA-7 cumprida pela ADR. STATUS escrito em ESTILO.md §8.2 e §10. Gate 'aprovacao humana do estilo registrada' CUMPRIDO; ESTILO.md virou contrato de estilo (mudanca significativa = nova decisao). Resta da T020: aplicar os tokens no apps/web e as demonstracoes por CA."
+  ],
   "assumptions": [
-    "Tarefa incremental em worktree paralela a partir de T011, somente após aprovacao humana dos wireframes da T023; depende dos endpoints de cada modulo conforme eles saem da cadeia do nucleo."
+    "Tarefa incremental em worktree paralela a partir de T011, somente após aprovacao humana dos wireframes da T023; depende dos endpoints de cada modulo conforme eles saem da cadeia do nucleo.",
+    "Os incrementos de codigo do front comecam apos a integracao da T012: T012 e T020 editariam packages/shared/src/index.ts ao mesmo tempo (conflito de arquivos vedado por AGENTS.md)."
   ],
   "blockers": [],
   "worktree": null,
-  "session_id": null,
+  "session_id": "ses_ea15bcbc4ffdedlyZF2ekdH7Sw",
   "estimate_hours": 14,
   "created_at": "2026-10-20T22:55:00Z",
   "updated_at": "2026-10-20T22:55:00Z"

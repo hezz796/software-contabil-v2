@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-012",
-    "next_action": "T011 (seguranca base) em execucao quando o usuario encerrou a sessao; T011 concluida e verificada pelo coordenador (20/20 testes, commit pendente deste fechamento). Gate da T020 CUMPRIDO: wireframes aprovados em 2026-10-20 e Q-UI-1..3 resolvidas em ADR-0004 (flag 'pode_configurar_fiscal'; cadastro minimo de conta bancaria agora no escopo da T018; sem dashboard). T020 pode iniciar apos T011 e deve incluir docs/design/ESTILO.md (fase de estilo: produto nao e preto e branco). Ao retomar (/resume): iniciar TASK-012 (empresas, usuarios e atribuicoes — cria a tabela empresa e adiciona FK em usuario_empresa); T020 ja liberada e pode rodar em worktree paralela a partir de T012 (inclui docs/design/ESTILO.md). Pendencias de produto restantes: v4 de seguranca, H9, RK-8. Pendencias de coordenacao: colisao de IDs com a landing page (HANDOFF-001-id-collision) e aprovacao do ADR-0002 da landing."
+    "current_task_id": "TASK-013",
+    "next_action": "MARCO T012 FECHADO em 2026-10-21 e verificado pelo coordenador (10 arquivos / 38 testes — base T011 era 7/20; typecheck 0 erros; migracao do zero com FK empresa em usuario_empresa e triggers intactos; rota-exemplo de teste confirmada fora de src/app.ts). Pendencias de produto resolvidas em 2026-10-21: ADR-0005 (direcao visual), ADR-0006 (H9 = CSV+PDF), ADR-0007 (v4 de seguranca aprovada; guarda fail-fast do SESSION_SECRET agendada na T021; CSRF recusado). RK-8 adiado ate o escritorio fornecer caso real. PROXIMO PASSO: abrir T013 (plano de contas e periodos) + os incrementos de codigo do front da T020, que ja aplicam os tokens aprovados do ESTILO.md — lembrar que T014 e T016 DEVEM usar o preHandler exigirEscritaContabil (services/permissoes.ts) para herdar as recusas auditadas verificadas na T012. Pendencia de coordenacao: aprovacao do ADR-0002 da landing."
   },
   "tasks": [
     { "id": "TASK-001", "title": "Criar README.md na raiz documentando a squad", "status": "done", "path": "README.md", "owner": "coordinator" },
@@ -22,7 +22,7 @@
     { "id": "TASK-009", "title": "Plano de implementação do sistema contábil", "status": "done", "path": "docs/plans/PLAN-IMPLEMENTACAO.md", "owner": "coordinator" },
     { "id": "TASK-010", "title": "Fundação do monorepo e harness de teste", "status": "done", "path": "sistema-contabil/", "owner": "implementer" },
     { "id": "TASK-011", "title": "Segurança base: sessão, papéis, tenant e auditoria", "status": "done", "path": ".squad/tasks/TASK-011.json", "owner": "implementer" },
-    { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "todo", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
+    { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "done", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
     { "id": "TASK-013", "title": "Plano de contas e períodos contábeis", "status": "todo", "path": ".squad/tasks/TASK-013.json", "owner": "implementer" },
     { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "todo", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
     { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "todo", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
@@ -39,7 +39,10 @@
     { "id": "ADR-0001", "title": "Stack e arquitetura do sistema contábil (MVP) — aceita em 2026-10-20", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md" },
     { "id": "ADR-0002", "title": "Stack da landing page (HTML/CSS/JS estático) — proposta do fluxo paralelo, aguardando aprovação", "path": "docs/decisions/ADR-0002-landing-page-stack.md" },
     { "id": "ADR-0003", "title": "Implantação na web: VPS em São Paulo + SQLite — aceita em 2026-10-20", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md" },
-    { "id": "ADR-0004", "title": "Decisões de produto da interface (Q-UI-1..3) e aprovação dos wireframes — aceita em 2026-10-20", "path": "docs/decisions/ADR-0004-decisoes-interface-q-ui.md" }
+    { "id": "ADR-0004", "title": "Decisões de produto da interface (Q-UI-1..3) e aprovação dos wireframes — aceita em 2026-10-20", "path": "docs/decisions/ADR-0004-decisoes-interface-q-ui.md" },
+    { "id": "ADR-0005", "title": "Aprovação da direção visual (ESTILO.md, PA-1..PA-7) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0005-aprovacao-direcao-visual-estilo.md" },
+    { "id": "ADR-0006", "title": "Formato de exportação dos relatórios (H9) = CSV + PDF — aceita em 2026-10-21", "path": "docs/decisions/ADR-0006-formato-exportacao-h9.md" },
+    { "id": "ADR-0007", "title": "Aprovação dos requisitos v4 de segurança da exposição pública (V4-01..V4-10) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0007-aprovacao-requisitos-v4-seguranca.md" }
   ],
   "active_work": [],
   "last_verified": {
@@ -91,19 +94,49 @@
         "evidence": "Resolvida em .squad/handoffs/HANDOFF-001-id-collision.json (ADR de implantação -> ADR-0003; task -> TASK-008; IDs TASK-004..007 e ADR-0002 cedidos ao fluxo da landing page)."
       },
       {
+        "name": "TASK-020 inc.1 — docs/design/ESTILO.md entregue e verificado (aguardando aprovacao humana)",
+        "result": "passed",
+        "evidence": "Sessao ses_ea15bcbc4ffdedlyZF2ekdH7Sw. Arquivo unico do incremento: docs/design/ESTILO.md (45.6 KB). Verificacao do coordenador: git status confina o trabalho ao arquivo pedido; 116 tokens; ~40 pares de contraste WCAG; CE-01..22 mapeados a estados; 11 telas correspondidas; PA-1..PA-7 listadas. Limitacao: contraste por formula WCAG, nao medido em navegador (fica para aplicacao + T021)."
+      },
+      {
+        "name": "TASK-012 — empresas, gestao de usuarios e permissoes entregue e verificada pelo coordenador",
+        "result": "passed",
+        "evidence": "Sessao ses_ea15bcbc4ffenQE7nvqipQooHq. Tabela empresa (CNPJ validado e unico, situacao ativa/inativa, sem exclusao dura/H13) + FK usuario_empresa.empresa_id -> empresa.id via migracao 0003; leitura global auditada do admin (evento escopo.leitura_global); preHandler exigirEscritaContabil reutilizavel (T014/T016 devem usa-lo). Verificacao independente do coordenador 2026-10-21: npm test => 10 arquivos / 38 testes (18 novos; base T011 7/20), typecheck 0 erros, migracao do zero inspecionada (8 tabelas, FKs, uk empresa_cnpj_uk, integrity_check ok, foreign_key_check vazio, triggers append-only intactos). CA cobertos por teste nomeado: 15, 20, 21/RF-02, 23, 33, 34, 35, 36, 37, 40. Risco investigado e descartado: rota-exemplo /lancamentos-exemplo registrada SO em fixtures de teste, nao em src/app.ts. Diff de routes/auditoria.ts inspecionado (F13/CA-34 pretendido, CA-39 sem regressao)."
+      },
+      {
+        "name": "v4 de seguranca da exposicao publica — requisitos propostos e APROVADOS (ADR-0007)",
+        "result": "passed",
+        "evidence": "Proposta entregue pelo product-analyst (ses_ea1315796ffeysqIzTtuSxqoIp) em docs/requirements/v4-SEGURANCA-EXPOSICAO-PUBLICA.md: 10 requisitos V4-01..10 com status concreto, matriz req x risco, custos (+8h, sem tarefa nova — pendurado em T021/T022) e §2 do que a T011 ja atende. Verificacao do coordenador: arquivo unico do agente, achado A-1 confirmado no codigo (config.ts:18 SESSION_SECRET com default 'segredo-de-desenvolvimento-trocar' usado em producao; atenuante: sessao validada no banco). Usuario em 2026-10-21 aprovou: PA-1 (conjunto inteiro), PA-3 (recusar token CSRF — mesmo origin + SameSite=Lax + JSON/preflight), PA-4 (guarda fail-fast do SESSION_SECRET na T021); PA-2 pelos valores de rate limit; PA-5 (CSP style-src) deferida para T021 com medicao do build. STATUS escrito no §6 do documento; ADR-0007 registrada; item 'v4 de seguranca aprovada' do checklist da T022 DESBLOQUEADO."
+      },
+      {
+        "name": "H9 — formato de exportacao dos relatorios decidido (ADR-0006)",
+        "result": "passed",
+        "evidence": "Usuario em 2026-10-21 escolheu CSV + PDF. Registrado em docs/decisions/ADR-0006-formato-exportacao-h9.md; H9 atualizada na tabela de hipoteses de SISTEMA-CONTABIL.md (aberta -> resolvida); D2 atualizada; TASK-019 escopo ajustado (remove 'decisao final de formato H9' do exclude, referencia ADR-0006 e critério de CSV UTF-8+BOM/';'/decimal virgula e PDF com empresa+periodo+emissao). Bloqueador de checklist da T022 'H9 resolvido' resolvido; restam v4 de seguranca, RK-6 e VPS."
+      },
+      {
+        "name": "Aprovacao humana da direcao visual (ESTILO.md, PA-1..PA-7)",
+        "result": "passed",
+        "evidence": "Usuario em 2026-10-21 aprovou PA-1 (paleta azul #2143D1 + teal + neutros frios, sem troca de familia), PA-2 (fonte do sistema, sem CDN/self-hosted) e PA-6 (manter 10,5px). PA-3/4/5 aprovadas pelos defaults recomendados sem objecao; PA-7 cumprida pela ADR-0005. STATUS escrito em docs/design/ESTILO.md §8.2 e §10. Gate 'aprovacao humana do estilo registrada' da T020 CUMPRIDO; falta a aplicacao no app."
+      },
+      {
+        "name": "Retomada 2026-10-21 — base do repo confirmada antes de T012",
+        "result": "passed",
+        "evidence": "HEAD=98d651e (T011). Execucao do coordenador em sistema-contabil/: npm test => 7 arquivos / 20 testes passando; npm run typecheck => 0 erros (api, web, shared). Blocker da landing (TASK-004) confirmado resolvido. Arquivos nao rastreados do fluxo paralelo (landpage/, ADR-0002, landpage.md, TASK-004..007.json) intactos."
+      },
+      {
         "name": "Compra/contratação de VPS",
         "result": "not_run",
         "evidence": "Não é ação da squad; ADR-0003 recomenda e a contratação é decisão humana."
       }
     ],
-    "notes": "Requisitos, stack, implantacao, plano e direcao de UI/UX decididos. Estimativa revisada pelo plano: ~97h de agente somadas (T010..T023), 3-4 semanas de calendario com paralelismo; revisao oficial de estimativa ao fim de T011 e T016. Nenhum codigo de produto criado ate este commit; nenhum custo assumido. O campo commit fica null de proposito (auto-referencia): usar git log. Fluxo paralelo da landing page: artefatos TASK-005/006/007, ADR-0002 e landpage/ observados, nao inspecionados nem commitados por este fluxo."
+    "notes": "Requisitos, stack, implantacao, plano e direcao de UI/UX decididos. Estimativa revisada: ~106h de agente somadas (T010..T023; +9h em 2026-10-21 pela v4 aprovada em ADR-0007), 3-4 semanas de calendario com paralelismo; revisao oficial de estimativa ao fim de T011 e T016. Nenhum custo assumido; VPS ainda nao contratada (decisao humana). O campo commit fica null de proposito (auto-referencia): usar git log. Fluxo paralelo da landing page: artefatos TASK-004..007, ADR-0002 e landpage/ observados, nao inspecionados nem commitados por este fluxo."
   },
   "blockers": [
     {
-      "description": "Fluxo da landing page: depends_on de TASK-005/006/007 e o cabeçalho de docs/requirements/landpage.md referenciam TASK-004 como tarefa de requisitos da landing, mas não existe .squad/tasks/TASK-004.json.",
+      "description": "[RESOLVIDO em 2026-10-21] depends_on de TASK-005/006/007 e docs/requirements/landpage.md referenciavam TASK-004 inexistente.",
       "owner": "sessão da landing page",
-      "required_action": "Criar .squad/tasks/TASK-004.json com os requisitos da landing page ou renomear as referências, conforme .squad/handoffs/HANDOFF-001-id-collision.json."
+      "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-21T00:30:00Z"
+  "updated_at": "2026-10-21T10:30:00Z"
 }

@@ -286,7 +286,7 @@ Hipóteses reversíveis de baixo impacto; qualquer uma pode ser refutada pelo co
 | H6 | Papéis: administrador (gestão + leitura global auditada, **sem escrita contábil**) e contador (escrita na rotina das empresas atribuídas). | **Confirmada e refinada** — PB-1 (F9) e decisão I2 (F13). |
 | H7 | Valores sempre positivos, com natureza dada por débito/crédito; BRL com 2 casas decimais. | Aberta; prática contábil usual; multi-moeda seria escopo novo. |
 | H8 | Baixa **total ou parcial** de títulos, com saldo devedor/credor rastreável. | **Confirmada** — F14/M4 pressupõem baixa parcial ("parcial ou total"). |
-| H9 | Exportação dos relatórios principais em arquivo (formato a definir na arquitetura: ex. PDF e/ou planilha). | Aberta; compartilhamento é expectativa de escritório; formato é detalhe de implementação. |
+| H9 | Exportação dos relatórios principais em arquivo (formato a definir na arquitetura: ex. PDF e/ou planilha). | **Resolvida em 2026-10-21 (aprovação humana, ADR-0006): CSV + PDF** nos 4 relatórios (balancete, razão, balanço, fluxo de caixa), gerados pela API. |
 | H10 | MVP não resolve edições simultâneas do mesmo registro por dois usuários, além da imutabilidade dos lançamentos. | Aberta; risco aceito no MVP; controle otimista pode ser adicionado depois. |
 | H11 | Terminologia e agrupamentos seguem o PCASP; layouts oficiais de obrigação não são requisito. | Aberta; coerente com F4 e R1. |
 | H12 | **Exercício = os 12 períodos mensais do ano-calendário; encerramento do exercício é ação manual ao encerrar o 12º período, com transferência do resultado ao PL.** | Definição de domínio registrada pela revisão (I4), usada em RF-09/CA-31/CA-32; se o escritório usar exercício de forma diferente (ex.: encerramento por data), ajusta-se RF-09. |
@@ -319,7 +319,7 @@ Hipóteses reversíveis de baixo impacto; qualquer uma pode ser refutada pelo co
 ### Dependências
 
 - **D1 — TASK-003 (arquitetura):** escolha de stack, modelo de dados e design de interface dependem deste documento aprovado. Nenhum bloqueio prévio a esta etapa.
-- **D2 — Definições remanescentes para a arquitetura:** as PBs estão todas respondidas (§9); restam detalhes de implementação registrados como hipóteses de valor: formatos de exportação (H9), política de senha (H15), limite de tentativas (H16) e expiração de sessão (H14) — revisáveis sem reabrir escopo.
+- **D2 — Definições remanescentes para a arquitetura:** as PBs estão todas respondidas (§9); detalhes de implementação registrados como hipóteses de valor e suas resoluções: **H9 resolvida em 2026-10-21 (CSV + PDF, ADR-0006)**; política de senha (H15), limite de tentativas (H16) e expiração de sessão (H14) adotadas na T011 (Argon2id; 5 falhas/15 min; TTL 30 min). Restam apenas H17..H19 fiscais, dependentes da validação D4/RK-8.
 - **D3 — Operação/implantação (posterior):** backup e publicação do ambiente (R13) não fazem parte do MVP de produto e precisam ser definidos antes do uso em produção.
 - **D4 — Validação fiscal com caso real (nova):** tabelas, alíquotas e base de cálculo (H17..H19) devem ser conferidas com o escritório antes do uso em produção (ver RK-8).
 

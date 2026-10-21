@@ -11,7 +11,7 @@ function pragma(sqlite: Sqlite, nome: string): unknown {
  * (consulta no banco aberto pelo harness), não apenas a constante de código.
  */
 describe('configuração real do SQLite', () => {
-  test('journal_mode=wal, synchronous=FULL e busy_timeout>0', () => {
+  test('journal_mode=wal, synchronous=FULL, busy_timeout>0 e foreign_keys=ON (integridade, T012)', () => {
     const t = createTestDatabase({ migrate: false });
     try {
       const journal = String(pragma(t.sqlite, 'journal_mode')).toLowerCase();
@@ -28,6 +28,9 @@ describe('configuração real do SQLite', () => {
       expect(Number.isFinite(busyTimeout), 'busy_timeout deve ser numérico').toBe(true);
       expect(busyTimeout, 'busy_timeout deve ser > 0').toBeGreaterThan(0);
       expect(busyTimeout).toBe(SQLITE_PRAGMAS.busyTimeoutMs);
+
+      // FK verificada em runtime (T012): usuario_empresa -> empresa.
+      expect(Number(pragma(t.sqlite, 'foreign_keys')), 'foreign_keys deve ser 1 (ON)').toBe(1);
     } finally {
       t.destroy();
     }
@@ -38,6 +41,7 @@ describe('configuração real do SQLite', () => {
       journalMode: 'wal',
       synchronous: 'full',
       busyTimeoutMs: 5000,
+      foreignKeys: true,
     });
     expect(SQLITE_PRAGMAS.busyTimeoutMs).toBeGreaterThan(0);
   });

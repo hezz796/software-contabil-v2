@@ -77,9 +77,39 @@ export const sessao = sqliteTable(
 export type Sessao = typeof sessao.$inferSelect;
 
 /**
- * Atribuição N:N usuário x empresa (RF-04). Sem FK para `empresa`: a tabela
- * de empresas é criada na TASK-012 (fora do escopo desta tarefa).
- * Remoção de linha tem efeito imediato na requisição seguinte (R10/CA-37).
+ * Empresa (cliente do escritório) — RF-01/RF-04, TASK-012.
+ *
+ * - `cnpj` armazenado normalizado (14 dígitos, sem pontuação), validado na
+ *   camada de entrada (CA-15) e único no banco (CA-15: duplicado recusado).
+ * - Situação ativa/inativa: **não existe exclusão dura no MVP** (H13) — não há
+ *   rota nem trigger de DELETE; inativa bloqueia escrita contábil nova e
+ *   mantém leitura/histórico (CA-40/CE-14).
+ */
+export const empresa = sqliteTable(
+  'empresa',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    razaoSocial: text('razao_social').notNull(),
+    /** 14 dígitos sem pontuação (ver domínio `cnpj`). */
+    cnpj: text('cnpj').notNull(),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [uniqueIndex('empresa_cnpj_uk').on(t.cnpj)],
+);
+
+export type Empresa = typeof empresa.$inferSelect;
+export type NovaEmpresa = typeof empresa.$inferInsert;
+
+/**
+ * Atribuição N:N usuário x empresa (RF-04). Remoção de linha tem efeito
+ * imediato na requisição seguinte (R10/CA-37) — o escopo é relido do banco
+ * a cada requisição.
  */
 export const usuarioEmpresa = sqliteTable(
   'usuario_empresa',
@@ -87,7 +117,9 @@ export const usuarioEmpresa = sqliteTable(
     usuarioId: integer('usuario_id')
       .notNull()
       .references(() => usuario.id),
-    empresaId: integer('empresa_id').notNull(),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
   },
   (t) => [
     primaryKey({ columns: [t.usuarioId, t.empresaId] }),
