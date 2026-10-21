@@ -8,9 +8,11 @@ import { ErroAplicacao } from './errors.ts';
 import { registrarAutenticacao } from './middleware/auth.ts';
 import { auditoriaRoutes } from './routes/auditoria.ts';
 import { authRoutes } from './routes/auth.ts';
+import { contaRoutes } from './routes/contas.ts';
 import { empresaRoutes } from './routes/empresas.ts';
 import { gestaoUsuariosRoutes } from './routes/gestao-usuarios.ts';
 import { healthRoutes } from './routes/health.ts';
+import { periodoRoutes } from './routes/periodos.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -70,6 +72,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(auditoriaRoutes);
   await app.register(empresaRoutes);
   await app.register(gestaoUsuariosRoutes);
+  await app.register(contaRoutes);
+  await app.register(periodoRoutes);
   await app.register(healthRoutes);
 
   return app;

@@ -1,4 +1,12 @@
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+  type AnySQLiteColumn,
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
 
 /**
  * Bootstrap de metadados (não é regra de negócio): pares chave/valor usados
@@ -161,3 +169,88 @@ export const auditEvent = sqliteTable(
 
 export type AuditEvent = typeof auditEvent.$inferSelect;
 export type NovoAuditEvent = typeof auditEvent.$inferInsert;
+
+/**
+ * Tipos de conta do plano (RF-06, ADR-0001): ativo, passivo, patrimônio
+ * líquido, receita e despesa — estrutura aderente ao PCASP (H5) e
+ * **configurável pelo escritório** (sem pre-carga obrigatória, H5 aberta).
+ */
+export const TIPOS_CONTA = ['ativo', 'passivo', 'patrimonio_liquido', 'receita', 'despesa'] as const;
+export type TipoConta = (typeof TIPOS_CONTA)[number];
+
+/**
+ * Conta do plano de contas por empresa (RF-06, TASK-013, CA-17/CA-27).
+ *
+ * - `codigo` é único POR EMPRESA (`conta_empresa_codigo_uk`): o mesmo código
+ *   pode existir em empresas diferentes;
+ * - `conta_pai_id` forma a hierarquia pai/filhas (auto-referência; `NULL` =
+ *   nível raiz). Pai com filhas ativas não é inativada antes das filhas
+ *   (CA-27);
+ * - situação ativa/inativa: **não existe exclusão dura** (CA-17/CE-13) — conta
+ *   com lançamentos só inativa; inativa sai das escolhas novas e o histórico
+ *   permanece. A regra "tem lançamentos" é apurada sobre `partida` (T014);
+ *   até lá nenhuma conta pode ter lançamentos.
+ */
+export const conta = sqliteTable(
+  'conta',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** Ex.: `1.1.1`; normalizado (trim) na camada de entrada. */
+    codigo: text('codigo').notNull(),
+    descricao: text('descricao').notNull(),
+    tipo: text('tipo', { enum: TIPOS_CONTA }).notNull(),
+    /** Auto-referência para o pai; a validação de escopo (mesma empresa) é de serviço. */
+    contaPaiId: integer('conta_pai_id').references((): AnySQLiteColumn => conta.id),
+    ativa: integer('ativa', { mode: 'boolean' }).notNull().default(true),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('conta_empresa_codigo_uk').on(t.empresaId, t.codigo),
+    index('conta_empresa_idx').on(t.empresaId),
+    index('conta_pai_idx').on(t.contaPaiId),
+  ],
+);
+
+export type Conta = typeof conta.$inferSelect;
+export type NovaConta = typeof conta.$inferInsert;
+
+/**
+ * Período contábil mensal (RF-09, TASK-013, base do CA-24/CA-31/CA-32).
+ *
+ * - único por (empresa, ano, mês) (`periodo_empresa_ano_mes_uk`);
+ * - estado aberto/encerrado expresso por `encerrado_em`: `NULL` = aberto,
+ *   ISO-8601 UTC = data/hora do encerramento. As **ações** de encerramento
+ *   (zera resultado, estornos, rolagem e exercício — H12) são da TASK-015;
+ *   aqui estão apenas a base e o estado.
+ */
+export const periodoContabil = sqliteTable(
+  'periodo_contabil',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    ano: integer('ano').notNull(),
+    /** 1..12 (validado na camada de entrada). */
+    mes: integer('mes').notNull(),
+    /** ISO-8601 UTC; `NULL` = período aberto. */
+    encerradoEm: text('encerrado_em'),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('periodo_empresa_ano_mes_uk').on(t.empresaId, t.ano, t.mes),
+    index('periodo_empresa_idx').on(t.empresaId),
+  ],
+);
+
+export type PeriodoContabil = typeof periodoContabil.$inferSelect;

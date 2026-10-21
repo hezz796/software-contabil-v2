@@ -248,3 +248,154 @@ export const atribuicoesResponseSchema = z.object({
 });
 
 export type AtribuicoesResponse = z.infer<typeof atribuicoesResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Plano de contas e períodos contábeis (TASK-013, RF-06/RF-09)                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tipos de conta do plano (RF-06, ADR-0001): ativo, passivo, patrimônio
+ * líquido, receita e despesa. Obrigatório na criação — CA-17 recusa tipo
+ * ausente com mensagem específica citando as opções.
+ */
+export const tipoContaSchema = z.enum(
+  ['ativo', 'passivo', 'patrimonio_liquido', 'receita', 'despesa'],
+  { error: 'Selecione o tipo da conta (ativo, passivo, patrimônio líquido, receita ou despesa).' },
+);
+export type TipoContaDTO = z.infer<typeof tipoContaSchema>;
+
+/** Situação da conta (RF-06): ativa/inativa — sem exclusão dura (CA-17/CE-13). */
+export const situacaoContaSchema = z.enum(['ativa', 'inativa']);
+export type SituacaoConta = z.infer<typeof situacaoContaSchema>;
+
+/**
+ * Código da conta (RF-06): obrigatório e único POR EMPRESA (não global) — o
+ * mesmo código pode existir em empresas diferentes (CA-17).
+ */
+export const codigoContaSchema = z
+  .string({ error: 'Informe o código da conta.' })
+  .trim()
+  .min(1, 'Informe o código da conta.')
+  .max(30, 'O código da conta deve ter no máximo 30 caracteres.');
+
+/** Descrição da conta (RF-06): obrigatória. */
+export const descricaoContaSchema = z
+  .string({ error: 'Informe a descrição da conta.' })
+  .trim()
+  .min(1, 'Informe a descrição da conta.')
+  .max(200, 'A descrição da conta deve ter no máximo 200 caracteres.');
+
+/** Conta do plano devolvida pela API. */
+export const contaSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  codigo: z.string(),
+  descricao: z.string(),
+  tipo: tipoContaSchema,
+  /** `null` = conta de nível raiz. */
+  conta_pai_id: z.number().int().nullable(),
+  situacao: situacaoContaSchema,
+  /** Contas com lançamentos só inativam, nunca excluem (CA-17/CA-27/CE-13). */
+  tem_lancamentos: z.boolean(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+  atualizado_em: z.iso.datetime(),
+});
+
+export type ContaDTO = z.infer<typeof contaSchema>;
+
+/** Criação de conta (RF-06): `empresa_id` é obrigatório e validado pelo guard de escrita. */
+export const criarContaRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  codigo: codigoContaSchema,
+  descricao: descricaoContaSchema,
+  tipo: tipoContaSchema,
+  conta_pai_id: z.number().int().positive().nullish(),
+  situacao: situacaoContaSchema.optional(),
+});
+
+export type CriarContaRequest = z.infer<typeof criarContaRequestSchema>;
+
+/** Edição de conta: descrição, tipo e/ou situação. Código e pai são imutáveis (decisão T013). */
+export const atualizarContaRequestSchema = z
+  .object({
+    descricao: descricaoContaSchema.optional(),
+    tipo: tipoContaSchema.optional(),
+    situacao: situacaoContaSchema.optional(),
+  })
+  .refine(
+    (valor) =>
+      valor.descricao !== undefined || valor.tipo !== undefined || valor.situacao !== undefined,
+    'Informe ao menos um campo para atualizar (descrição, tipo ou situação).',
+  );
+
+export type AtualizarContaRequest = z.infer<typeof atualizarContaRequestSchema>;
+
+/** Filtros de `GET /contas`: empresa obrigatória; `somente_ativas` tira as inativas das escolhas novas. */
+export const contasQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  somente_ativas: z.enum(['true', 'false']).optional(),
+});
+
+export type ContasQuery = z.infer<typeof contasQuerySchema>;
+
+export const listaContasResponseSchema = z.object({
+  contas: z.array(contaSchema),
+});
+
+export type ListaContasResponse = z.infer<typeof listaContasResponseSchema>;
+
+/** Ano do período contábil (RF-09): inteiro em faixa plausível. */
+export const anoPeriodoSchema = z
+  .coerce.number({ error: 'Informe o ano do período contábil (ex.: 2026).' })
+  .int('O ano do período contábil deve ser um número inteiro (ex.: 2026).')
+  .min(1900, 'O ano do período contábil deve estar entre 1900 e 9999.')
+  .max(9999, 'O ano do período contábil deve estar entre 1900 e 9999.');
+
+/** Mês do período contábil (RF-09): 1 a 12. */
+export const mesPeriodoSchema = z
+  .coerce.number({ error: 'Informe o mês do período contábil (1 a 12).' })
+  .int('O mês do período contábil deve ser um número inteiro de 1 a 12.')
+  .min(1, 'O mês do período contábil deve estar entre 1 e 12.')
+  .max(12, 'O mês do período contábil deve estar entre 1 e 12.');
+
+/** Situação do período (RF-09): aberto/encerrado (o encerramento em si é T015). */
+export const situacaoPeriodoSchema = z.enum(['aberto', 'encerrado']);
+export type SituacaoPeriodo = z.infer<typeof situacaoPeriodoSchema>;
+
+/** Período contábil devolvido pela API. */
+export const periodoContabilSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  ano: z.number().int(),
+  mes: z.number().int(),
+  situacao: situacaoPeriodoSchema,
+  /** ISO-8601 UTC; `null` enquanto aberto. */
+  encerrado_em: z.iso.datetime().nullable(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type PeriodoContabilDTO = z.infer<typeof periodoContabilSchema>;
+
+/** Criação de período contábil mensal (RF-09): único por (empresa, ano, mês). */
+export const criarPeriodoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  ano: anoPeriodoSchema,
+  mes: mesPeriodoSchema,
+});
+
+export type CriarPeriodoRequest = z.infer<typeof criarPeriodoRequestSchema>;
+
+/** Filtros de `GET /periodos`: empresa obrigatória. */
+export const periodosQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+});
+
+export type PeriodosQuery = z.infer<typeof periodosQuerySchema>;
+
+export const listaPeriodosResponseSchema = z.object({
+  periodos: z.array(periodoContabilSchema),
+});
+
+export type ListaPeriodosResponse = z.infer<typeof listaPeriodosResponseSchema>;
