@@ -2,9 +2,11 @@
   "id": "TASK-015",
   "title": "Balancete, razao, balanco e encerramento de periodo/exercicio (FIX-01)",
   "objective": "Implementar os relatorios contabeis (RF-10..RF-12) e o encerramento de periodo e exercicio (RF-09/H12) restrito ao contador com escrita ativa, validados com a fixture FIX-01.",
-  "status": "todo",
+  "status": "done",
   "owner": "implementer",
-  "depends_on": ["TASK-014"],
+  "depends_on": [
+    "TASK-014"
+  ],
   "scope": {
     "include": [
       "balancete por periodo (debitos, creditos, saldo, acumulado, totais)",
@@ -25,7 +27,9 @@
     "CA-05 com FIX-01: balanco ativo 1.300,00, passivo 200,00, PL 1.100,00 e igualdade confere.",
     "CA-31 encerramento zera contas de resultado e mantem permanentes; tentativa do admin e recusada com mensagem de permissao e auditada.",
     "CA-32 encerramento do 12o periodo transfere o resultado (100,00) ao PL, balanco em 31/12 equilibrado; tentativa do admin recusada e auditada.",
-    "FIX-01 e uma unica factory reutilizada por todos os testes acima, com asserts nos numeros canonicos do requisito."
+    "FIX-01 e uma unica factory reutilizada por todos os testes acima, com asserts nos numeros canonicos do requisito.",
+    "CA-24 no banco: com dados reais gravados enquanto aberto e periodo depois encerrado, o INSERT direto em lancamento e abortado pelo trigger lancamento_no_periodo_encerrado com mensagem especifica.",
+    "CA-40 empresa inativa: escrita recusada, mas balancete, razao e balanco continuam consultaveis com os mesmos valores."
   ],
   "verification_plan": [
     {
@@ -37,14 +41,52 @@
       "method": "Asserts diretos nos valores do documento de requisitos (3.000,00; 900/400/600/200/1.000/700; 1.300/200/1.100)."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "npm test (sistema-contabil/): 14 arquivos / 62 testes verdes (base 51 da T014 + 11 novos da T015: CA-03, CA-04, CA-05, CA-40, CA-31, CA-32, validacao de conta de PL, triggers no banco, exercicio com 11 anteriores, CA-24 no banco e \"liquido zero com movimento\" da rodada 3). O teste \"CA-56\" da rodada 1 foi REMOVIDO (ID de requisito inexistente; a serie vai ate CA-55).",
+    "npm run typecheck (sistema-contabil/, workspaces api/web/shared): exit 0.",
+    "Migracao em banco FRESCO em %TEMP%\\t015-fresh.db: migrate OK, re-execucao idempotente, PRAGMA integrity_check = ok, foreign_key_check = 0 linhas, journal = 7 entradas (0006_periodo_encerramento_garantias), triggers lancamento_no_periodo_encerrado e periodo_encerramento_unico presentes. Banco temporario removido apos a verificacao.",
+    "Numeros canonicos conferidos contra docs/requirements/SISTEMA-CONTABIL.md 6.0/6.1: FIX-01 totais 3.000,00; saldos 900/400/600/200/1.000/700; balanco 1.300/200/1.100; razao de Caixa L1/L3/L5 = 1.000/600/900; resultado do exercicio -100,00 (lucro)."
+  ],
   "assumptions": [
-    "H12 mantida: exercicio = 12 periodos do ano-calendario, encerramento manual do 12o."
+    "H12 mantida: exercicio = 12 periodos do ano-calendario, encerramento manual do 12o.",
+    "Ambiguidade CA-24 x CA-32 resolvida por leitura de OPERACAO ATOMICA: a acao de encerramento grava seus lancamentos de encerramento com o periodo ainda aberto e so entao o marca, na mesma transacao; \"nada escreve em periodo encerrado\" (CA-24) vale para o caminho normal DEPOIS de fechado, reforcado no banco pelo trigger lancamento_no_periodo_encerrado (migracao 0006). CA-24, CA-31 e CA-32 valem simultaneamente.",
+    "DECISAO HUMANA de 2026-10-21 (substitui o split transferirResultado da rodada 1): o fechamento mensal TAMBEM GERA lancamento de encerramento, conforme o CA-31 literal — TODO encerramento (mes comum ou 12o) grava o lancamento que zera as contas de resultado e leva o resultado liquido a conta de PL (conta_resultado_id), datado no ultimo dia do periodo, com o periodo ainda aberto (operacao atomica); trecho \"resultado do periodo zero => sem lancamento\" SUPERSEDIDO pela correcao de 2026-10-22 abaixo (o gatilho e o acumulado nao nulo de QUALQUER conta de resultado, nao o liquido). Como os fechamentos mensais ja transferem, o acumulado no 12o mes e so o de dezembro — \"transfere o resultado acumulado\" (CA-32) vale com ou sem meses 1-11 encerrados. A distincao que sobra para o exercicio: pre-condicao dos 11 anteriores encerrados, marcacao do exercicio, evento de trilha exercicio.encerramento e exercicio_encerrado: true.",
+    "Correcao de metodo (rodada 1): a assercao usada entao para o CA-31 no balancete de abril era saldo_periodo_centavos = 0 — VAZIA, pois abril nao tem nenhuma partida e saldo_periodo e zero para toda conta com ou sem encerramento (o teste passaria sem a acao sob teste, violando a regra 2 do AGENTS.md). Corrigido: o teste agora mede o balancete de abril ANTES do encerramento (Despesas 60.000 / Receita -70.000) e DEPOIS (0 / 0) na mesma execucao, acrescentando a assercao literal do CA-31 acumulado_centavos = 0.",
+    "Correcao de regra (rodada 3, 2026-10-22): a regra \"resultado liquido zero => sem lancamento\" veio de uma instrucao do coordenador na rodada 2 e estava ERRADA perante o CA-31 literal (zerar as contas de resultado, nao apenas transferir): um periodo com Receita = Despesas mantinha as duas contas com acumulado bruto no balancete seguinte, fora do criterio, e o caso era auto-recorrente mes a mes. Regra corrigida: QUALQUER conta de resultado com acumulado NAO nulo gera o lancamento de encerramento (inverte todas elas pelo tipo da conta); a linha da conta de PL so entra quando o liquido difere de zero (com liquido zero as inversoes ja fecham D = C); sem nenhuma conta com acumulado, segue sem lancamento. Coberto pelo teste \"resultado liquido zero COM movimento ... \" (discriminante: balancete de abril medido antes 70.000/-70.000 e depois 0/0 na mesma execucao; lancamento fecha em zero com 2 partidas e nenhuma de PL)."
   ],
   "blockers": [],
   "worktree": null,
-  "session_id": null,
+  "session_id": "ses_e9ff93948ffe5cgqezu7eUwrYE",
   "estimate_hours": 7,
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "updated_at": "2026-10-22",
+  "coordinator_verification": {
+    "verified_at": "2026-10-22",
+    "method": "verificacao independente do coordenador (comandos executados por ele, nao relato do agente)",
+    "result": "ACCEPTED",
+    "rounds": 3,
+    "findings": [
+      "R1: CA-31 NAO estava satisfeito — o acumulado de Despesas/Receita seguia 60.000/-70.000 apos o fechamento mensal, e a assercao usada (saldo_periodo_centavos = 0 em abril) era VAZIA: abril nao tem partida alguma, entao passaria mesmo sem a chamada de encerramento. Viola a regra 2 do AGENTS.md.",
+      "R1: o agente criou um \"CA-56\" inexistente (a serie de criterios vai ate CA-55) e o propagou para packages/shared/src/index.ts e encerramento.test.ts — ID de requisito nao se inventa.",
+      "R2: decisão humana de 2026-10-21 aplicada — o fechamento mensal GERA lancamento de encerramento que zera as contas de resultado e leva o liquido a conta de PL, gravado com o periodo aberto (operacao atomica); transferirResultado e a derivacao mes === 12 foram removidas.",
+      "R2: correcao de instrução do PROPRIO coordenador — o brief da R2 mandava \"liquido zero => sem lancamento\", o que deixava o acumulado bruto sem zerar. Corrigido na R3.",
+      "R3: condicao virou \"qualquer conta de resultado com acumulado nao nulo\" (encerramento.ts:157); linha de PL so quando liquido != 0 (linha 173)."
+    ],
+    "evidence": [
+      "npm test (sistema-contabil/): 14 arquivos / 62 testes verdes, exit 0",
+      "npm run typecheck: exit 0",
+      "migracao do zero executada PELO COORDENADOR em banco descartavel em %TEMP%: integrity_check = ok, foreign_key_check = 0 linhas, 8 triggers, 11 tabelas, journal com 7 migracoes (0000..0006); banco removido ao final",
+      "CA-31 discriminante: mesma coluna medida antes e depois na mesma execucao — antes 60.000 / -70.000, depois 0 / 0; permanentes Caixa 90.000, Cliente 40.000, Fornecedor -20.000, Capital -100.000; PL recebeu -10.000",
+      "CA-32: resultado -10.000, resultado acumulado 0, balanco 130.000 = 20.000 + 110.000, PL Capital 100.000 + resultado 10.000",
+      "caso liquido zero (teste novo, sem numero de CA): pre-condicao comprovada 70.000 / -70.000 antes, 0 / 0 depois, lancamento gerado apesar do liquido zero, fecha em zero sem linha de PL, periodo sem movimento continua sem lancamento",
+      "grep CA-56|transferirResultado|OpcoesEncerramento em sistema-contabil/: zero matches",
+      "condicao conferida na fonte: encerramento.ts:157 if (saldos.length > 0) e :173 if (resultadoCentavos !== 0)",
+      "CA-03/CA-04/CA-05/CA-40 e os 51 testes da base T014 sem regressao"
+    ],
+    "limitations": [
+      "O campo de auditoria transferiu_resultado passa a ser true tambem no caso liquido zero; nome nao foi trocado para nao quebrar asserts de CA-31/CA-32 — renomeio e opcional numa futura rodada.",
+      "O pre-flight de conflitos T016..T019 falhou por rate limit na primeira tentativa e esta sendo reexecutado; resultado pendente.",
+      "Seis achados de seguranca Baixo da revisao da T014 (S-T014-1..6) nao foram corrigidos ainda; S-T014-4 ja esta coberto pelo trigger lancamento_no_periodo_encerrado da migracao 0006. Devem entrar no brief da T016."
+    ]
+  }
 }

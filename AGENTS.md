@@ -44,7 +44,7 @@ Registradas em 2026-10-21 a partir de falhas que aconteceram de fato. O incident
 
 4. **Invariante de que o domínio depende é garantida NO BANCO, não na aplicação** (RF-08/R9 generalizado): triggers e constraints valem quando a aplicação tem bug; validação só na camada de serviço não. **Conveniência de fixture ou teste nunca enfraquece schema de produção** — caso concreto: `partida.lancamento_id` ficou sem foreign key na T014 rodada 1 para preservar uma fixture da T013, e foi revertido na rodada 2.
 
-5. **Arquivos de estado em `.squad/` são alterados por leitura e escrita programática (ler JSON → modificar → gravar), nunca por âncora de texto.** Âncora de texto falhou duas vezes no mesmo dia; a abordagem programática elimina a classe de erro e ainda garante que o JSON continue válido.
+5. **Edição de JSON em `.squad/`: valide por `JSON.parse`, derive a substituição do valor exato que o parse confirmou, e revalide por parse antes de gravar.** Nunca monte bloco de texto multilinha a partir da memória para servir de âncora — falhou duas vezes em 2026-10-21. Também **não troque a formatação existente**: um reparse completo de `project-state.json` reformataria 154 de 182 linhas sem alterar conteúdo algum (medido antes de decidir) — JSON seguro ao custo de revisão ilegível não vale a troca.
 
 ## Paralelismo e sessões
 

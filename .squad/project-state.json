@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-014",
-    "next_action": "T012, T013, o incremento 2 da T020 e a T014 entregues e verificados; commitados ate agora apenas e2759d6 (T012), fc76a37 (T013) e 6eb90f8 (T020 inc.2). A T014 esta PRONTA E NAO COMMITADA, aguardando ordem do usuario para entrar no proximo commit de marco. Duas correcoes do coordenador no incremento 2: ROTAS_API do vite.config.ts ('/plano-de-contas' inexistente -> '/contas', que devolvia HTML do SPA em vez de JSON) e secao do README da raiz sobre proxy. PROXIMO: T014 (lancamentos em partidas dobradas e estorno) — ATENCAO: DEVE usar o preHandler exigirEscritaContabil (T012) nas rotas de escrita; a tabela partida ja e esperada por contaTemLancamentos (T013) e pela fixture simularLancamentoEmConta. Depois, proximos incrementos da T020 (telas de negocio usando tokens, placeholders TelaPendente). Pendencias de produto: RK-8 adiado (aguarda caso real do escritorio). Pendencia de coordenacao: aprovacao do ADR-0002 da landing. INSTRUMENTO NOVO em 2026-10-21: Playwright MCP configurado no opencode.jsonc (mcp.servers.playwright) para fechar a limitacao de verificacao visual registrada na T020 inc.2 — ferramenta de sessao da squad, nao dependencia do produto; ver campo 'tooling'. O opencode.jsonc esta alterado e NAO commitado (aguarda ordem). MCP-PLAYWRIGHT EM USO REAL em 2026-10-21: verificacao visual do login e do shell concluida pelo coordenador (tokens medidos no navegador, fluxo real pela interface, 5 achados novos V-1..V-5 em TASK-020.json); as ferramentas estao disponiveis NA SESSAO ATUAL, sem reiniciar. PROXIMO PASSO (aguardando ordem do usuario): T015 (relatorios contabeis e encerramentos, FIX-01) e T016 (financeiro: titulos, baixas e estorno de baixa) — ambas desbloqueadas pela T014, que ja gravacao o razao e ja garante no banco imutabilidade e integridade do par lancamento/partida. ATENCAO ao paralelismo: T015 e T016 mexem em areas diferentes de codigo mas AMBAS alteram schema.ts e geram migracao — rodar as duas ao mesmo tempo na mesma arvore produz colisao de migracao 0006; escolher uma por vez ou coordenar a numeracao. T016 deve usar exigirEscritaContabil e respeitar que nada escreve em periodo encerrado (RF-09). Alternativa valida: proximo incremento da T020 (telas de negocio nos placeholders TelaPendente), que ja consome a API de lancamentos existente. Pendencias de produto abertas: (1) chips de rastreabilidade RF/CA visiveis na UI (V-2) — decidir se sao removidos ou filtrados por ambiente antes da release; (2) RK-8 adiado (aguarda caso real do escritorio); (3) ADR-0002 da landing aguarda aprovacao. Pendencia de coordenacao: commit do opencode.jsonc aguarda ordem do usuario."
+    "current_task_id": "TASK-015",
+    "next_action": "T015 CONCLUIDA E VERIFICADA PELO COORDENADOR, AGUARDANDO ORDEM DE COMMIT (3 rodadas). Verificacao: 14 arquivos / 62 testes, typecheck exit 0, migracao do zero executada pelo coordenador (integrity ok, 8 triggers, journal 7), CA-31 discriminante (60.000/-70.000 antes -> 0/0 depois), CA-56 inexistente removido, caso liquido zero coberto. DECISAO HUMANA DE 2026-10-21 APLICADA: o fechamento mensal GERA lancamento de encerramento que zera as contas de resultado e leva o liquido a conta de PL — conforme o CA-31 literal; transferirResultado e mes===12 removidos. Achados do coordenador: R1 assercao vazia do CA-31 (regra 2 violada pelo agente) e CA-56 inventado; R2 o PROPRIO coordenador instruiu \"liquido zero => sem lancamento\" e corrigiu na R3 (condicao agora: movimento de resultado => lanca, linha de PL só se liquido != 0). PROXIMO PASSO: (a) ordem do usuario para o commit do marco da T015; (b) pre-flight de conflitos T016..T019 reexecutando apos rate limit; (c) entao T016 financeiro (8h), absorvendo no brief os 6 achados de seguranca Baixo da revisao da T014 (S-T014-1..6 — S-T014-4 ja coberto pelo trigger lancamento_no_periodo_encerrado da 0006). CADEIA: T016 -> T017 -> T018 -> T019 (exportacao CSV/PDF conforme ADR-0006) -> T020 -> T021 (CA-01..55, code/security review, v4 com +6h e guarda do SESSION_SECRET). PENDENCIAS DE PRODUTO: V-2 (chips RF/CA visiveis na UI — remover ou filtrar por ambiente antes da release); RK-8 adiado aguarda caso real do escritorio; V-1 favicon. FATO DO REPOSITORIO: o commit d5ddd8d da landing page foi criado entre as sessoes (fora desta squad); a landing deixa de ser trabalho nao commitado."
   },
   "tooling": [
     {
@@ -31,7 +31,7 @@
     { "id": "TASK-003", "title": "Definir arquitetura e stack do sistema contábil", "status": "done", "path": "docs/decisions/ADR-0001-stack-e-arquitetura-sistema-contabil.md", "owner": "architect" },
     { "id": "TASK-005", "title": "[landing page] Registrar decisão de stack em ADR", "status": "done", "path": "docs/decisions/ADR-0002-landing-page-stack.md", "owner": "architect" },
     { "id": "TASK-006", "title": "[landing page] Implementar a landing page estática", "status": "done", "path": "landpage/", "owner": "implementer" },
-    { "id": "TASK-007", "title": "[landing page] Verificar critérios de aceite da landing page", "status": "todo", "path": ".squad/tasks/TASK-007.json", "owner": "qa" },
+    { "id": "TASK-007", "title": "[landing page] Verificar critérios de aceite da landing page", "status": "done", "path": ".squad/tasks/TASK-007.json", "owner": "qa" },
     { "id": "TASK-008", "title": "Definir estratégia de implantação web (ADR-0003)", "status": "done", "path": "docs/decisions/ADR-0003-implantacao-web-vps-sqlite.md", "owner": "coordinator" },
     { "id": "TASK-009", "title": "Plano de implementação do sistema contábil", "status": "done", "path": "docs/plans/PLAN-IMPLEMENTACAO.md", "owner": "coordinator" },
     { "id": "TASK-010", "title": "Fundação do monorepo e harness de teste", "status": "done", "path": "sistema-contabil/", "owner": "implementer" },
@@ -163,6 +163,11 @@
         "evidence": "HEAD=98d651e (T011). Execucao do coordenador em sistema-contabil/: npm test => 7 arquivos / 20 testes passando; npm run typecheck => 0 erros (api, web, shared). Blocker da landing (TASK-004) confirmado resolvido. Arquivos nao rastreados do fluxo paralelo (landpage/, ADR-0002, landpage.md, TASK-004..007.json) intactos."
       },
       {
+        "name": "TASK-007 — landing page verificada (CA-1..CA-10)",
+        "result": "passed",
+        "evidence": "Verificacao executada pelo coordenador apos 2 interrupcoes da sessao QA. Navegador Playwright via servidor local: 320px e 1440px sem overflow (scrollWidth==clientWidth), CTA do hero visivel, secoes topo/recursos/como-funciona/cta + footer na ordem, rolagem completa sem erros de console (unico erro: favicon.ico 404, artefato do servidor http de teste), rede apenas 2 requisicoes locais (index.html, styles.css), 0 scripts, grep sem https?:///@import/url()/. Copy literal de §4.1–§4.5 conferido; rotulo provisorio do CTA conforme §4.4 (PB-1 pendente). Limitacao: file:// nao reexecutado pelo coordenador (protocolo bloqueado na ferramenta); evidencia do implementer (Chrome headless) + href relativo unico registradas em TASK-007.json. Nenhum defeito bloqueante/importante."
+      },
+      {
         "name": "Compra/contratação de VPS",
         "result": "not_run",
         "evidence": "Não é ação da squad; ADR-0003 recomenda e a contratação é decisão humana."
@@ -177,5 +182,5 @@
       "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-21T16:10:00Z"
+  "updated_at": "2026-10-22T14:35:00Z"
 }

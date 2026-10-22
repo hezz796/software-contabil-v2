@@ -67,6 +67,24 @@ export function criarPeriodoTeste(db: AppDb, opcoes: OpcoesPeriodoTeste): Period
 }
 
 /**
+ * Encerra um período ABERTO direto no banco (fixture: transição de estado,
+ * como o produto faz no serviço de encerramento — TASK-015).
+ *
+ * Preparação legítima de teste: grava lançamentos enquanto aberto e então
+ * fecha. Depois disso o trigger `lancamento_no_periodo_encerrado` (migração
+ * 0006) aborta QUALQUER INSERT novo em `lancamento` no período — é o que o
+ * teste CA-24 (banco) prova. O UPDATE da marca passa porque o período ainda
+ * está aberto; uma segunda chamada é abortada por `periodo_encerramento_unico`.
+ */
+export function encerrarPeriodoTeste(db: AppDb, periodoId: number): void {
+  db.update(periodoContabil)
+    .set({ encerradoEm: new Date().toISOString() })
+    .where(eq(periodoContabil.id, periodoId))
+    .prepare()
+    .run();
+}
+
+/**
  * Simula um lançamento lançado na conta (CA-17/CA-27: "conta com lançamentos").
  *
  * Usa as tabelas REAIS da T014: cria um lançamento (com período aberto de

@@ -1,7 +1,7 @@
 import { erroResponseSchema, lancamentoSchema } from '@sistema-contabil/shared';
 import { describe, expect, test } from 'vitest';
 import { auditEvent, lancamento, partida, type Conta, type Empresa } from '../../src/db/schema.ts';
-import { criarContaTeste, criarPeriodoTeste } from '../fixtures/contas.ts';
+import { criarContaTeste, criarPeriodoTeste, encerrarPeriodoTeste } from '../fixtures/contas.ts';
 import { criarEmpresaTeste } from '../fixtures/empresas.ts';
 import { criarUsuarioTeste, fazerLogin } from '../fixtures/seguranca.ts';
 import { createTestApp, type TestApp } from '../harness.ts';
@@ -322,6 +322,53 @@ describe('lançamentos em partidas dobradas (RF-07, CA-13/CA-14/CA-24)', () => {
       // estado final: original + estorno, 4 partidas
       expect(lancamentosNoBanco(c)).toHaveLength(2);
       expect(partidasNoBanco(c)).toHaveLength(4);
+    } finally {
+      await c.t.close();
+    }
+  });
+
+  test('CA-24 no banco: com dados reais gravados enquanto aberto, o INSERT direto em lançamento no período depois encerrado é abortado pelo trigger lancamento_no_periodo_encerrado', async () => {
+    const c = await prepararCenario('CA-24-banco');
+    try {
+      // período M (03/2026) ABERTO + lançamento real gravado pelo caminho de
+      // produção (serviço) — pré-condição comprovada, não banco vazio
+      const periodo = criarPeriodoTeste(c.t.database.db, {
+        empresaId: c.empresa.id,
+        ano: 2026,
+        mes: 3,
+      });
+      const real = await postLancamento(c, payloadEquilibrado(c, 100_000));
+      expect(real.statusCode).toBe(201);
+      expect(lancamentosNoBanco(c)).toHaveLength(1);
+      expect(partidasNoBanco(c)).toHaveLength(2);
+
+      // transição legítima de estado (fixture: mesmo caminho de estado do
+      // produto — UPDATE da marca com o período ainda aberto)
+      encerrarPeriodoTeste(c.t.database.db, periodo.id);
+
+      // INSERT direto (fora da aplicação) no período encerrado é abortado NO
+      // BANCO com a mensagem específica do trigger 0006 — vale mesmo com bug
+      // de aplicação (RF-08/RF-09 invariante no banco)
+      expect(() =>
+        c.t.database.sqlite
+          .prepare(
+            `INSERT INTO lancamento (empresa_id, periodo_id, data, historico, estorno_de_id, criado_por, criado_em)
+             VALUES (?, ?, ?, ?, NULL, ?, ?)`,
+          )
+          .run(
+            c.empresa.id,
+            periodo.id,
+            '2026-03-25',
+            'INSERT direto em período encerrado',
+            c.contador.id,
+            new Date().toISOString(),
+          ),
+      ).toThrow(/periodo encerrado/i);
+
+      // estado inalterado: só o lançamento real gravado enquanto aberto
+      expect(lancamentosNoBanco(c)).toHaveLength(1);
+      expect(partidasNoBanco(c)).toHaveLength(2);
+      expect(lancamentosNoBanco(c)[0]?.historico).toBe('Lançamento de teste');
     } finally {
       await c.t.close();
     }

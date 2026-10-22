@@ -502,3 +502,193 @@ export const estornarLancamentoRequestSchema = z.object({
 });
 
 export type EstornarLancamentoRequest = z.infer<typeof estornarLancamentoRequestSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Relatórios contábeis: balancete, razão e balanço (TASK-015, RF-10..RF-12)   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Convenção de sinal de todo relatório (decisão T015): saldos são inteiros em
+ * centavos **assinados** — positivo = saldo devedor na perspectiva da seção
+ * (ativo: débito − crédito; passivo/PL: crédito − débito). Negativo = credor.
+ * Os campos `*_centavos` seguem o ADR-0001 (nunca float).
+ */
+
+/** `empresa_id` + `periodo_id` do balancete (RF-10). */
+export const balanceteQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  periodo_id: z.coerce.number().int().positive('periodo_id é obrigatório.'),
+});
+
+export type BalanceteQuery = z.infer<typeof balanceteQuerySchema>;
+
+/** Conta no balancete (RF-10): movimento do período + acumulado até ele. */
+export const linhaBalanceteSchema = z.object({
+  conta_id: z.number().int(),
+  codigo: z.string(),
+  descricao: z.string(),
+  tipo: tipoContaSchema,
+  debitos_centavos: z.number().int(),
+  creditos_centavos: z.number().int(),
+  /** Débitos − créditos do período (positivo = devedor). */
+  saldo_periodo_centavos: z.number().int(),
+  /** Débitos − créditos acumulados até o fim do período (positivo = devedor). */
+  acumulado_centavos: z.number().int(),
+});
+
+export type LinhaBalanceteDTO = z.infer<typeof linhaBalanceteSchema>;
+
+export const balanceteResponseSchema = z.object({
+  empresa_id: z.number().int(),
+  periodo: periodoContabilSchema,
+  /** Apenas contas com movimento no período ou acumulado até ele. */
+  linhas: z.array(linhaBalanceteSchema),
+  /** Garantia RF-10: débitos = créditos em qualquer momento. */
+  totais: z.object({
+    debitos_centavos: z.number().int(),
+    creditos_centavos: z.number().int(),
+  }),
+});
+
+export type BalanceteResponse = z.infer<typeof balanceteResponseSchema>;
+
+/** Filtros do razão (RF-11): conta obrigatória; intervalo de datas opcional. */
+export const razaoQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  conta_id: z.coerce.number().int().positive('conta_id é obrigatório.'),
+  de: dataLancamentoSchema.optional(),
+  ate: dataLancamentoSchema.optional(),
+});
+
+export type RazaoQuery = z.infer<typeof razaoQuerySchema>;
+
+/** Partida de outra conta no mesmo lançamento (contraparte listada no razão). */
+export const contraparteRazaoSchema = z.object({
+  conta_id: z.number().int(),
+  codigo: z.string(),
+  descricao: z.string(),
+  natureza: naturezaSchema,
+  valor_centavos: z.number().int(),
+});
+
+export type ContraparteRazaoDTO = z.infer<typeof contraparteRazaoSchema>;
+
+/** Lançamento no razão (RF-11): data, histórico, débito/crédito, saldo corrente. */
+export const linhaRazaoSchema = z.object({
+  lancamento_id: z.number().int(),
+  data: dataLancamentoSchema,
+  historico: z.string(),
+  /** Somas das partidas DESTA conta no lançamento (0 quando não há). */
+  debito_centavos: z.number().int(),
+  credito_centavos: z.number().int(),
+  /** Débito − crédito acumulados da conta desde o início até esta linha. */
+  saldo_corrente_centavos: z.number().int(),
+  contrapartes: z.array(contraparteRazaoSchema),
+});
+
+export type LinhaRazaoDTO = z.infer<typeof linhaRazaoSchema>;
+
+export const razaoResponseSchema = z.object({
+  empresa_id: z.number().int(),
+  conta: z.object({
+    id: z.number().int(),
+    codigo: z.string(),
+    descricao: z.string(),
+    tipo: tipoContaSchema,
+  }),
+  /** `null` = sem limite inferior/superior. */
+  de: dataLancamentoSchema.nullable(),
+  ate: dataLancamentoSchema.nullable(),
+  linhas: z.array(linhaRazaoSchema),
+  total_debitos_centavos: z.number().int(),
+  total_creditos_centavos: z.number().int(),
+  /** Saldo da última linha (ou 0 sem movimento no intervalo). */
+  saldo_final_centavos: z.number().int(),
+});
+
+export type RazaoResponse = z.infer<typeof razaoResponseSchema>;
+
+/** Filtros do balanço patrimonial (RF-12): empresa + data de corte. */
+export const balancoQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema,
+});
+
+export type BalancoQuery = z.infer<typeof balancoQuerySchema>;
+
+export const linhaBalancoSchema = z.object({
+  conta_id: z.number().int(),
+  codigo: z.string(),
+  descricao: z.string(),
+  tipo: tipoContaSchema,
+  /** Convênção da seção: ativo = D − C; passivo/PL = C − D (positivo = saldo). */
+  saldo_centavos: z.number().int(),
+});
+
+export type LinhaBalancoDTO = z.infer<typeof linhaBalancoSchema>;
+
+export const secaoBalancoSchema = z.object({
+  linhas: z.array(linhaBalancoSchema),
+  total_centavos: z.number().int(),
+});
+
+export type SecaoBalancoDTO = z.infer<typeof secaoBalancoSchema>;
+
+export const balancoResponseSchema = z.object({
+  empresa_id: z.number().int(),
+  data: dataLancamentoSchema,
+  ativo: secaoBalancoSchema,
+  passivo: secaoBalancoSchema,
+  /** Contas de PL permanentes + resultado do período (receita − despesa). */
+  patrimonio_liquido: secaoBalancoSchema,
+  /** Igualdade patrimonial visível (RF-12/CA-05): ativo − passivo − PL = 0. */
+  totais: z.object({
+    ativo_centavos: z.number().int(),
+    passivo_centavos: z.number().int(),
+    patrimonio_liquido_centavos: z.number().int(),
+    confere: z.boolean(),
+  }),
+});
+
+export type BalancoResponse = z.infer<typeof balancoResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Encerramento de período e exercício (TASK-015, RF-09/H12, CA-31/CA-32)      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Encerramento (RF-09): ação do contador com escrita ativa (F13). Semântica
+ * única desde a decisão humana de 2026-10-21, corrigida em 2026-10-22
+ * (CA-31 literal; TASK-015): **todo** encerramento (mês comum ou 12º do
+ * ano-calendário) gera o lançamento que zera as contas de resultado sempre
+ * que ALGUMA delas tem acumulado não nulo (mesmo com líquido zero — nesse
+ * caso só as inversões, sem linha de PL); o resultado líquido vai à conta
+ * `conta_resultado_id` (tipo patrimônio líquido) quando difere de zero,
+ * datado no último dia do período — exigida nesse caso; período sem
+ * movimento de resultado fecha sem lançamento. O **exercício** (12º período
+ * — H12) é o fechamento que, além disso, exige os 11 períodos anteriores
+ * encerrados e é auditado como `exercicio.encerramento`.
+ */
+export const encerrarPeriodoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  conta_resultado_id: z.number().int().positive().nullish(),
+});
+
+export type EncerrarPeriodoRequest = z.infer<typeof encerrarPeriodoRequestSchema>;
+
+export const encerramentoPeriodoResponseSchema = z.object({
+  periodo: periodoContabilSchema,
+  /** true quando o período encerrado era o 12º do ano-calendário (encerramento do exercício — H12). */
+  exercicio_encerrado: z.boolean(),
+  /** Σ (débito − crédito) das contas de resultado até o período; negativo = lucro. */
+  resultado_centavos: z.number().int(),
+  /**
+   * Lançamento gerado pelo encerramento para zerar as contas de resultado
+   * (inversões + linha de PL quando o líquido difere de zero); **null quando
+   * nenhuma conta de resultado tem acumulado** (nada a zerar — em qualquer
+   * mês).
+   */
+  lancamento_encerramento_id: z.number().int().nullable(),
+});
+
+export type EncerramentoPeriodoResponse = z.infer<typeof encerramentoPeriodoResponseSchema>;

@@ -43,6 +43,13 @@
       "when": 1792605595247,
       "tag": "0005_common_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792613546331,
+      "tag": "0006_periodo_encerramento_garantias",
+      "breakpoints": true
     }
   ]
 }
