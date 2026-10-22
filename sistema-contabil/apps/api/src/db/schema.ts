@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   type AnySQLiteColumn,
   check,
+  foreignKey,
   index,
   integer,
   primaryKey,
@@ -216,6 +217,10 @@ export const conta = sqliteTable(
   },
   (t) => [
     uniqueIndex('conta_empresa_codigo_uk').on(t.empresaId, t.codigo),
+    // Base da FK composta `titulo_conta_empresa_fk` (S-T014-6, TASK-016):
+    // (id, empresa_id) é único porque id já é a PK — garante no banco que a
+    // conta referenciada pertence à mesma empresa do referenciador.
+    uniqueIndex('conta_id_empresa_uk').on(t.id, t.empresaId),
     index('conta_empresa_idx').on(t.empresaId),
     index('conta_pai_idx').on(t.contaPaiId),
   ],
@@ -304,6 +309,10 @@ export const lancamento = sqliteTable(
   (t) => [
     /** Uma origem só pode ter UM estorno (CA-26; NULLs não colidem no SQLite). */
     uniqueIndex('lancamento_estorno_de_uk').on(t.estornoDeId),
+    // Base das FKs compostas de `baixa` (S-T014-6, TASK-016): o par
+    // (id, empresa_id) é único porque id é a PK — qualquer vínculo
+    // baixa↔lançamento é obrigado a compartilhar `empresa_id` NO BANCO.
+    uniqueIndex('lancamento_id_empresa_uk').on(t.id, t.empresaId),
     index('lancamento_empresa_data_idx').on(t.empresaId, t.data),
     index('lancamento_periodo_idx').on(t.periodoId),
   ],
@@ -350,3 +359,168 @@ export const partida = sqliteTable(
 
 export type Partida = typeof partida.$inferSelect;
 export type NovaPartida = typeof partida.$inferInsert;
+
+/**
+ * Tipos de título (RF-13/RF-14, TASK-016): a pagar e a receber. O mesmo
+ * fluxo de baixa/cancelamento/estorno serve as duas perspectivas.
+ */
+export const TIPOS_TITULO = ['pagar', 'receber'] as const;
+export type TipoTitulo = (typeof TIPOS_TITULO)[number];
+
+/**
+ * Situações do título (RF-13, TASK-016): `aberto`, `parcial`, `pago`,
+ * `cancelado` — enum exatamente como definido em
+ * `TASK-016.json:scope.include` (o JSON governa; CA-07 "recebido" é o estado
+ * quitado, representado por `pago` — ver `TASK-016.json:assumptions`).
+ * A situação é DERIVADA das baixas/cancelamento, nunca enviada pelo cliente.
+ */
+export const SITUACOES_TITULO = ['aberto', 'parcial', 'pago', 'cancelado'] as const;
+export type SituacaoTitulo = (typeof SITUACOES_TITULO)[number];
+
+/**
+ * Título a pagar/receber (RF-13/RF-14, TASK-016, CA-06/07/16/41).
+ *
+ * - `valor_centavos` é o valor TOTAL do título; `saldo_centavos` é o saldo
+ *   residual abatido pelas baixas (H8: baixa total/parcial). CHECK no banco
+ *   garante `0 <= saldo <= valor` (invariante de domínio no BANCO — regra 4
+ *   do AGENTS.md);
+ * - `situacao` nasce `aberto` e só muda por escuta de serviço (baixa,
+ *   estorno de baixa, cancelamento); `cancelado` zera o saldo residual e
+ *   **não gera lançamento** (hipótese registrada em `TASK-016.json`);
+ * - `conta_id` + `empresa_id` formam FK COMPOSTA com `conta(id, empresa_id)`
+ *   (S-T014-6): o banco recusa vínculo com conta de OUTRA empresa — não só o
+ *   serviço;
+ * - `titulo_id + empresa_id` é único (`titulo_id_empresa_uk`) porque é a
+ *   referência alvo das FKs compostas de `baixa`.
+ */
+export const titulo = sqliteTable(
+  'titulo',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    tipo: text('tipo', { enum: TIPOS_TITULO }).notNull(),
+    /** Fornecedor/cliente (RF-13: "fornecedor/descrição"). */
+    contraparte: text('contraparte').notNull(),
+    /** Observação livre; `NULL` = sem observação. */
+    descricao: text('descricao'),
+    /** `YYYY-MM-DD` (validado na camada de entrada). */
+    vencimento: text('vencimento').notNull(),
+    /** Total do título em centavos (ADR-0001, nunca float). */
+    valorCentavos: integer('valor_centavos').notNull(),
+    /** Conta contábil do título (razão em que a baixa impacta — RF-15). */
+    contaId: integer('conta_id').notNull(),
+    situacao: text('situacao', { enum: SITUACOES_TITULO }).notNull().default('aberto'),
+    /** Saldo residual em centavos; `0` quando quitado/cancelado. */
+    saldoCentavos: integer('saldo_centavos').notNull(),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('titulo_id_empresa_uk').on(t.id, t.empresaId),
+    index('titulo_empresa_idx').on(t.empresaId),
+    index('titulo_empresa_situacao_idx').on(t.empresaId, t.situacao),
+    foreignKey({
+      columns: [t.contaId, t.empresaId],
+      foreignColumns: [conta.id, conta.empresaId],
+      name: 'titulo_conta_empresa_fk',
+    }),
+    check('titulo_valor_positivo', sql`${t.valorCentavos} > 0`),
+    check('titulo_saldo_na_faixa', sql`${t.saldoCentavos} >= 0 AND ${t.saldoCentavos} <= ${t.valorCentavos}`),
+    check(
+      'titulo_situacao_valida',
+      sql`${t.situacao} IN ('aberto', 'parcial', 'pago', 'cancelado')`,
+    ),
+    check('titulo_tipo_valido', sql`${t.tipo} IN ('pagar', 'receber')`),
+  ],
+);
+
+export type Titulo = typeof titulo.$inferSelect;
+export type NovoTitulo = typeof titulo.$inferInsert;
+
+/**
+ * Baixa de título (RF-13/RF-14/RF-15, TASK-016, CA-06/16/41/42/43/55).
+ *
+ * - **Decisão D1 (2026-10-22):** `valor_centavos` é o **bruto abatido do
+ *   saldo** do título — a recusa "valor maior que o saldo" do CA-16 é
+ *   literalmente sobre o bruto; `retencao_centavos` e `encargos_centavos`
+ *   (multa/juros) são colunas próprias que entram no lançamento vinculado
+ *   (CA-47/CA-48 — entrada/cálculo são da T017; nesta tarefa nascem em 0);
+ * - `lancamento_id` é o vínculo contábil da baixa (RF-15); a correção é o
+ *   **estorno de baixa** (RF-24), que preenche `estorno_lancamento_id` —
+ *   coluna ÚNICA (`baixa_estorno_lancamento_uk`), portanto um estorno por
+ *   baixa (RF-24: "só pode ser aplicado uma vez por baixa");
+ * - **S-T014-6 (invariante NO BANCO):** as três FKs são COMPOSTAS
+ *   `(…, empresa_id) -> pai(id, empresa_id)`: baixa ↔ título ↔ lançamento só
+ *   existem se compartilharem `empresa_id`. O banco recusa vínculo
+ *   cross-tenant mesmo com bug de aplicação;
+ * - `data` é a data da baixa; o período contábil dela é resolvido do servidor
+ *   (o lançamento vinculado carrega `periodo_id` derivado da mesma data, e o
+ *   trigger `lancamento_no_periodo_encerrado` da 0006 aborta baixa em período
+ *   encerrado como retrocesso no banco).
+ */
+export const baixa = sqliteTable(
+  'baixa',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    tituloId: integer('titulo_id').notNull(),
+    /** Lançamento contábil vinculado à baixa (RF-15). */
+    lancamentoId: integer('lancamento_id').notNull(),
+    /** Lançamento de estorno gerado pelo estorno de baixa; `NULL` = vigente. */
+    estornoLancamentoId: integer('estorno_lancamento_id'),
+    /** `YYYY-MM-DD` da baixa (validado na camada de entrada). */
+    data: text('data').notNull(),
+    /** Bruto abatido do saldo do título (D1). */
+    valorCentavos: integer('valor_centavos').notNull(),
+    /** Retenção na fonte dentro do bruto (D1; CA-47 é T017 — aqui 0). */
+    retencaoCentavos: integer('retencao_centavos').notNull().default(0),
+    /** Multa/juros acrescidos ao caixa (D1; CA-48 é T017 — aqui 0). */
+    encargosCentavos: integer('encargos_centavos').notNull().default(0),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.tituloId, t.empresaId],
+      foreignColumns: [titulo.id, titulo.empresaId],
+      name: 'baixa_titulo_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.lancamentoId, t.empresaId],
+      foreignColumns: [lancamento.id, lancamento.empresaId],
+      name: 'baixa_lancamento_empresa_fk',
+    }),
+    // Nullable: enquanto `estorno_lancamento_id` é NULL o SQLite não avalia a
+    // FK; preenchido, exige lançamento DA MESMA empresa.
+    foreignKey({
+      columns: [t.estornoLancamentoId, t.empresaId],
+      foreignColumns: [lancamento.id, lancamento.empresaId],
+      name: 'baixa_estorno_lancamento_empresa_fk',
+    }),
+    /** Um estorno por baixa (NULLs não colidem no SQLite — RF-24). */
+    uniqueIndex('baixa_estorno_lancamento_uk').on(t.estornoLancamentoId),
+    index('baixa_titulo_idx').on(t.tituloId),
+    index('baixa_empresa_idx').on(t.empresaId),
+    check('baixa_valor_positivo', sql`${t.valorCentavos} > 0`),
+    check('baixa_retencao_nao_negativa', sql`${t.retencaoCentavos} >= 0`),
+    check('baixa_encargos_nao_negativos', sql`${t.encargosCentavos} >= 0`),
+  ],
+);
+
+export type Baixa = typeof baixa.$inferSelect;
+export type NovaBaixa = typeof baixa.$inferInsert;

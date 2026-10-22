@@ -15,6 +15,7 @@ import { healthRoutes } from './routes/health.ts';
 import { lancamentoRoutes } from './routes/lancamentos.ts';
 import { periodoRoutes } from './routes/periodos.ts';
 import { relatorioRoutes } from './routes/relatorios.ts';
+import { tituloRoutes } from './routes/titulos.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -77,6 +78,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(contaRoutes);
   await app.register(periodoRoutes);
   await app.register(lancamentoRoutes);
+  await app.register(tituloRoutes);
   await app.register(relatorioRoutes);
   await app.register(healthRoutes);
 

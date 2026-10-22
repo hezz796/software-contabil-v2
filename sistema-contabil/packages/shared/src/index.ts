@@ -692,3 +692,161 @@ export const encerramentoPeriodoResponseSchema = z.object({
 });
 
 export type EncerramentoPeriodoResponse = z.infer<typeof encerramentoPeriodoResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Títulos a pagar/receber, baixas e estorno de baixa (TASK-016, RF-13..15/24) */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tipo do título (RF-13/RF-14): a pagar ou a receber — mesmo fluxo de
+ * baixa/cancelamento/estorno nas duas perspectivas.
+ */
+export const tipoTituloSchema = z.enum(['pagar', 'receber'], {
+  error: 'O tipo do título deve ser pagar ou receber.',
+});
+export type TipoTituloDTO = z.infer<typeof tipoTituloSchema>;
+
+/**
+ * Situação do título (RF-13): `aberto`, `parcial`, `pago`, `cancelado` —
+ * enum exatamente como em `TASK-016.json:scope.include` (o JSON governa).
+ * CA-07 ("recebido") é o estado quitado, representado por `pago`.
+ * Derivada das baixas/cancelamento no servidor; nunca vem do cliente.
+ */
+export const situacaoTituloSchema = z.enum(['aberto', 'parcial', 'pago', 'cancelado']);
+export type SituacaoTituloDTO = z.infer<typeof situacaoTituloSchema>;
+
+/** Valor do título/baixa em centavos: inteiro e **maior que zero** (CA-16b, ADR-0001). */
+export const valorTituloSchema = z
+  .number({ error: 'Informe o valor em centavos.' })
+  .int('O valor deve ser um número inteiro de centavos.')
+  .positive('O valor deve ser maior que zero (em centavos).');
+
+/** Vencimento do título: `AAAA-MM-DD` real (mesma regra da data de baixa). */
+export const vencimentoTituloSchema = z.iso.date({
+  error: 'Informe o vencimento no formato AAAA-MM-DD.',
+});
+
+/** Contraparte (fornecedor/cliente) do título — obrigatória (RF-13). */
+export const contraparteTituloSchema = z
+  .string({ error: 'Informe a contraparte (fornecedor ou cliente) do título.' })
+  .trim()
+  .min(1, 'Informe a contraparte (fornecedor ou cliente) do título.')
+  .max(200, 'A contraparte deve ter no máximo 200 caracteres.');
+
+/** Observação livre do título (RF-13: "fornecedor/descrição"). */
+export const descricaoTituloSchema = z
+  .string()
+  .trim()
+  .max(500, 'A descrição do título deve ter no máximo 500 caracteres.');
+
+/** Criação de título (RF-13/RF-14): `empresa_id` validado pelo guard de escrita. */
+export const criarTituloRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  tipo: tipoTituloSchema,
+  contraparte: contraparteTituloSchema,
+  descricao: descricaoTituloSchema.optional(),
+  vencimento: vencimentoTituloSchema,
+  valor_centavos: valorTituloSchema,
+  conta_id: z.number().int().positive('conta_id é obrigatório.'),
+});
+
+export type CriarTituloRequest = z.infer<typeof criarTituloRequestSchema>;
+
+/** Baixa devolvida pela API (RF-15/RF-24). */
+export const baixaSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  titulo_id: z.number().int(),
+  /** Lançamento contábil vinculado à baixa (RF-15). */
+  lancamento_id: z.number().int(),
+  /** Lançamento de estorno; `null` = baixa vigente (RF-24). */
+  estorno_lancamento_id: z.number().int().nullable(),
+  data: dataLancamentoSchema,
+  /** Bruto abatido do saldo do título (decisão D1 da T016). */
+  valor_centavos: z.number().int(),
+  /** Dentro do bruto (D1; cálculo de retenções — CA-47 — é T017). */
+  retencao_centavos: z.number().int(),
+  /** Acrescidos ao caixa (D1; multa/juros — CA-48 — é T017). */
+  encargos_centavos: z.number().int(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type BaixaDTO = z.infer<typeof baixaSchema>;
+
+/** Título devolvido pela API (RF-13/RF-14). */
+export const tituloSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  tipo: tipoTituloSchema,
+  contraparte: z.string(),
+  descricao: z.string().nullable(),
+  vencimento: dataLancamentoSchema,
+  valor_centavos: z.number().int(),
+  conta_id: z.number().int(),
+  situacao: situacaoTituloSchema,
+  saldo_centavos: z.number().int(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+  atualizado_em: z.iso.datetime(),
+});
+
+export type TituloDTO = z.infer<typeof tituloSchema>;
+
+/** Detalhe do título com as baixas vinculadas (CA-06/41/42: rastreabilidade RF-15). */
+export const tituloComBaixasSchema = tituloSchema.extend({
+  baixas: z.array(baixaSchema),
+});
+
+export type TituloComBaixasDTO = z.infer<typeof tituloComBaixasSchema>;
+
+/** Filtros de `GET /titulos`: empresa obrigatória; tipo/situacao opcionais. */
+export const titulosQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  tipo: tipoTituloSchema.optional(),
+  situacao: situacaoTituloSchema.optional(),
+});
+
+export type TitulosQuery = z.infer<typeof titulosQuerySchema>;
+
+export const listaTitulosResponseSchema = z.object({
+  titulos: z.array(tituloSchema),
+});
+
+export type ListaTitulosResponse = z.infer<typeof listaTitulosResponseSchema>;
+
+/**
+ * Baixa de título (RF-13/RF-14, H8, CA-16): `valor_centavos` é o **bruto**
+ * abatido do saldo (D1 — "valor maior que o saldo" é literalmente sobre o
+ * bruto) e `conta_contrapartida_id` é a conta do outro lado do lançamento
+ * vinculado (caixa/banco na contrapartida do título).
+ */
+export const criarBaixaRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema,
+  valor_centavos: valorTituloSchema,
+  conta_contrapartida_id: z.number().int().positive('conta_contrapartida_id é obrigatório.'),
+});
+
+export type CriarBaixaRequest = z.infer<typeof criarBaixaRequestSchema>;
+
+/**
+ * Estorno de baixa (RF-24): `data` opcional (padrão do servidor: hoje, em
+ * período aberto). Recusado quando o **período da baixa** está encerrado
+ * (CA-55) — regra de serviço sobre a baixa, não sobre a data do estorno.
+ */
+export const estornarBaixaRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema.optional(),
+});
+
+export type EstornarBaixaRequest = z.infer<typeof estornarBaixaRequestSchema>;
+
+/** Cancelamento de título em aberto (RF-13/F11): sem corpo além da empresa. */
+export const cancelarTituloRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+});
+
+export type CancelarTituloRequest = z.infer<typeof cancelarTituloRequestSchema>;

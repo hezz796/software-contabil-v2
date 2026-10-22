@@ -12,12 +12,20 @@ import * as schema from './schema.ts';
  * `foreignKeys` (TASK-012): FKs verificadas em runtime (integridade referencial
  * de `usuario_empresa -> empresa`); antes eram só declarativas (default do
  * better-sqlite3 é OFF).
+ *
+ * `recursiveTriggers` (S-T014-5, TASK-016): sem ele, o atalho `REPLACE` do
+ * SQLite satisfaz o conflito de PK **removendo a linha antiga sem disparar**
+ * o `BEFORE DELETE` — ex.: o trigger `audit_event_no_delete` (append-only,
+ * CA-38) seria contornado por um `REPLACE INTO audit_event`. Com o pragma ON a
+ * remoção implícita dispara os triggers de DELETE (e a de UPDATE dispara os de
+ * UPDATE), fechando o atalho no banco.
  */
 export const SQLITE_PRAGMAS = {
   journalMode: 'wal',
   synchronous: 'full',
   busyTimeoutMs: 5000,
   foreignKeys: true,
+  recursiveTriggers: true,
 } as const;
 
 /** Abre (ou cria) o arquivo SQLite e aplica os pragmas do projeto. */
@@ -31,6 +39,7 @@ export function openSqlite(filePath: string) {
   sqlite.pragma(`synchronous = ${SQLITE_PRAGMAS.synchronous}`);
   sqlite.pragma(`busy_timeout = ${SQLITE_PRAGMAS.busyTimeoutMs}`);
   sqlite.pragma(`foreign_keys = ${SQLITE_PRAGMAS.foreignKeys ? 'ON' : 'OFF'}`);
+  sqlite.pragma(`recursive_triggers = ${SQLITE_PRAGMAS.recursiveTriggers ? 'ON' : 'OFF'}`);
   return sqlite;
 }
 

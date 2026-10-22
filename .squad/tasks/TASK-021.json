@@ -12,7 +12,11 @@
       "re-execucao da su inteira do zero em banco limpo",
       "code review independente e correcao de achados relevantes",
       "security review (RK-6): tenant, sessao/cookies, CSRF, rate limit, headers (HSTS/CSP), CORS, HTTPS da ADR-0003",
-      "IMPLEMENTACAO e verificacao dos requisitos v4 APROVADOS (V4-01..10, docs/requirements/v4-SEGURANCA-EXPOSICAO-PUBLICA.md + ADR-0007): rate limit (V4-04), headers/CSP (V4-05), CORS negado em producao (V4-02), guarda fail-fast do SESSION_SECRET (V4-07/PA-4, fecha o achado A-1), e decisao final do CSP style-src com o build na mao (V4-PA-5)"
+      "IMPLEMENTACAO e verificacao dos requisitos v4 APROVADOS (V4-01..10, docs/requirements/v4-SEGURANCA-EXPOSICAO-PUBLICA.md + ADR-0007): rate limit (V4-04), headers/CSP (V4-05), CORS negado em producao (V4-02), guarda fail-fast do SESSION_SECRET (V4-07/PA-4, fecha o achado A-1), e decisao final do CSP style-src com o build na mao (V4-PA-5)",
+      "pendencias da revisao da T016 (.squad/handoffs/REVIEW-T016.md): lacunas de teste (filtros de GET /titulos, 404 de conta, periodo da data do estorno, ramos inalcancaveis, controle negativo do REPLACE) e deduplicacao da logica 404-sem-oraculo (3 copias em titulos.ts/lancamentos.ts)",
+      "comportamentos SEM CA nenhum (pre-flight .squad/handoffs/PREFLIGHT-T016-T019.md): cancelamento de titulo, baixa em periodo encerrado e baixa em empresa inativa — a matriz CA-01..55 nao os verifica; exigir verificacao explicita",
+      "rechecagem dos predicados otimistas da rodada de correcao pos-revisao da T016 (C1..C7): escritas novas em titulo mantem o predicado de revalidacao no WHERE e o 409 mapeado da constraint unica de estorno",
+      "reavaliacao dos riscos aceitos no ADR-0008 se o modelo de ataque mudar (ex.: app multi-processo com contention real de escrita)"
     ],
     "exclude": [
       "alterar requisitos aprovados sem aprovacao humana",
@@ -48,12 +52,13 @@
   ],
   "evidence": [],
   "assumptions": [
-    "Os CA marcados [D] sao demonstrados na UI e registrados como evidencia (Playwright e opcional, ADR-0001)."
+    "Os CA marcados [D] sao demonstrados na UI e registrados como evidencia (Playwright e opcional, ADR-0001).",
+    "Leia ANTES de comecar: .squad/handoffs/REVIEW-T016.md (achados das revisoes da T016 com itens adiados para esta tarefa) e .squad/handoffs/PREFLIGHT-T016-T019.md (lacunas de cobertura e ambiguidades de T016..T019)."
   ],
   "blockers": [],
   "worktree": null,
   "session_id": null,
   "estimate_hours": 16,
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "updated_at": "2026-10-22"
 }

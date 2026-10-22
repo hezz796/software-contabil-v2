@@ -50,6 +50,13 @@
       "when": 1792613546331,
       "tag": "0006_periodo_encerramento_garantias",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792684896796,
+      "tag": "0007_slimy_chronomancer",
+      "breakpoints": true
     }
   ]
 }

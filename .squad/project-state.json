@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-015",
-    "next_action": "T015 CONCLUIDA E VERIFICADA PELO COORDENADOR, AGUARDANDO ORDEM DE COMMIT (3 rodadas). Verificacao: 14 arquivos / 62 testes, typecheck exit 0, migracao do zero executada pelo coordenador (integrity ok, 8 triggers, journal 7), CA-31 discriminante (60.000/-70.000 antes -> 0/0 depois), CA-56 inexistente removido, caso liquido zero coberto. DECISAO HUMANA DE 2026-10-21 APLICADA: o fechamento mensal GERA lancamento de encerramento que zera as contas de resultado e leva o liquido a conta de PL — conforme o CA-31 literal; transferirResultado e mes===12 removidos. Achados do coordenador: R1 assercao vazia do CA-31 (regra 2 violada pelo agente) e CA-56 inventado; R2 o PROPRIO coordenador instruiu \"liquido zero => sem lancamento\" e corrigiu na R3 (condicao agora: movimento de resultado => lanca, linha de PL só se liquido != 0). PROXIMO PASSO: (a) ordem do usuario para o commit do marco da T015; (b) pre-flight de conflitos T016..T019 reexecutando apos rate limit; (c) entao T016 financeiro (8h), absorvendo no brief os 6 achados de seguranca Baixo da revisao da T014 (S-T014-1..6 — S-T014-4 ja coberto pelo trigger lancamento_no_periodo_encerrado da 0006). CADEIA: T016 -> T017 -> T018 -> T019 (exportacao CSV/PDF conforme ADR-0006) -> T020 -> T021 (CA-01..55, code/security review, v4 com +6h e guarda do SESSION_SECRET). PENDENCIAS DE PRODUTO: V-2 (chips RF/CA visiveis na UI — remover ou filtrar por ambiente antes da release); RK-8 adiado aguarda caso real do escritorio; V-1 favicon. FATO DO REPOSITORIO: o commit d5ddd8d da landing page foi criado entre as sessoes (fora desta squad); a landing deixa de ser trabalho nao commitado."
+    "current_task_id": "TASK-017",
+    "next_action": "MARCO T016 COMMITADO EM 2026-10-22 — escopo: codigo T016 + correcoes pos-revisao C1..C7, ADR-0008 (decisoes humanas D-R1..3), handoffs REVIEW-T016 e PREFLIGHT-T016-T019, memorias .squad (TASK-016/019/021 e este estado). AGENTS.md: o usuario restaurou os caminhos reais (.squad/ e docs/) em 2026-10-22; RESTA PENDENTE de decisao humana — a secao \"Regras contra reincidencia\" (5 regras, 14 linhas) segue apagada e o arquivo permanece FORA do commit ate o usuario decidir restaurar ou manter. DERIVA CORRIGIDA NESTE MARCO: tasks[] T015/T016 -> done, current_task_id -> TASK-017, ADR-0008 adicionada as decisions[]. PROXIMO PASSO: (1) smoke-test do agente qa numa verificacao pequena ANTES de apostar nele na T021 (nunca completou um trabalho — 2 interrupcoes na T007; permissao em opencode.jsonc e shell \"ask\", entao pedidos de aprovacao podem aparecer) — nunca em paralelo com outro subagente (rate limit ja derrubou 2 sessoes simultaneas); (2) T017 fiscal (o pre-flight PREFLIGHT-T016-T019 ja cobre T017-F-1 e F-2); depois T018 (architect na escolha de libs de OFX/CSV/PDF), T019, restante T020, T021 (absorve lacunas de teste da T016, deduplicacao 404-sem-oraculo, comportamentos sem CA e rechecagem dos predicados otimistas), T022 (implantacao: backup/restore/runbook — registrada aqui para nao ser ignorada pela cadeia). NOTA INFRA: reviewer e security-reviewer tem shell deny restrito a git (opencode.jsonc) — confirmar permissoes de execucao do qa antes de delegar a T021. PENDENCIAS DE PRODUTO: V-2 (chips RF/CA na UI), RK-8 adiado, V-1 favicon."
   },
   "tooling": [
     {
@@ -39,8 +39,8 @@
     { "id": "TASK-012", "title": "Empresas, gestão de usuários e permissões", "status": "done", "path": ".squad/tasks/TASK-012.json", "owner": "implementer" },
     { "id": "TASK-013", "title": "Plano de contas e períodos contábeis", "status": "done", "path": ".squad/tasks/TASK-013.json", "owner": "implementer" },
     { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "done", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
-    { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "todo", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
-    { "id": "TASK-016", "title": "Financeiro: títulos, baixas e estorno de baixa", "status": "todo", "path": ".squad/tasks/TASK-016.json", "owner": "implementer" },
+    { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "done", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
+    { "id": "TASK-016", "title": "Financeiro: títulos, baixas e estorno de baixa", "status": "done", "path": ".squad/tasks/TASK-016.json", "owner": "implementer" },
     { "id": "TASK-017", "title": "Fiscal configurável: tabelas, retenções, multa/juros, DAS", "status": "todo", "path": ".squad/tasks/TASK-017.json", "owner": "implementer" },
     { "id": "TASK-018", "title": "Conciliação bancária e importação OFX/CSV", "status": "todo", "path": ".squad/tasks/TASK-018.json", "owner": "implementer" },
     { "id": "TASK-019", "title": "Fluxo de caixa e exportação CSV/PDF", "status": "todo", "path": ".squad/tasks/TASK-019.json", "owner": "implementer" },
@@ -56,7 +56,8 @@
     { "id": "ADR-0004", "title": "Decisões de produto da interface (Q-UI-1..3) e aprovação dos wireframes — aceita em 2026-10-20", "path": "docs/decisions/ADR-0004-decisoes-interface-q-ui.md" },
     { "id": "ADR-0005", "title": "Aprovação da direção visual (ESTILO.md, PA-1..PA-7) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0005-aprovacao-direcao-visual-estilo.md" },
     { "id": "ADR-0006", "title": "Formato de exportação dos relatórios (H9) = CSV + PDF — aceita em 2026-10-21", "path": "docs/decisions/ADR-0006-formato-exportacao-h9.md" },
-    { "id": "ADR-0007", "title": "Aprovação dos requisitos v4 de segurança da exposição pública (V4-01..V4-10) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0007-aprovacao-requisitos-v4-seguranca.md" }
+    { "id": "ADR-0007", "title": "Aprovação dos requisitos v4 de segurança da exposição pública (V4-01..V4-10) — aceita em 2026-10-21", "path": "docs/decisions/ADR-0007-aprovacao-requisitos-v4-seguranca.md" },
+    { "id": "ADR-0008", "title": "Riscos aceitos e correcao de concorrencia da T016 (D-R1..3) — decidido em 2026-10-22", "path": "docs/decisions/ADR-0008-riscos-aceitos-e-correcao-concorrencia-t016.md" }
   ],
   "active_work": [],
   "last_verified": {
@@ -182,5 +183,5 @@
       "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-22T14:35:00Z"
+  "updated_at": "2026-10-22T19:52:55.024Z"
 }

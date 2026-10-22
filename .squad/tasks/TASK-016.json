@@ -2,7 +2,7 @@
   "id": "TASK-016",
   "title": "Financeiro: titulos, baixa total/parcial, cancelamento e estorno de baixa",
   "objective": "Implementar contas a pagar/receber (RF-13/RF-14), baixa total ou parcial com validacoes (H8), situacao derivada das baixas, vinculo contabil das baixas (RF-15) e estorno de baixa (RF-24/F14).",
-  "status": "todo",
+  "status": "done",
   "owner": "implementer",
   "depends_on": ["TASK-015"],
   "scope": {
@@ -39,14 +39,97 @@
       "method": "Afirmar que lancamentos vinculados somam o valor total do titulo (CA-41) em reais inteiros (centavos)."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "Testes: tests/integration/titulos.test.ts (16 testes: CA-06, CA-07, CA-16, CA-40, CA-41, CA-42, CA-43, CA-55, decisao D2, S-T014-2, S-T014-3, S-T014-6 e 4 sem CA — cancelamento x2, baixa em periodo encerrado/sem periodo, baixa em empresa inativa) + tests/unit/sqlite-config.test.ts (S-T014-5).",
+    "npm test (apps/api): 15 arquivos / 79 testes verdes (base antes da T016: 14 arquivos / 62 testes; nenhuma regressao).",
+    "npm run typecheck (apps/api): exit 0.",
+    "Migracao do zero em %TEMP% (DATABASE_PATH=%TEMP%\\t016-migracao\\mig.db, npm run migrate): PRAGMA integrity_check=ok, PRAGMA foreign_key_check sem violacoes, journal 8/8 com ultima tag 0007_slimy_chronomancer; CHECKs (titulo_valor_positivo, titulo_saldo_na_faixa, titulo_situacao_valida, baixa_*), as 4 FKs compostas (…, empresa_id) e os indices unicos (titulo_id_empresa_uk, baixa_estorno_lancamento_uk, conta_id_empresa_uk, lancamento_id_empresa_uk) presentes; triggers das migracoes 0002/0005/0006 intactos; DELETE em audit_event abortado (append-only).",
+    "drizzle/0007_slimy_chronomancer.sql + drizzle/meta/0007_snapshot.json gerados (drizzle-kit generate); _journal.json acrescentou apenas a entrada idx 7 (0005/0006 inalterados).",
+    "Verificacoes discriminantes por teste: cada recusa afirma mensagem/estado/trilha E o controle aceito logo em seguida (recusa sem dado real e sem controle seria insumo, nao evidencia)."
+  ],
   "assumptions": [
-    "Valores em centavos (inteiro) conforme ADR-0001; apresentacao BRL com 2 casas (H7)."
+    "Valores em centavos (inteiro) conforme ADR-0001; apresentacao BRL com 2 casas (H7).",
+    "D1 (2026-10-22): baixa.valor_centavos e o BRUTO abatido do saldo do titulo (a recusa \"valor maior que o saldo\" do CA-16 e literal sobre o bruto); retencao_centavos/encargos_centavos sao colunas proprias com default 0 — entrada e calculo de retencoes/multa-juros (CA-47/CA-48) pertencem a T017; o somatorio \"lancamentos vinculados somam o valor total\" (CA-41) vale para baixas sem retencao/encargos.",
+    "D2 (2026-10-22): estorno DIRETO (POST /lancamentos/:id/estorno) de lancamento gerado por baixa ou pelo seu estorno e recusado com 409 orientando a POST /baixas/:id/estorno e auditado (lancamento.estorno_recusado, motivo vinculado_a_baixa). A regra NAO e imposta no banco porque os dois INSERTs de estorno sao indistinghiveis para SQL (ambos estorno_de_id = baixa.lancamento_id) — a fronteira de servico e o caminho correto; id inexistente e id de outra empresa respondem o MESMO 404 (trilha so na tentativa alheia).",
+    "D3 (2026-10-22): \"em aberto\" = nao quitado nem cancelado (inclui parcial); cancelar e escrita do contador que zera o saldo residual com auditoria, NAO gera lancamento e preserva os lancamentos das baixas parciais (imutabilidade R9); estorno de baixa em titulo cancelado e recusado 409 (o cancelamento nao se reabre).",
+    "CA-07: o enum do escopo (TASK-016.json:scope.include) e aberto|parcial|pago|cancelado — o JSON governa; \"recebido\" e o estado quitado, representado por `pago`.",
+    "Limitacoes sem CA: cancelamento de titulo, recusa de baixa em periodo encerrado/sem periodo cadastrado e recusa de baixa em empresa inativa nao tem criterio de aceite proprio — os testes sao nomeados SEM numero de CA em tests/integration/titulos.test.ts; leitura do historico de titulos em empresa inativa segue liberada (CA-40: so escrita nova e bloqueada)."
   ],
   "blockers": [],
   "worktree": null,
-  "session_id": null,
+  "session_id": "ses_e9bbf0a6cffe5E3DmnRjWZ8EAL",
   "estimate_hours": 8,
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "coordinator_post_review_verification": {
+    "verified_at": "2026-10-22",
+    "trigger": "O coordenador auditou o uso dos agentes da squad e constatou que NENHUM marco tinha passado por revisao independente antes do commit — apenas pela verificacao do coordenador (que nao enxerga classe de concorrencia). T016 foi a primeira entrega revisada.",
+    "reviews": [
+      "reviewer (ses_e9b625c27ffeHoRNqbYjTHvxQD): 9 achados — 1 Alto (corrida read-modify-write: validacoes fora da transacao e UPDATE sem predicado; duas baixas simultaneas gravavam saldo de leitura velha, silenciosamente, e o CHECK titulo_saldo_na_faixa nao pegava), 2 Medio (estorno de baixa concorrente = 500 sem trilha; bomba de data no CA-55 quebrando a suite a partir de 2026-11-01), 5 Baixo, 1 Nit. Integridade dos achados em .squad/handoffs/REVIEW-T016.md.",
+      "security-reviewer (ses_e9b4bea74ffeNvH7OjQeedZwKP): S-T014-1..6 TODOS confirmados no codigo; 2 Baixo (oraculo de timing cross-tenant; baixa/titulo sem imutabilidade no banco) aceitos e registrados no ADR-0008; 2 Nit informativos; superficie nova sem achados."
+    ],
+    "human_decisions_2026_10_22": [
+      "D-R1: corrida corrigida por predicado otimista no WHERE (nao BEGIN IMMEDIATE, nao trigger).",
+      "D-R2: imutabilidade de baixa/titulo = risco aceito (registrado no ADR-0008; o estorno exige UPDATE em baixa, entao BEFORE UPDATE generico e impossivel).",
+      "D-R3: escopo da correcao = Alto + Medios + Lows baratos; itens 5 (lacunas de teste) e 7 (deduplicacao da logica 404-sem-oraculo) adiados para a T021.",
+      "Oraculo de timing (S-T016-SEC-1) aceito: resposta identica mantida; equalizar custo poluiria a trilha."
+    ],
+    "correction_round": {
+      "session_id": "ses_e9b3c900cffePf7r5MMxruB2Tx",
+      "result": "ACCEPTED",
+      "evidence": [
+        "npm test executado PELO COORDENADOR em 2 execucoes consecutivas: 15 arquivos / 82 testes verdes NAS DUAS — as 9 falhas transitórias relatadas pelo agente (conteudo de maquina) nao se reproduziram; suíte estavel.",
+        "npm run typecheck: exit 0.",
+        "Migracao do zero PELO COORDENADOR em banco descartavel: integrity_check ok, foreign_key_check 0, CHECK titulo_tipo_valido PRESENTE no DDL, 8 triggers antigos intactos, journal com 8 migracoes ate 0007_slimy_chronomancer; banco removido.",
+        "CHECK PROVADO FUNCIONAL PELO COORDENADOR (fechando a limitacao de banco vazio): INSERT com tipo=INVALIDO aborta com \"CHECK constraint failed: titulo_tipo_valido\"; CONTROLE com tipo valido e FKs inexistentes aborta por FOREIGN KEY — o CHECK mira o tipo, nao outro erro.",
+        "PROVA DE DISCRIMINACAO DO C1 MEDIDA PELO COORDENADOR: predicado removido temporariamente de criarBaixa -> teste de corrida VERMELHO (\"expected [201,201] to deeply equal [201,409]\" — a corrupcao exata, as duas aceitas); predicado restaurado -> verde; restauracao confirmada funcionalmente pelo proprio teste (que so passa com o predicado).",
+        "C2 verificado na fonte (services/titulos.ts:882-896): ehViolacaoDeEstornoUnico com match exato (codigo + nome da constraint) -> evento titulo.estorno_baixa_recusada com motivo baixa_ja_estornada_concorrente -> 409 identico ao caminho sequencial; violacoes diferentes repropagam como bug real.",
+        "C3 verificado na fonte (titulos.test.ts:713,740): Date congelado em 2026-12-15 via vi.useFakeTimers so para Date + data explicita 2026-06-10 no estorno A — prova PERMANENTE de independencia de relogio: se qualquer data voltar a derivar do calendario, o periodo do mes congelado nao existira e o teste falhara.",
+        "Helper dbComLeiturasAdiadas lido integralmente e considerado LEGITIMO: adia apenas a execucao dos select para o proximo tick (mesma familia dos fake timers), sem contornar validacao de negocio; sem ele o Promise.all serializa e a corrida nao se manifesta (medido: [201,400] com segunda baixa recusada por valor_maior_que_saldo).",
+        "git status confere footprint exato: so arquivos do escopo da T016 + memoria do coordenador; NENHUM commit; banco de dev intocado (ultima migracao aplicada nele e a 0002 — a 0007 sera aplicada pelo migrator quando o usuario rodar npm run migrate)."
+      ],
+      "technical_decisions": [
+        "Motivo de auditoria distinto para a corrida (baixa_ja_estornada_concorrente) espelha estorno_duplicado_concorrente de lancamentos.ts.",
+        "Trilha da recusa de corrida gravada FORA da transacao abortada — espelha o padrao do CA-55 da T015.",
+        "Guard de relogio congelado no CA-55 e permanente (prova de independencia de calendario)."
+      ],
+      "limitations": [
+        "Discriminacao do C2 aceita por MECANISMO (catch lido na fonte + comportamento do harness provado pelo C1) e pela medicao do agente ([201,500] sem o catch); o coordenador remediu apenas o C1.",
+        "Itens 5 e 7 das revisoes adiados para a T021 por decisao humana D-R3 — estao no scope.include da TASK-021.",
+        "Nenhum commit foi feito; aguarda ordem do usuario para o marco da T016 (que agora inclui ADR-0008, REVIEW-T016.md, PREFLIGHT-T016-T019.md e as memorias)."
+      ]
+    }
+  },
+  "coordinator_verification": {
+    "verified_at": "2026-10-22",
+    "method": "verificacao independente do coordenador (comandos executados por ele, nao relato do agente)",
+    "result": "ACCEPTED",
+    "findings": [
+      "Garantias de TENANT no banco, nao na aplicacao (regra 4 do AGENTS.md): titulo tem FK composta empresa_id -> conta(empresa_id); baixa tem empresa_id -> lancamento(empresa_id) (x2) e empresa_id -> titulo(empresa_id). Titulo, baixa e lancamento ficam obrigados a mesma empresa por CONSTRAINT, nao por disciplina de service.",
+      "S-T014-1 corrigido na fonte: predicado de empresa movido para o WHERE (services/lancamentos.ts:119 and(eq(id), eq(empresaId))) — antes era busca por id com checagem em JS.",
+      "S-T014-3 corrigido na fonte: ehViolacaoDeUnicidade casa SQLITE_CONSTRAINT_UNIQUE exato (l.54) em vez de qualquer SQLITE_CONSTRAINT, que mascarava bug real como 409 de negocio.",
+      "S-T014-2 corrigido: tentativa sobre :id de outra empresa grava lancamento.tentativa_negada na trilha SEM mudar a resposta (404 identico, sem oraculo — CA-22).",
+      "S-T014-5 corrigido: recursive_triggers habilitado, com teste comportamental de REPLACE INTO abortado.",
+      "CA-55 coberto com fixture ORDENADA — a recusa nao vem do trigger da 0006 (o estorno seria datado de hoje e passaria), vem de regra de servico sobre o periodo da baixa, com auditoria persistida FORA da transacao que aborta."
+    ],
+    "evidence": [
+      "npm test (sistema-contabil/): 15 arquivos / 79 testes verdes, exit 0 (base 62 da T015 + 17 novos, zero regressao)",
+      "npm run typecheck: exit 0",
+      "migracao do zero executada PELO COORDENADOR em banco descartavel em %TEMP%: integrity_check = ok, foreign_key_check = 0 violacoes, 13 tabelas (titulo e baixa novas), 8 triggers (T014 e T015 intactos), journal com 8 migracoes ate 0007_slimy_chronomancer; banco removido ao final",
+      "consistencia da pasta de migracao conferida pelo coordenador: 8 sql = 8 snapshots = 8 entradas de journal (o 0007 nasceu com snapshot, ao contrario da 0006 que a T015 entregou incompleta)",
+      "CA-55 lido pelo coordenador no teste (tests/integration/titulos.test.ts:661-690): periodo encerrado pelo servico da T015, recusa 409 citando 05/2026, evento titulo.estorno_baixa_recusada com motivo periodo_encerrado, titulo INALTERADO (saldo 20.000, situacao parcial), estorno_lancamento_id null, total de lancamentos fixo em 3",
+      "D2 com controle discriminante (titulos.test.ts:703-714): lancamento comum estorna (201), o da baixa e recusado (409) — a assercao distingue os dois caminhos",
+      "unique indexes no banco: titulo_id_empresa_uk, baixa_estorno_lancamento_uk"
+    ],
+    "decisions": [
+      "D1 (coordenador): baixa.valor_centavos = bruto abatido do saldo; retencao e encargos em colunas proprias. A validacao \"valor > saldo\" do CA-16 permanece literal sobre o bruto; o invariante do CA-41 fica escopado a baixa sem encargos/retencao.",
+      "D2 (coordenador): estorno direto do lancamento de baixa (e do seu estorno) e recusado orientando a POST /baixas/:id/estorno — antes a rota da T014 aceitaria e reverteria o contabil SEM reabrir o titulo.",
+      "D3 (coordenador): \"em aberto\" = nao quitado nem cancelado; cancelamento e escrita do contador, nao gera lancamento, zera saldo residual auditado."
+    ],
+    "limitations": [
+      "Testes nomeados SEM numero de CA para cancelamento, baixa em periodo encerrado e baixa em empresa inativa: nenhum CA cobre esses comportamentos (a serie vai ate CA-55 e nenhum cita cancelamento). A T021 nao os verificaria pela matriz CA — precisam constar do plano da T021.",
+      "Mapeamento CA-07: \"recebido\" foi mapeado para situacao \"pago\" (registrado em assumptions pelo agente).",
+      "Nenhum commit foi feito; aguarda ordem do usuario para o marco."
+    ]
+  },
+  "updated_at": "2026-10-22"
 }
