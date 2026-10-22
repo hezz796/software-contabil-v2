@@ -1,0 +1,53 @@
+{
+  "id": "TASK-007",
+  "title": "Verificar criterios de aceite da landing page",
+  "objective": "Verificar de forma independente os criterios de aceite de TASK-004 e TASK-006 e registrar evidencias e achados, sem editar a implementacao.",
+  "status": "done",
+  "owner": "qa",
+  "depends_on": ["TASK-006"],
+  "scope": {
+    "include": [
+      "landpage/** (somente leitura)",
+      "docs/requirements/landpage.md (somente leitura)"
+    ],
+    "exclude": [
+      "qualquer edicao de arquivos",
+      "correcao de defeitos (reportar ao coordenador)"
+    ]
+  },
+  "acceptance_criteria": [
+    "Cada criterio de aceite de TASK-004 e TASK-006 recebe resultado passed/failed/not_run com evidencia",
+    "Defeitos encontrados sao descritos com passos de reproducao",
+    "Nenhum arquivo de implementacao e alterado pelo QA"
+  ],
+  "verification_plan": [
+    {
+      "name": "Relatorio de verificacao",
+      "method": "QA registra resultado por criterio; coordenador confere o relatorio contra o codigo e os testes."
+    }
+  ],
+  "evidence": [
+    "EXECUCAO: verificacao executada pelo COORDENADOR apos 2 interrupcoes da sessão de QA por restart do servidor; independencia reduzida (registrada como limitacao). Nenhum arquivo de implementacao foi alterado.",
+    "CA-1 passed: docs/requirements/landpage.md §1 contem 'Problema' e 'Resultado esperado'.",
+    "CA-2 passed: seções 4.1 (hero), 4.2 (recursos), 4.3 (como funciona), 4.4 (CTA) e 4.5 (rodapé) definidas no documento.",
+    "CA-3 passed: todas as seções 4.1–4.5 contêm texto pronto em PT-BR ou instrução '[a confirmar]'.",
+    "CA-4 passed: RT-1 (pagina estatica, sem framework/build) declarada no documento.",
+    "CA-5 passed COM LIMITACAO: RT-2 declarada; Playwright bloqueia file://, entao verificado via http://127.0.0.1 local servindo landpage/ (2 requisicoes: index.html + styles.css), href relativo unico (styles.css), 0 scripts, 0 dependencias absolutas. O implementer verificou file:// via Chrome headless (DOM completo).",
+    "CA-6 passed: viewport 320px -> scrollWidth==clientWidth==320 e lista de elementos vazantes vazia; viewport 1440px -> scrollWidth==clientWidth==1440, mesmo resultado; CTA do hero visivel no primeiro quadro em ambas.",
+    "CA-7 passed: 0 tags <script> na pagina; apos rolagem completa ate o footer (scrollY==maxScroll==1415, footer visivel) o unico erro de console era favicon.ico 404 — artefato do servidor de teste http (navegador pede favicon em http; via file:// nao ha pedido). Sem novos erros durante a rolagem.",
+    "CA-8 passed: network do navegador mostra apenas index.html e styles.css, ambos locais; grep em landpage/ sem correspondencia para https?://, @import, url( ou <script>.",
+    "CA-9 passed: tabela §6 do documento tem coluna 'Forma de verificacao' preenchida para CA-1..CA-10.",
+    "CA-10 passed: §2.2 registra H1–H4 como hipoteses; §7 lista PB-1..PB-3 como perguntas abertas.",
+    "Copy conferido: textos literais de §4.1–§4.5 presentes em index.html (titulo, subtitulo, apoio, 6 recursos, 6 passos Start→Release, CTA 'Pronto para colocar a squad para trabalhar?', rotulo provisorio 'Ver o ciclo da squad' -> #como-funciona, rodape de 3 linhas). Sem e-mail/URL/domínio inventados.",
+    "Defeitos: nenhum bloqueante nem importante. Observacao informativa: favicon.ico 404 quando servido via http (irrelevante para o uso via file://; considerar se PB-3 levar a publicacao). Barra superior minima (marca + ancora) e aceita como acréscimo de navegacao dentro de landpage/.",
+    "Limitacao: verificacao de file:// (CA-5) nao reexecutada pelo coordenador (ferramenta de navegador bloqueia protocolo file:); evidencia indireta + verificacao do implementer registradas."
+  ],
+  "assumptions": [],
+  "blockers": [],
+  "worktree": null,
+  "session_id": null,
+  "executed_by": "coordinator (2 tentativas de subagente qa interrompidas por restart em 2026-10-21/22; verificacao reexecutada pelo coordenador)",
+  "created_at": "2026-10-20T21:58:32Z",
+  "updated_at": "2026-10-22T14:35:00Z",
+  "renumbered_from": "TASK-004 (linha de tasks da landing page; os IDs TASK-001..004 ja estavam em uso pelo fluxo do sistema contabil)"
+}

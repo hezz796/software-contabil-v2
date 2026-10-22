@@ -1,0 +1,51 @@
+{
+  "id": "TASK-004",
+  "title": "[landing page] Definir requisitos e criterios de aceite",
+  "objective": "Produzir docs/requirements/landpage.md com objetivo, publico-alvo (hipotese), secoes da pagina, CTA, idioma, restricoes tecnicas e criterios de aceite verificaveis para a landing page.",
+  "status": "done",
+  "owner": "product-analyst",
+  "depends_on": [],
+  "scope": {
+    "include": [
+      "docs/requirements/landpage.md"
+    ],
+    "exclude": [
+      "codigo-fonte de qualquer tipo",
+      ".squad/",
+      ".opencode/",
+      "AGENTS.md",
+      "docs/decisions/",
+      "docs/requirements/SISTEMA-CONTABIL.md e arquivos do fluxo do sistema contabil"
+    ]
+  },
+  "acceptance_criteria": [
+    "docs/requirements/landpage.md existe e registra objetivo e resultado esperado",
+    "Define secoes minimas da pagina (hero, proposta de valor, recursos/diferenciais, CTA, rodape) e o texto/guia de copy em portugues (BR)",
+    "Declara requisitos tecnicos: pagina estatica, abre sem build, funciona via file://, responsiva (mobile e desktop), sem erros de console",
+    "Declara criterios de aceite observaveis e verificaveis (incluindo forma de verificacao)",
+    "Lista explicitamente as hipoteses adotadas e as perguntas que permanecem abertas"
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspecao do documento de requisitos",
+      "method": "Coordenador le docs/requirements/landpage.md e confere cada criterio de aceite acima."
+    }
+  ],
+  "evidence": [
+    "docs/requirements/landpage.md criado e conferido pelo coordenador: secoes 4.1-4.5 com copy pronta, RT-1..RT-6, CA-1..CA-10 com forma de verificacao, H1-H4 e PB-1..PB-3 registradas.",
+    "Sessao do product-analyst: ses_ea4abad57ffebwDN7ZCks7gRO6",
+    "Ajuste posterior do coordenador (2026-10-20): correcao de numeracao na secao 4.1 (ancora do CTA do hero aponta para a secao 4.3 'Como funciona'; o texto original dizia 4.4)."
+  ],
+  "assumptions": [
+    "Hipotese H1: landing page estatica HTML/CSS/JS puro, sem framework e sem build",
+    "Hipotese H2: objetivo 'apresentar/informar' (CTA secundario: contato)",
+    "Hipotese H3: idioma portugues (BR), copy generica produzida pela squad",
+    "Hipotese H4: escopo interno deste repositorio, sem deploy/publicacao nesta etapa"
+  ],
+  "blockers": [],
+  "worktree": null,
+  "session_id": "ses_ea4abad57ffebwDN7ZCks7gRO6",
+  "created_at": "2026-10-20T21:58:32Z",
+  "updated_at": "2026-10-21T00:45:00Z",
+  "note": "Arquivo recriado em 2026-10-21 conforme .squad/handoffs/HANDOFF-001-id-collision.json: os IDs TASK-001..003 + TASK-008 em diante pertencem ao fluxo do sistema contabil; TASK-004..007 pertencem ao fluxo da landing page."
+}

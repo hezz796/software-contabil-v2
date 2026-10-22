@@ -1,0 +1,44 @@
+{
+  "id": "TASK-005",
+  "title": "Registrar decisao de stack da landing page em ADR",
+  "objective": "Criar docs/decisions/ADR-0002-landing-page-stack.md avaliando opcoes de stack para a landing page e registrando a decisao e suas consequencias.",
+  "status": "done",
+  "owner": "architect",
+  "depends_on": ["TASK-004"],
+  "scope": {
+    "include": [
+      "docs/decisions/ADR-0002-landing-page-stack.md"
+    ],
+    "exclude": [
+      "codigo-fonte",
+      ".squad/",
+      ".opencode/",
+      "renomear ou apagar o template ADR-XXXX existente",
+      "o ADR-0001 do sistema contabil (outro escopo)"
+    ]
+  },
+  "acceptance_criteria": [
+    "ADR segue o template de docs/decisions/ADR-XXXX-titulo-da-decisao.md",
+    "Avalia ao menos duas opcoes (estatico HTML/CSS/JS vs framework) segundo requisitos e restricoes conhecidos",
+    "Registra a decisao, consequencias e como sera validada",
+    "Nao altera codigo nem implementa a solucao"
+  ],
+  "verification_plan": [
+    {
+      "name": "Inspecao do ADR",
+      "method": "Coordenador le o ADR e confere estrutura do template, opcoes consideradas e decisao registrada."
+    }
+  ],
+  "evidence": [
+    "docs/decisions/ADR-0002-landing-page-stack.md: template seguido, 3 opcoes comparadas (A estatico puro escolhido; B Astro/build e C SPA violam RT-1/RT-2), decisao justificada por CA-5/CA-7/CA-8, riscos com mitigacao, validacao mapeada a CA-5..CA-8 e PB-3.",
+    "Sessao do architect: ses_ea4a8f64bffeJTdyMbqLE72Pze",
+    "Colisao de numeracao ADR-0001 resolvida pelo coordenador: arquivo renumerado para ADR-0002 e referencias internas atualizadas."
+  ],
+  "assumptions": [],
+  "blockers": [],
+  "worktree": null,
+  "session_id": "ses_ea4a8f64bffeJTdyMbqLE72Pze",
+  "created_at": "2026-10-20T21:58:32Z",
+  "updated_at": "2026-10-20T22:25:00Z",
+  "renumbered_from": "TASK-002 (linha de tasks da landing page; TASK-002 pertence ao fluxo do sistema contabil)"
+}

@@ -1,0 +1,322 @@
+/* squad-framework — landing page estática (ADR-0002: HTML/CSS/JS puro, sem build).
+   Sem fontes nem imagens externas: apenas recursos locais/nativos. */
+
+:root {
+  --cor-fundo: #f5f7fb;
+  --cor-fundo-alt: #ffffff;
+  --cor-texto: #1c2333;
+  --cor-texto-suave: #4a5468;
+  --cor-destaque: #2c5bd8;
+  --cor-destaque-escura: #1f45a6;
+  --cor-borda: #d7dded;
+  --cor-cta-fundo: #101a33;
+  --cor-cta-texto: #ffffff;
+  --raio: 12px;
+  --sombra: 0 6px 20px rgba(16, 26, 51, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Contêiner fluido: nunca ultrapassa a largura da viewport (evita rolagem horizontal). */
+.conteiner {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 4vw, 2.5rem);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0 0 0.5em;
+  overflow-wrap: break-word;
+}
+
+p {
+  margin: 0 0 1em;
+  overflow-wrap: break-word;
+}
+
+/* ---------- Barra superior ---------- */
+
+.barra {
+  background: var(--cor-fundo-alt);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.barra__conteudo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-block: 0.75rem;
+}
+
+.barra__marca {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.barra__link {
+  color: var(--cor-destaque);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.barra__link:hover,
+.barra__link:focus-visible {
+  text-decoration: underline;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  background: linear-gradient(180deg, var(--cor-fundo-alt) 0%, var(--cor-fundo) 100%);
+  padding-block: clamp(2.5rem, 8vw, 5rem);
+}
+
+.hero__conteudo {
+  max-width: 46rem;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 8vw, 3.25rem);
+  margin-bottom: 0.25em;
+}
+
+.hero__subtitulo {
+  font-size: clamp(1.05rem, 3.5vw, 1.35rem);
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.hero__apoio {
+  font-size: clamp(0.95rem, 3vw, 1.05rem);
+  color: var(--cor-texto-suave);
+}
+
+.hero__acao {
+  margin: 1.5rem 0 0;
+}
+
+/* ---------- Botões ---------- */
+
+.botao {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.botao--primario {
+  background: var(--cor-destaque);
+  color: #ffffff;
+}
+
+.botao--primario:hover,
+.botao--primario:focus-visible {
+  background: var(--cor-destaque-escura);
+}
+
+/* ---------- Seções ---------- */
+
+.secao {
+  padding-block: clamp(2.5rem, 7vw, 4.5rem);
+}
+
+.secao--alternada {
+  background: var(--cor-fundo-alt);
+  border-block: 1px solid var(--cor-borda);
+}
+
+.secao h2 {
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  margin-bottom: 0.75em;
+}
+
+/* ---------- Recursos (grade fluida) ---------- */
+
+.grade {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: clamp(1rem, 3vw, 1.5rem);
+}
+
+.cartao {
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.secao--alternada .cartao {
+  background: var(--cor-fundo);
+}
+
+.cartao h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.4em;
+}
+
+.cartao p {
+  margin: 0;
+  color: var(--cor-texto-suave);
+  font-size: 0.975rem;
+}
+
+/* ---------- Como funciona (lista numerada) ---------- */
+
+.passos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1rem);
+}
+
+.passo {
+  counter-increment: passo;
+  position: relative;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 1rem 1rem 1rem 3.25rem;
+}
+
+.passo::before {
+  content: counter(passo);
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--cor-destaque);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passo strong {
+  color: var(--cor-texto);
+}
+
+/* ---------- CTA ---------- */
+
+.secao--cta {
+  padding-block: clamp(3rem, 8vw, 5rem);
+}
+
+.bloco-cta {
+  background: var(--cor-cta-fundo);
+  color: var(--cor-cta-texto);
+  border-radius: calc(var(--raio) * 1.5);
+  box-shadow: var(--sombra);
+  padding: clamp(1.5rem, 6vw, 3rem);
+  text-align: center;
+}
+
+.bloco-cta h2 {
+  color: var(--cor-cta-texto);
+}
+
+.bloco-cta__texto {
+  color: #dfe5f5;
+  max-width: 40rem;
+  margin-inline: auto;
+}
+
+.bloco-cta__acao {
+  margin: 1.5rem 0 0;
+}
+
+.bloco-cta .botao--primario {
+  background: #ffffff;
+  color: var(--cor-destaque-escura);
+}
+
+.bloco-cta .botao--primario:hover,
+.bloco-cta .botao--primario:focus-visible {
+  background: #e8edfb;
+}
+
+/* ---------- Rodapé ---------- */
+
+.rodape {
+  background: var(--cor-fundo-alt);
+  border-top: 1px solid var(--cor-borda);
+  padding-block: clamp(1.5rem, 5vw, 2.5rem);
+  font-size: 0.925rem;
+  color: var(--cor-texto-suave);
+}
+
+.rodape p {
+  margin: 0 0 0.35em;
+}
+
+.rodape p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Ponto de quebra (tablet) ---------- */
+
+@media (min-width: 640px) {
+  .passo {
+    padding-left: 3.75rem;
+  }
+
+  .passo::before {
+    left: 1.25rem;
+  }
+}
+
+/* ---------- Ponto de quebra (desktop) ---------- */
+
+@media (min-width: 960px) {
+  .hero__conteudo {
+    max-width: 52rem;
+  }
+}
+
+/* ---------- Acessibilidade: movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "TASK-006",
+  "title": "Implementar a landing page estatica",
+  "objective": "Criar a landing page em HTML/CSS/JS na pasta landpage/ do repositorio, conforme docs/requirements/landpage.md e ADR-0002, responsiva e sem build.",
+  "status": "done",
+  "owner": "implementer",
+  "depends_on": ["TASK-004", "TASK-005"],
+  "scope": {
+    "include": [
+      "landpage/**"
+    ],
+    "exclude": [
+      ".squad/",
+      ".opencode/",
+      "AGENTS.md",
+      "docs/",
+      "raiz do repositorio alem da pasta landpage/",
+      "sistema-contabil/ (outro escopo)",
+      "deploy ou publicacao externa"
+    ]
+  },
+  "acceptance_criteria": [
+    "landpage/index.html abre diretamente (file://) sem servidor e sem etapa de build",
+    "Layout responsivo valido em larguras de 320px a 1440px",
+    "Sem erros de JavaScript no console e sem requisitos de rede obrigatorios",
+    "Conteudo em portugues (BR) conforme o documento de requisitos, com CTA claro"
+  ],
+  "verification_plan": [
+    {
+      "name": "Verificacao QA dos criterios de aceite",
+      "method": "QA abre a pagina, inspeciona HTML/CSS/JS e registra evidencias por criterio."
+    }
+  ],
+  "evidence": [
+    "Sessao do implementer: ses_ea4a10b09ffekAT0zCdynxZN8F",
+    "Criados landpage/index.html (5244 bytes, semantico, lang=pt-BR, 4 secoes + footer na ordem exigida) e landpage/styles.css (5774 bytes, mobile-first, media queries 640/960px). Sem JS (ancoras nativas) — RT-4 atendido por construcao.",
+    "Verificacoes do implementer em Chrome headless: file:// render completo; scrollWidth==clientWidth em 305px e 1425px com lista de elementos vazante vazia; console sem erros (0 scripts); grep sem https?://, @import, url() em landpage/.",
+    "CTA [a confirmar] resolvido com rotulo provisorio 'Ver o ciclo da squad' -> #como-funciona, com comentario HTML marcando PB-1; nenhum e-mail/URL/domino inventado.",
+    "Discrepancia de numeracao da secao 4.1 (ancora 'secao 4.4') corrigida no documento de requisitos pelo coordenador em 2026-10-20; implementacao coerente com a correcao."
+  ],
+  "assumptions": [],
+  "blockers": [],
+  "worktree": null,
+  "session_id": "ses_ea4a10b09ffekAT0zCdynxZN8F",
+  "created_at": "2026-10-20T21:58:32Z",
+  "updated_at": "2026-10-20T22:40:00Z",
+  "renumbered_from": "TASK-003 (linha de tasks da landing page; TASK-003 pertence ao fluxo do sistema contabil)"
+}

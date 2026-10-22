@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="squad-framework — framework de squad autônoma com agentes do OpenCode que conduzem o ciclo de desenvolvimento de software, do pedido à release.">
+  <title>squad-framework — squad autônoma com agentes do OpenCode</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="barra">
+    <div class="conteiner barra__conteudo">
+      <span class="barra__marca">squad-framework</span>
+      <a class="barra__link" href="#como-funciona">Como funciona</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- 4.1 Hero -->
+    <section class="hero" id="topo" aria-labelledby="titulo-hero">
+      <div class="conteiner hero__conteudo">
+        <h1 id="titulo-hero">squad-framework</h1>
+        <p class="hero__subtitulo">
+          Um framework de squad autônoma: agentes do OpenCode que conduzem o ciclo de
+          desenvolvimento de software — do pedido à release.
+        </p>
+        <p class="hero__apoio">
+          Entender, planejar, implementar, verificar, revisar e publicar com papéis definidos,
+          critérios de aceite verificáveis e memória persistente entre sessões.
+        </p>
+        <p class="hero__acao">
+          <a class="botao botao--primario" href="#como-funciona">Como funciona</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- 4.2 Recursos / diferenciais -->
+    <section class="secao" id="recursos" aria-labelledby="titulo-recursos">
+      <div class="conteiner">
+        <h2 id="titulo-recursos">Recursos</h2>
+        <ul class="grade">
+          <li class="cartao">
+            <h3>Ciclo completo</h3>
+            <p>Do entendimento à release, com etapas nomeadas e handoffs claros entre especialistas.</p>
+          </li>
+          <li class="cartao">
+            <h3>Papéis especializados</h3>
+            <p>Coordenador, arquiteto, implementador, revisor, QA e revisor de segurança atuam só no escopo delegado.</p>
+          </li>
+          <li class="cartao">
+            <h3>Aceite verificável</h3>
+            <p>Tarefa só fecha com critérios observáveis, evidências de verificação e limitações registradas.</p>
+          </li>
+          <li class="cartao">
+            <h3>Memória persistente</h3>
+            <p>Estado, decisões e progresso ficam no repositório — não apenas no histórico da conversa.</p>
+          </li>
+          <li class="cartao">
+            <h3>Agnóstica a tecnologia</h3>
+            <p>A stack é escolhida por projeto, a partir de requisitos, restrições e capacidade de operação.</p>
+          </li>
+          <li class="cartao">
+            <h3>Execução paralela</h3>
+            <p>Subagents em background e worktrees separadas mantêm o trabalho independente sem conflito.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 4.3 Como funciona -->
+    <section class="secao secao--alternada" id="como-funciona" aria-labelledby="titulo-como-funciona">
+      <div class="conteiner">
+        <h2 id="titulo-como-funciona">Como funciona</h2>
+        <ol class="passos">
+          <li class="passo">
+            <strong>Start</strong> — o pedido é transformado em objetivo, requisitos, hipóteses e critérios de aceite.
+          </li>
+          <li class="passo">
+            <strong>Plan</strong> — o objetivo vira plano, dependências e critérios verificáveis.
+          </li>
+          <li class="passo">
+            <strong>Implement</strong> — tarefas planejadas são executadas em escopo delimitado, com trabalho paralelo quando independente.
+          </li>
+          <li class="passo">
+            <strong>Verify</strong> — os critérios são conferidos e as evidências são registradas.
+          </li>
+          <li class="passo">
+            <strong>Review</strong> — uma revisão independente relata defeitos, regressões e riscos.
+          </li>
+          <li class="passo">
+            <strong>Release</strong> — as notas e os artefatos de release são preparados a partir do que foi verificado.
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 4.4 CTA -->
+    <section class="secao secao--cta" id="cta" aria-labelledby="titulo-cta">
+      <div class="conteiner bloco-cta">
+        <h2 id="titulo-cta">Pronto para colocar a squad para trabalhar?</h2>
+        <p class="bloco-cta__texto">
+          Comece por um pedido: descreva o problema e deixe a squad conduzir o ciclo até a release.
+        </p>
+        <!-- Rótulo provisório conforme docs/requirements/landpage.md §4.4 (PB-1 pendente):
+             destino é âncora interna; nenhum e-mail, URL ou domínio inventado. -->
+        <p class="bloco-cta__acao">
+          <a class="botao botao--primario" href="#como-funciona">Ver o ciclo da squad</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- 4.5 Rodapé -->
+  <footer class="rodape">
+    <div class="conteiner">
+      <p>squad-framework-2.0 — framework de squad autônoma com agentes do OpenCode.</p>
+      <p>Documento de origem: docs/requirements/landpage.md.</p>
+      <p>Conteúdo em português (BR).</p>
+    </div>
+  </footer>
+</body>
+</html>
