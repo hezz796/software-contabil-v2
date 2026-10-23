@@ -2,7 +2,7 @@
   "id": "TASK-017",
   "title": "Fiscal configuravel: tabelas, retencoes, multa/juros e DAS",
   "objective": "Implementar o escopo fiscal ampliado por PB-4 (F12): tabelas de imposto configuraveis (RF-20), retencao na fonte na baixa (RF-22), multa e juros pro rata diaria (RF-23) e apuracao do DAS (RF-21), todos com vinculo contabil (RF-15).",
-  "status": "in_progress",
+  "status": "done",
   "owner": "implementer",
   "depends_on": ["TASK-016"],
   "scope": {
@@ -68,5 +68,5 @@
   "session_id": "ses_e9ab05c9cffez6sqvyijaec6ck",
   "estimate_hours": 7,
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-23T17:55:00.000Z"
+  "updated_at": "2026-10-23T18:20:00.000Z"
 }

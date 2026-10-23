@@ -874,3 +874,233 @@ export const apuracaoDas = sqliteTable(
 
 export type ApuracaoDas = typeof apuracaoDas.$inferSelect;
 export type NovaApuracaoDas = typeof apuracaoDas.$inferInsert;
+
+/* -------------------------------------------------------------------------- */
+/* Conciliação bancária e importação de extrato (RF-16, CA-08/28/44/53, F10;   */
+/* TASK-018)                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Conta bancária da empresa (RF-16/Q-UI-2): cadastro MÍNIMO — nome, saldo
+ * inicial e data do saldo inicial. É a pré-condição do extrato: sem conta não
+ * há onde registrar item de extrato, manual ou importado (ADR-0004/Q-UI-2).
+ *
+ * - `nome` único POR EMPRESA (`conta_bancaria_empresa_nome_uk`);
+ * - `saldo_inicial_centavos` aceita negativo (limite/cheque especial);
+ * - `conta_bancaria_id_empresa_uk` é o alvo das FKs compostas de
+ *   `importacao_extrato`/`item_extrato` (padrão S-T014-6).
+ */
+export const contaBancaria = sqliteTable(
+  'conta_bancaria',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    nome: text('nome').notNull(),
+    saldoInicialCentavos: integer('saldo_inicial_centavos').notNull().default(0),
+    /** `YYYY-MM-DD` (validado na camada de entrada). */
+    dataSaldoInicial: text('data_saldo_inicial').notNull(),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('conta_bancaria_empresa_nome_uk').on(t.empresaId, t.nome),
+    uniqueIndex('conta_bancaria_id_empresa_uk').on(t.id, t.empresaId),
+    index('conta_bancaria_empresa_idx').on(t.empresaId),
+  ],
+);
+
+export type ContaBancaria = typeof contaBancaria.$inferSelect;
+export type NovaContaBancaria = typeof contaBancaria.$inferInsert;
+
+/**
+ * Registro de importação de arquivo de extrato (CA-53/RF-16).
+ *
+ * - `arquivo_hash` = sha256 dos **bytes** enviados; UNIQUE por CONTA
+ *   (`importacao_conta_hash_uk`): reimportar o mesmo arquivo na mesma conta é
+ *   recusada como duplicata idêntica (T018-F-2), enquanto o mesmo arquivo em
+ *   OUTRA conta continua permitido;
+ * - `quantidade_itens` registra o resultado do parse (3 no exemplo do CA-53).
+ */
+export const importacaoExtrato = sqliteTable(
+  'importacao_extrato',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    contaBancariaId: integer('conta_bancaria_id').notNull(),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** Nome original enviado pelo cliente; `NULL` quando não informado. */
+    nomeArquivo: text('nome_arquivo'),
+    arquivoHash: text('arquivo_hash').notNull(),
+    quantidadeItens: integer('quantidade_itens').notNull(),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('importacao_conta_hash_uk').on(t.contaBancariaId, t.arquivoHash),
+    uniqueIndex('importacao_extrato_id_empresa_uk').on(t.id, t.empresaId),
+    index('importacao_extrato_conta_idx').on(t.contaBancariaId),
+    foreignKey({
+      columns: [t.contaBancariaId, t.empresaId],
+      foreignColumns: [contaBancaria.id, contaBancaria.empresaId],
+      name: 'importacao_extrato_conta_empresa_fk',
+    }),
+    check('importacao_quantidade_nao_negativa', sql`${t.quantidadeItens} >= 0`),
+  ],
+);
+
+export type ImportacaoExtrato = typeof importacaoExtrato.$inferSelect;
+export type NovaImportacaoExtrato = typeof importacaoExtrato.$inferInsert;
+
+/** Origem do item de extrato (RF-16): lançamento manual ou importação de arquivo. */
+export const ORIGENS_ITEM_EXTRATO = ['manual', 'importacao'] as const;
+export type OrigemItemExtratoBanco = (typeof ORIGENS_ITEM_EXTRATO)[number];
+
+/**
+ * Item de extrato conciliável (RF-16): manual (data, descrição, valor) ou
+ * importado de arquivo OFX/CSV (CA-53 — conciliáveis "como os manuais").
+ *
+ * - `valor_centavos` ASSINADO: positivo = entrada, negativo = saída (a
+ *   entrada/saída do RF-16 é o sinal);
+ * - `identificador` é o FITID do OFX quando o arquivo traz; `NULL` no manual;
+ * - o estado conciliado NÃO é coluna aqui: deriva de `conciliacao` vigente —
+ *   desconciliação devolve o item a pendente (CA-28);
+ * - CHECK no banco: `origem = 'importacao'` ⇔ `importacao_id` preenchido
+ *   (invariante de domínio NO BANCO — regra 4 do AGENTS.md).
+ */
+export const itemExtrato = sqliteTable(
+  'item_extrato',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    contaBancariaId: integer('conta_bancaria_id').notNull(),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** `YYYY-MM-DD` (validado na entrada; parser valida datas reais). */
+    data: text('data').notNull(),
+    descricao: text('descricao').notNull(),
+    /** Centavos com sinal: + entrada, − saída. */
+    valorCentavos: integer('valor_centavos').notNull(),
+    origem: text('origem', { enum: ORIGENS_ITEM_EXTRATO }).notNull(),
+    /** `NULL` para item manual; FK composta para `importacao_extrato`. */
+    importacaoId: integer('importacao_id'),
+    /** FITID do banco no arquivo; `NULL` quando não há (manual/CSV sem FITID). */
+    identificador: text('identificador'),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('item_extrato_id_empresa_uk').on(t.id, t.empresaId),
+    index('item_extrato_conta_idx').on(t.contaBancariaId),
+    index('item_extrato_empresa_idx').on(t.empresaId),
+    foreignKey({
+      columns: [t.contaBancariaId, t.empresaId],
+      foreignColumns: [contaBancaria.id, contaBancaria.empresaId],
+      name: 'item_extrato_conta_empresa_fk',
+    }),
+    // Nullable: com `importacao_id` NULL a FK não é avaliada (padrão da 0008).
+    foreignKey({
+      columns: [t.importacaoId, t.empresaId],
+      foreignColumns: [importacaoExtrato.id, importacaoExtrato.empresaId],
+      name: 'item_extrato_importacao_empresa_fk',
+    }),
+    check(
+      'item_extrato_origem_coerente',
+      sql`(${t.origem} = 'manual' AND ${t.importacaoId} IS NULL) OR (${t.origem} = 'importacao' AND ${t.importacaoId} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export type ItemExtrato = typeof itemExtrato.$inferSelect;
+export type NovoItemExtrato = typeof itemExtrato.$inferInsert;
+
+/** Objeto de uma conciliação (RF-16): um TÍTULO **ou** um LANÇAMENTO por vez. */
+export const OBJETOS_CONCILIACAO = ['titulo', 'lancamento'] as const;
+export type ObjetoConciliacaoBanco = (typeof OBJETOS_CONCILIACAO)[number];
+
+/**
+ * Conciliação item ↔ objeto (RF-16, CA-08/CA-28/CA-44).
+ *
+ * - **UM objeto por vez:** `objeto_tipo` define qual FK é preenchida (CHECK
+ *   `conciliacao_objeto_coerente`); o "e/ou" do RF-16 é lido como alternativo
+ *   (T018-F-2);
+ * - **UMA linha por item** (`conciliacao_item_uk` total): desconciliar é
+ *   UPDATE que preenche `desconciliado_em` — nunca DELETE (a história fica na
+ *   própria linha e na trilha, CA-28); reconciliar REATIVA a mesma linha;
+ * - **unicidade do objeto entre conciliações VIGENTES** via índices únicos
+ *   PARCIAIS `WHERE desconciliado_em IS NULL` (`conciliacao_titulo_uk`,
+ *   `conciliacao_lancamento_uk`): dois itens não conciliam o mesmo
+ *   título/lançamento até o primeiro ser desconciliado (T018-F-2);
+ * - FKs compostas `(…, empresa_id)` → o banco recusa vínculo cross-tenant
+ *   mesmo com bug de aplicação (S-T014-6).
+ */
+export const conciliacao = sqliteTable(
+  'conciliacao',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    itemExtratoId: integer('item_extrato_id').notNull(),
+    objetoTipo: text('objeto_tipo', { enum: OBJETOS_CONCILIACAO }).notNull(),
+    tituloId: integer('titulo_id'),
+    lancamentoId: integer('lancamento_id'),
+    conciliadoPor: integer('conciliado_por')
+      .notNull()
+      .references(() => usuario.id),
+    conciliadoEm: text('conciliado_em')
+      .notNull()
+      .$defaultFn(agora),
+    /** `NULL` = conciliação vigente; preenchido = desfeita (histórico, CA-28). */
+    desconciliadoPor: integer('desconciliado_por').references(() => usuario.id),
+    desconciliadoEm: text('desconciliado_em'),
+  },
+  (t) => [
+    uniqueIndex('conciliacao_item_uk').on(t.itemExtratoId),
+    // Parciais: só as VIGENTES disputam o objeto (desfeitas não bloqueiam).
+    uniqueIndex('conciliacao_titulo_uk')
+      .on(t.tituloId)
+      .where(sql`${t.desconciliadoEm} IS NULL AND ${t.tituloId} IS NOT NULL`),
+    uniqueIndex('conciliacao_lancamento_uk')
+      .on(t.lancamentoId)
+      .where(sql`${t.desconciliadoEm} IS NULL AND ${t.lancamentoId} IS NOT NULL`),
+    index('conciliacao_empresa_idx').on(t.empresaId),
+    foreignKey({
+      columns: [t.itemExtratoId, t.empresaId],
+      foreignColumns: [itemExtrato.id, itemExtrato.empresaId],
+      name: 'conciliacao_item_empresa_fk',
+    }),
+    // Nullable: com `titulo_id`/`lancamento_id` NULL a FK não é avaliada.
+    foreignKey({
+      columns: [t.tituloId, t.empresaId],
+      foreignColumns: [titulo.id, titulo.empresaId],
+      name: 'conciliacao_titulo_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.lancamentoId, t.empresaId],
+      foreignColumns: [lancamento.id, lancamento.empresaId],
+      name: 'conciliacao_lancamento_empresa_fk',
+    }),
+    check(
+      'conciliacao_objeto_coerente',
+      sql`(${t.objetoTipo} = 'titulo' AND ${t.tituloId} IS NOT NULL AND ${t.lancamentoId} IS NULL) OR (${t.objetoTipo} = 'lancamento' AND ${t.lancamentoId} IS NOT NULL AND ${t.tituloId} IS NULL)`,
+    ),
+  ],
+);
+
+export type Conciliacao = typeof conciliacao.$inferSelect;
+export type NovaConciliacao = typeof conciliacao.$inferInsert;

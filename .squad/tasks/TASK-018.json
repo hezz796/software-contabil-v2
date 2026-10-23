@@ -2,7 +2,7 @@
   "id": "TASK-018",
   "title": "Conciliacao bancaria e importacao de extrato OFX/CSV",
   "objective": "Implementar contas bancarias, itens de extrato manuais e por importacao validada (RF-16/F10), conciliacao item a item com desconciliacao (CA-28) e a regra de estorno de baixa exigindo desconciliacao (H20/CA-44).",
-  "status": "todo",
+  "status": "in_progress",
   "owner": "implementer",
   "depends_on": ["TASK-017"],
   "scope": {
@@ -36,14 +36,27 @@
       "method": "CA-08 consulta o estado com sessao nova (sair e voltar) antes de concluir."
     }
   ],
-  "evidence": [],
+  "evidence": [
+    "Architect T018-ARCH (ses_e9612dbf0ffe7hqk6tY3SX4Pg5): ADR-0009-libs-ofx-csv-pdf.md — parse OFX/CSV PROPRIO confirmado com evidencia (nenhuma lib entrega validacao estrita do CA-53; ofx/node-expat tem install script que quebra no npm 11.17; ofx4js abandonada; fallback pre-vetado ofx-js@1.1.2 e csv-parse@7.0.3); pdfmake@0.3.12 escolhido para o PDF da T019. ADR aprovada pelo coordenador em 2026-10-23.",
+    "Implementacao (implementer, ses_e9601f9d9ffeq7LkDEMhjooEjF): 13 arquivos — domain/extrato.ts (parser OFX SGML/XML + CSV proprio), services/extrato.ts e conciliacoes.ts, 2 rotas, 4 tabelas na migracao 0009_mighty_peter_parker (ADD-only), CA-44 em services/titulos.ts, schemas Zod T018, 13 testes.",
+    "Verificacao independente do coordenador: footprint 13 arquivos + ADR + 3 de memoria; 143/143 medidos; migracao do zero (integrity ok, 0 FK, journal 10/10, FKs compostas em conciliacao para item/titulo/lancamento, CHECK conciliacao_objeto_coerente, uks conciliacao_item_uk/titulo_uk/lancamento_uk = exclusividade NO BANCO, 8 triggers intactos); CA-44 lido na fonte (conciliacao vigente com desconciliadoEm IS NULL cobrindo lancamentoId e retencaoLancamentoId, recusa auditada fora da transacao); journal ADD-only (+7 linhas so a entrada idx 9).",
+    "Revisao reviewer (ses_e959f955cffegvP9VOiYbRncWn): 3 achados — 1 Medio (reativação sobrescrevia conciliacao vigente na corrida), 1 Medio-baixo (desconciliacao ignorava changes => 500 sem trilha), 1 Baixo (item manual aceitava valor 0). Corrigidos em FIX-T018-R1 (ses_e957b4e7bffe2kAmoja2TIW7rP) com padrao D-R1: predicado otimista IS NOT NULL/IS NULL + changes !== 1 => 409 auditado fora da transacao; red-green deterministico [201,409] e [200,409] com pre-condicao de corrida comprovada por harness dbComJanelaDeCorrida; 146/146.",
+    "Revisao security-reviewer (ses_e956056c1ffewM02RV8rVa3UKP): aprovado com ressalvas — NENHUM achado de tenant/autorizacao/IDOR/oraculo/injecao (8 rotas com guard correto, empresa_id do servidor, 404 identico com trilha seletiva, regex sem ReDoS, sem fs/caminho do usuario, Zod stripa massa, hash sobre bytes corretos); ressalvas de disponibilidade/higiene.",
+    "FIX-T018-R2 (ses_e9555c3ecffe1sbatdXzS2HhKI): bodyLimit explicito 2 MiB, base64 max 2.000.000 chars, teto 10.000 transacoes com recusa 400 auditada arquivo_grande_demais, truncamento de campo cru (resumirValor 80), caps descricao 500/identificador 120 por recusa; red-green; 150/150.",
+    "FIX-T018-R3 (ses_e953f05a9ffepwgMXNf5tWaeqK): chunk do INSERT em lotes de 1.000 (SQLITE_MAX_VARIABLE_NUMBER = 32766; 10 col x 1000 = 10.000 placeholders) — fecha o 500 too many SQL variables que arquivos validos de 3.277..10.000 linhas davam SEM trilha (mesma classe F1/F2 da T017). Red 500 -> Green 201 com 4.000 itens contados no banco; atomicidade do CA-53 preservada (mesma transacao). 151/151 medidos pelo coordenador; typecheck 0."
+  ],
   "assumptions": [
-    "Parser proprio de OFX/CSV com validacao estrita (ADR-0001); formatos de bancos diferentes sao evolucao futura (RK-7 encerrado)."
+    "Parser proprio de OFX/CSV com validacao estrita (ADR-0001); formatos de bancos diferentes sao evolucao futura (RK-7 encerrado).",
+    "ADR-0009 (2026-10-23, aprovada pelo coordenador): parse OFX/CSV proprio CONFIRMADO com evidencia (nenhuma lib candidata entrega validacao estrita do CA-53; ofx/node-expat tem install script e quebra no npm 11.17; ofx4js/ofx-data-extractor abandonadas ou opacas) — fallback pre-vetado ofx-js@1.1.2 e csv-parse@7.0.3 registrados na ADR sem mudanca de desenho. pdfmake escolhido para o PDF da T019 (fora do escopo desta tarefa).",
+    "T018-F-1 (pre-flight): conta bancaria (nome, saldo_inicial, data_saldo_inicial) e itens de extrato = ESCRITA FINANCEIRA (exigirEscritaContabil; contador com escrita, admin so le) — hipotese conservadora registrada; se virar configuracao administrativa como a fiscal, exige ADR no padrao de Q-UI-1.",
+    "T018-F-2 (pre-flight): RF-16 e/ou = alternativo (um objeto por vez, exclusividade do CA-28); dois itens conciliando o MESMO titulo/lancamento = recusa do segundo; reimportacao de arquivo com mesmo arquivo_hash = recusa de duplicata identica.",
+    "FIX-T018-R1/R2/R3 (2026-10-23): corridas de conciliacao corrigidas por D-R1 (predicado + changes + recusa auditada fora da transacao); motivos item_ja_conciliado e conciliacao_ja_desfeita; item manual com valor 0 recusado (alinhado aos parsers); tetos de importacao (bodyLimit 2 MiB, base64 2M chars, 10.000 transacoes, caps 500/120, resumirValor 80); INSERT em lotes de 1.000.",
+    "DIVIDAS registradas para T021/T022 (ressalvas de seguranca nao corrigidas por escopo): rate limit por usuario/rota (pre-existente no app); paginacao da resposta de importacao (devolve todos os itens); dedup opcional por FITID (hoje sha256 dos bytes, conforme CA-53 literal); mensagem 413 do Fastify em ingles."
   ],
   "blockers": [],
   "worktree": null,
   "session_id": null,
   "estimate_hours": 7,
-  "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "created_at": "2026-10-23T18:20:00.000Z",
+  "updated_at": "2026-10-23T19:05:00.000Z"
 }

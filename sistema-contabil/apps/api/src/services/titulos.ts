@@ -1,7 +1,8 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import type { AppDb } from '../db/index.ts';
 import {
   baixa,
+  conciliacao,
   titulo,
   type Baixa,
   type Natureza,
@@ -902,6 +903,50 @@ export async function estornarBaixa(
       },
     });
     throw new ErroAplicacao(409, MENSAGEM_BAIXA_JA_ESTORNADA, 'baixa_ja_estornada');
+  }
+
+  // CA-44 (RF-16/TASK-018): o lançamento da baixa conciliado a um item de
+  // extrato bloqueia o estorno até desconciliar — a conciliação registraria
+  // um vínculo com lançamento estornado. A consulta lê a tabela
+  // `diretamente` (sem importar o serviço de conciliações) e a recusa é
+  // auditada FORA de qualquer transação (mesmo padrão do período encerrado).
+  const lancamentosDaBaixa = [baixaAtual.lancamentoId, baixaAtual.retencaoLancamentoId].filter(
+    (id): id is number => id !== null,
+  );
+  if (lancamentosDaBaixa.length > 0) {
+    const conciliacoesVigentes = await db
+      .select({ id: conciliacao.id, itemExtratoId: conciliacao.itemExtratoId })
+      .from(conciliacao)
+      .where(
+        and(
+          eq(conciliacao.empresaId, entrada.empresaId),
+          isNull(conciliacao.desconciliadoEm),
+          inArray(conciliacao.lancamentoId, lancamentosDaBaixa),
+        ),
+      );
+    if (conciliacoesVigentes[0]) {
+      registrarEvento(db, {
+        acao: 'titulo.estorno_baixa_recusada',
+        usuarioId: atorId,
+        empresaId: entrada.empresaId,
+        objetoTipo: 'baixa',
+        objetoId: String(baixaAtual.id),
+        dados: {
+          motivo: 'lancamento_conciliado',
+          titulo_id: baixaAtual.tituloId,
+          lancamento_id: baixaAtual.lancamentoId,
+          conciliacao_id: conciliacoesVigentes[0].id,
+          item_extrato_id: conciliacoesVigentes[0].itemExtratoId,
+        },
+      });
+      throw new ErroAplicacao(
+        409,
+        'O lançamento desta baixa está conciliado a um item de extrato bancário: desconcilie o ' +
+          'item antes de estornar a baixa, para o extrato não registrar pagamento estornado ' +
+          '(CA-44/RF-16).',
+        'lancamento_conciliado',
+      );
+    }
   }
 
   const tituloAtual = await buscarTituloNaEmpresa(db, baixaAtual.tituloId, entrada.empresaId);

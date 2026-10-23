@@ -1097,3 +1097,244 @@ export const gerarApuracaoDasRequestSchema = z.object({
 });
 
 export type GerarApuracaoDasRequest = z.infer<typeof gerarApuracaoDasRequestSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Conciliação bancária e importação de extrato (RF-16, CA-08/28/44/53,        */
+/* F10; TASK-018)                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Conta bancária da empresa (RF-16/Q-UI-2): cadastro MÍNIMO — nome, saldo
+ * inicial e data do saldo inicial. É a pré-condição para existir onde
+ * registrar item de extrato (manual ou importado).
+ */
+export const contaBancariaSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  nome: z.string(),
+  saldo_inicial_centavos: z.number().int(),
+  /** `YYYY-MM-DD` real (validado na camada de entrada). */
+  data_saldo_inicial: dataLancamentoSchema,
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type ContaBancariaDTO = z.infer<typeof contaBancariaSchema>;
+
+export const criarContaBancariaRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  nome: z
+    .string({ error: 'Informe o nome da conta bancária.' })
+    .trim()
+    .min(1, 'Informe o nome da conta bancária.')
+    .max(120, 'O nome da conta bancária deve ter no máximo 120 caracteres.'),
+  /** Padrão: 0 (sem saldo inicial declarado). Aceita negativo (limite/estorno). */
+  saldo_inicial_centavos: z.number().int().default(0),
+  data_saldo_inicial: dataLancamentoSchema,
+});
+
+export type CriarContaBancariaRequest = z.infer<typeof criarContaBancariaRequestSchema>;
+
+/** Filtros de `GET /contas-bancarias` e das listas de itens: empresa obrigatória. */
+export const contasBancariasQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+});
+
+export type ContasBancariasQuery = z.infer<typeof contasBancariasQuerySchema>;
+
+export const listaContasBancariasResponseSchema = z.object({
+  contas: z.array(contaBancariaSchema),
+});
+
+export type ListaContasBancariasResponse = z.infer<typeof listaContasBancariasResponseSchema>;
+
+/** Origem do item de extrato (RF-16): lançamento manual ou importação de arquivo. */
+export const origemItemExtratoSchema = z.enum(['manual', 'importacao']);
+export type OrigemItemExtrato = z.infer<typeof origemItemExtratoSchema>;
+
+/**
+ * Item de extrato conciliável (RF-16).
+ *
+ * - `valor_centavos` é **assinado**: positivo = entrada, negativo = saída
+ *   (a entrada/saída do RF-16 é representada pelo sinal);
+ * - `conciliado` é DERIVADO da conciliação vigente (desconciliação devolve o
+ *   item a pendente — CA-28), não uma coluna do item;
+ * - `descricao` sem `max` no DTO: dados importados de arquivo podem trazer
+ *   textos longos e a resposta não pode estourar por validação.
+ */
+export const itemExtratoSchema = z.object({
+  id: z.number().int(),
+  conta_bancaria_id: z.number().int(),
+  empresa_id: z.number().int(),
+  data: dataLancamentoSchema,
+  descricao: z.string(),
+  valor_centavos: z.number().int(),
+  origem: origemItemExtratoSchema,
+  /** `NULL` para item manual. */
+  importacao_id: z.number().int().nullable(),
+  /** Identificador do banco no arquivo (FITID do OFX); `NULL` quando não há. */
+  identificador: z.string().nullable(),
+  conciliado: z.boolean(),
+  criado_por: z.number().int(),
+  criado_em: z.iso.datetime(),
+});
+
+export type ItemExtratoDTO = z.infer<typeof itemExtratoSchema>;
+
+/** Lançamento manual de item de extrato (RF-16) — exige conta bancária da empresa. */
+export const criarItemExtratoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  data: dataLancamentoSchema,
+  descricao: z
+    .string({ error: 'Informe a descrição do item de extrato.' })
+    .trim()
+    .min(1, 'Informe a descrição do item de extrato.')
+    .max(500, 'A descrição do item de extrato deve ter no máximo 500 caracteres.'),
+  /**
+   * Assinado: positivo = entrada, negativo = saída. Zero não representa
+   * movimento e é inválido em QUALQUER caminho — os parsers OFX/CSV do
+   * domínio já recusam `0` (RF-16; alinhamento da revisão FIX-T018-R1).
+   */
+  valor_centavos: z
+    .number()
+    .int('valor_centavos deve ser um número inteiro em centavos.')
+    .refine(
+      (valor) => valor !== 0,
+      'Informe um valor diferente de zero: positivo para entrada e negativo para saída.',
+    ),
+});
+
+export type CriarItemExtratoRequest = z.infer<typeof criarItemExtratoRequestSchema>;
+
+export const listaItensExtratoResponseSchema = z.object({
+  itens: z.array(itemExtratoSchema),
+});
+
+export type ListaItensExtratoResponse = z.infer<typeof listaItensExtratoResponseSchema>;
+
+/**
+ * Registro de importação de arquivo de extrato (CA-53). `arquivo_hash` é o
+ * sha256 dos bytes enviados: reimportar o MESMO arquivo na mesma conta é
+ * recusada como duplicata idêntica (T018-F-2).
+ */
+export const importacaoExtratoSchema = z.object({
+  id: z.number().int(),
+  conta_bancaria_id: z.number().int(),
+  empresa_id: z.number().int(),
+  nome_arquivo: z.string().nullable(),
+  arquivo_hash: z.string(),
+  quantidade_itens: z.number().int(),
+  criado_por: z.number().int(),
+  criado_em: z.iso.datetime(),
+});
+
+export type ImportacaoExtratoDTO = z.infer<typeof importacaoExtratoSchema>;
+
+/** Base64 padrão do navegador (`A-Za-z0-9+/` com padding `=`). */
+const conteudoBase64Schema = z
+  .string({ error: 'Informe o conteúdo do arquivo em base64 (conteudo_base64).' })
+  .min(1, 'Informe o conteúdo do arquivo em base64 (conteudo_base64).')
+  .refine(
+    (valor) => /^[A-Za-z0-9+/]+={0,2}$/.test(valor) && valor.length % 4 === 0,
+    'conteudo_base64 não é um conteúdo base64 válido.',
+  );
+
+/**
+ * Importação de extrato (RF-16/F10, CA-53): os bytes brutos chegam em
+ * base64 (o charset do arquivo é resolvido pelo parser — OFX declara
+ * `CHARSET`, CSV é UTF-8). Formatos aceitos: OFX 1.x (SGML), OFX 2.x (XML)
+ * e CSV com cabeçalho `data;descricao;valor`.
+ *
+ * Teto do conteúdo: base64 expande 3 bytes em 4 caracteres, então
+ * 2.000.000 chars × 3/4 = 1.500.000 bytes ≈ 1,5 MB de arquivo — perto do
+ * tamanho máximo de um extrato real de 10.000 transações (o teto de
+ * transações é aplicado pelo parser) e o bastante para o `bodyLimit` de
+ * 2 MiB do Fastify receber o corpo COMPLETO e responder esta recusa em
+ * pt-BR, em vez de um 413 do transporte.
+ */
+export const importarExtratoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  nome_arquivo: z
+    .string()
+    .trim()
+    .min(1, 'O nome do arquivo não pode ser vazio.')
+    .max(255, 'O nome do arquivo deve ter no máximo 255 caracteres.')
+    .optional(),
+  conteudo_base64: conteudoBase64Schema.max(
+    2_000_000,
+    'O conteúdo do arquivo em base64 deve ter no máximo 2.000.000 caracteres ' +
+      '(cerca de 1,5 MB de arquivo): divida o extrato e importe em partes.',
+  ),
+});
+
+export type ImportarExtratoRequest = z.infer<typeof importarExtratoRequestSchema>;
+
+/** Resposta da importação: o registro e os itens criados (todos conciliáveis). */
+export const importacaoExtratoResponseSchema = z.object({
+  importacao: importacaoExtratoSchema,
+  itens: z.array(itemExtratoSchema),
+});
+
+export type ImportacaoExtratoResponse = z.infer<typeof importacaoExtratoResponseSchema>;
+
+/** Objeto de uma conciliação (RF-16): um TÍTULO **ou** um LANÇAMENTO por vez (T018-F-2). */
+export const objetoConciliacaoSchema = z.enum(['titulo', 'lancamento']);
+export type ObjetoConciliacao = z.infer<typeof objetoConciliacaoSchema>;
+
+/**
+ * Conciliação item ↔ objeto (RF-16, CA-08/CA-28): uma linha por item;
+ * `desconciliado_em` preenchido = conciliação desfeita (história preservada,
+ * nunca DELETE — CA-28). Reconciliar reativa a MESMA linha.
+ */
+export const conciliacaoSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  item_extrato_id: z.number().int(),
+  objeto_tipo: objetoConciliacaoSchema,
+  titulo_id: z.number().int().nullable(),
+  lancamento_id: z.number().int().nullable(),
+  conciliado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  conciliado_em: z.iso.datetime(),
+  desconciliado_por: z.number().int().nullable(),
+  desconciliado_em: z.iso.datetime().nullable(),
+});
+
+export type ConciliacaoDTO = z.infer<typeof conciliacaoSchema>;
+
+/**
+ * Criação de conciliação (RF-16): `objeto_tipo` define qual id é obrigatório
+ * e o outro deve ficar ausente — "e/ou" do RF-16 lido como alternativo
+ * (T018-F-2: um objeto por vez).
+ */
+export const criarConciliacaoRequestSchema = z
+  .object({
+    empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+    item_extrato_id: z.number().int().positive('item_extrato_id é obrigatório.'),
+    objeto_tipo: objetoConciliacaoSchema,
+    titulo_id: z.number().int().positive().nullish(),
+    lancamento_id: z.number().int().positive().nullish(),
+  })
+  .refine(
+    (valor) =>
+      valor.objeto_tipo === 'titulo'
+        ? valor.titulo_id !== undefined && valor.titulo_id !== null && !valor.lancamento_id
+        : valor.lancamento_id !== undefined && valor.lancamento_id !== null && !valor.titulo_id,
+    'Informe exatamente o id do objeto indicado em objeto_tipo (titulo_id ou lancamento_id) e nenhum outro.',
+  );
+
+export type CriarConciliacaoRequest = z.infer<typeof criarConciliacaoRequestSchema>;
+
+export const conciliacoesQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+});
+
+export type ConciliacoesQuery = z.infer<typeof conciliacoesQuerySchema>;
+
+/** Histórico de conciliações da empresa (ativas e desfeitas — trilha do CA-28). */
+export const listaConciliacoesResponseSchema = z.object({
+  conciliacoes: z.array(conciliacaoSchema),
+});
+
+export type ListaConciliacoesResponse = z.infer<typeof listaConciliacoesResponseSchema>;

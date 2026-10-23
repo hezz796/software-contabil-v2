@@ -9,7 +9,9 @@ import { registrarAutenticacao } from './middleware/auth.ts';
 import { auditoriaRoutes } from './routes/auditoria.ts';
 import { authRoutes } from './routes/auth.ts';
 import { contaRoutes } from './routes/contas.ts';
+import { conciliacaoRoutes } from './routes/conciliacoes.ts';
 import { empresaRoutes } from './routes/empresas.ts';
+import { extratoRoutes } from './routes/extrato.ts';
 import { fiscalRoutes } from './routes/fiscal.ts';
 import { gestaoUsuariosRoutes } from './routes/gestao-usuarios.ts';
 import { healthRoutes } from './routes/health.ts';
@@ -35,6 +37,20 @@ export interface BuildAppOptions {
 }
 
 /**
+ * Teto de corpo HTTP EXPLÍCITO: 2 MiB (2.097.152 bytes).
+ *
+ * O Fastify tem 1 MiB implícito (`1048576`) que NÃO cabe o maior corpo que a
+ * API aceita: a importação de extrato valida até 2.000.000 caracteres de
+ * base64 (`importarExtratoRequestSchema`) = 1.500.000 bytes de arquivo, o que
+ * vira ~2.000.400 bytes de JSON — acima do default, que rejeitava o corpo com
+ * 413 ANTES de o schema poder responder a recusa em pt-BR. Com 2 MiB o payload
+ * máximo cabe com folga de ~96 KiB para o envelope (`empresa_id`,
+ * `nome_arquivo` de até 255 chars), e corpos além disso continuam recusados na
+ * LEITURA (413), sem buffer crescente — o limite está fixo aqui, não no default.
+ */
+const BODY_LIMIT_BYTES = 2 * 1024 * 1024;
+
+/**
  * Monta a instância do Fastify sem escutar porta: usada pelo bootstrap
  * (`src/index.ts`) e pelos testes de integração (via `Fastify.inject`).
  *
@@ -43,7 +59,7 @@ export interface BuildAppOptions {
  */
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const config = options.config ?? loadConfig();
-  const app = Fastify({ logger: options.logger ?? false });
+  const app = Fastify({ logger: options.logger ?? false, bodyLimit: BODY_LIMIT_BYTES });
 
   await app.register(fastifyCookie, { secret: config.sessionSecret });
   app.decorate('db', options.db);
@@ -82,6 +98,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(periodoRoutes);
   await app.register(lancamentoRoutes);
   await app.register(tituloRoutes);
+  await app.register(extratoRoutes);
+  await app.register(conciliacaoRoutes);
   await app.register(fiscalRoutes);
   await app.register(relatorioRoutes);
   await app.register(healthRoutes);
