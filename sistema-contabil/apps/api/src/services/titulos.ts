@@ -9,9 +9,11 @@ import {
   type TipoTitulo,
   type Titulo,
 } from '../db/schema.ts';
+import { calcularEncargosAtraso, calcularRetencoes } from '../domain/fiscal.ts';
 import { ErroAplicacao } from '../errors.ts';
 import { registrarEvento, transacaoComAuditoria } from './auditoria.ts';
 import { buscarContaNaEmpresa } from './contas.ts';
+import { configMultaJurosDoTitulo, retencaoVigenteDoTitulo } from './fiscal.ts';
 import {
   ehViolacaoDeEstornoUnico,
   exigirPeriodoAberto,
@@ -388,16 +390,29 @@ export interface ResultadoBaixa {
 }
 
 /**
- * Registra uma baixa total ou parcial (CA-06/CA-07/CA-41):
+ * Registra uma baixa total ou parcial (CA-06/CA-07/CA-41; retenções e encargos
+ * fiscais T017/CA-47/CA-48):
  *
  * - recusas ANTES da transação (CA-16): valor ≤ 0; valor > saldo (mensagem
  *   com os dois valores); título pago/cancelado; conta inexistente; data em
  *   período **não cadastrado ou encerrado** (check antes do INSERT — é o que
  *   evita o abort do trigger da 0006 no meio da operação, T016-F-4);
- * - dentro da MESMA transação: lançamento vinculado (RF-15) + baixa +
- *   atualização do título + trilha (`lancamento.criacao` e `titulo.baixa`);
+ * - **RF-22/CA-47 (T017):** tabelas de imposto ATIVAS associadas ao título
+ *   geram retenção sobre o BRUTO (D1): o líquido (bruto − retenção) é o que
+ *   circula no caixa e a retenção vira um **lançamento separado** de
+ *   "impostos/retenções a recolher" (`baixa.retencao_lancamento_id`, H19),
+ *   debitando a conta do título pelo valor retido — junto com o pagamento,
+ *   os débitos somam o bruto abatido do saldo;
+ * - **RF-23/CA-48 (T017):** título em atraso gera multa (percentual) + juros
+ *   pro rata diária (H18: mensal ÷ 30) sobre o bruto, refletidos NO lançamento
+ *   da baixa (partida extra na conta de encargos, mesmo lado do título; o
+ *   caixa recebe bruto − retenção + encargos). Baixa no vencimento não gera
+ *   encargos. Config por título vence o padrão da empresa;
+ * - dentro da MESMA transação: lançamento do pagamento (RF-15) + lançamento
+ *   de retenção (se houver) + baixa + atualização do título + trilha;
  * - contrapartida: `pagar` = D conta do título / C contrapartida; `receber` =
- *   D contrapartida / C conta do título.
+ *   D contrapartida / C conta do título (encargos acompanham o lado do
+ *   título; retenção é D em pagar / C em receber sobre a conta de retenção).
  */
 export async function criarBaixa(db: AppDb, entrada: EntradaBaixa, atorId: number): Promise<ResultadoBaixa> {
   const tituloAtual = await tituloParaEscritaOu404(db, entrada.tituloId, entrada.empresaId, atorId);
@@ -507,8 +522,159 @@ export async function criarBaixa(db: AppDb, entrada: EntradaBaixa, atorId: numbe
   const contraparteNatureza: Natureza = direcao === 'D' ? 'C' : 'D';
   const historico = `Baixa do título #${tituloAtual.id}: ${tituloAtual.contraparte}`.slice(0, 200);
 
+  // RF-22/CA-47 (T017): retenções vigentes das tabelas ATIVAS associadas ao
+  // título, aplicadas sobre o BRUTO (D1). Tabela sem conta de retenção não
+  // gera lançamento possível → recusa auditada (a associação já exige a
+  // conta; a lacuna só abre se a conta for removida depois — CA-54).
+  const tabelasRetencao = await retencaoVigenteDoTitulo(db, tituloAtual.id, entrada.empresaId);
+  for (const tabela of tabelasRetencao) {
+    if (tabela.contaRetencaoId === null) {
+      registrarEvento(db, {
+        acao: 'titulo.baixa_recusada',
+        usuarioId: atorId,
+        empresaId: entrada.empresaId,
+        objetoTipo: 'titulo',
+        objetoId: String(tituloAtual.id),
+        dados: {
+          motivo: 'tabela_sem_conta_retencao',
+          tabela_imposto_id: tabela.tabelaId,
+          tabela_nome: tabela.nome,
+        },
+      });
+      throw new ErroAplicacao(
+        409,
+        `A tabela de imposto "${tabela.nome}", associada a este título, ficou sem conta de retenção: ` +
+          'restaure a conta de "impostos/retenções a recolher" na tabela antes de registrar a baixa (RF-22).',
+        'tabela_sem_conta_retencao',
+      );
+    }
+  }
+  const retencoes = calcularRetencoes(entrada.valorCentavos, tabelasRetencao);
+  const retencaoTotal = retencoes.totalCentavos;
+  if (retencaoTotal > entrada.valorCentavos) {
+    // NÃO acontece com alíquotas saneadas, mas o CHECK do banco abortaria no
+    // meio da transação — recusa auditada com mensagem (CE-19) antes de gravar.
+    registrarEvento(db, {
+      acao: 'titulo.baixa_recusada',
+      usuarioId: atorId,
+      empresaId: entrada.empresaId,
+      objetoTipo: 'titulo',
+      objetoId: String(tituloAtual.id),
+      dados: { motivo: 'retencao_maior_que_bruto', retencao_centavos: retencaoTotal, bruto_centavos: entrada.valorCentavos },
+    });
+    throw new ErroAplicacao(
+      400,
+      `A retenção total (${reaisDe(retencaoTotal)}) é maior que o valor bruto da baixa ` +
+        `(${reaisDe(entrada.valorCentavos)}): confira as alíquotas das tabelas associadas (RF-22).`,
+      'retencao_maior_que_bruto',
+    );
+  }
+  if (retencaoTotal === entrada.valorCentavos) {
+    // Sem líquido não há pagamento/recebimento a registrar (só retenção);
+    // manter o lançamento da baixa exigiria partida de valor zero, proibida
+    // pelo CHECK do banco. Recusa com mensagem, nada gravado.
+    registrarEvento(db, {
+      acao: 'titulo.baixa_recusada',
+      usuarioId: atorId,
+      empresaId: entrada.empresaId,
+      objetoTipo: 'titulo',
+      objetoId: String(tituloAtual.id),
+      dados: { motivo: 'retencao_total_sem_liquido', retencao_centavos: retencaoTotal },
+    });
+    throw new ErroAplicacao(
+      400,
+      'A retenção total cobre o valor bruto da baixa e não sobra valor líquido a pagar/receber: ' +
+        'confira as alíquotas das tabelas associadas (RF-22).',
+      'retencao_total_sem_liquido',
+    );
+  }
+
+  // RF-23/CA-48 (T017): encargos de atraso conforme config vigente (override
+  // por título vence o padrão da empresa). Sem config → sem encargos. Com
+  // encargos e sem conta de encargos configurada → recusa auditada (a baixa
+  // não teria para onde lançar multa/juros).
+  const configEncargos = await configMultaJurosDoTitulo(db, entrada.empresaId, tituloAtual.id);
+  const encargos = configEncargos
+    ? calcularEncargosAtraso({
+        brutoCentavos: entrada.valorCentavos,
+        multaCentavos: configEncargos.multaCentavos,
+        jurosMensalCentavos: configEncargos.jurosMensalCentavos,
+        vencimento: tituloAtual.vencimento,
+        data: entrada.data,
+      })
+    : { diasAtraso: 0, multaCentavos: 0, jurosCentavos: 0, encargosCentavos: 0 };
+  if (encargos.encargosCentavos > 0 && configEncargos!.contaEncargosId === null) {
+    registrarEvento(db, {
+      acao: 'titulo.baixa_recusada',
+      usuarioId: atorId,
+      empresaId: entrada.empresaId,
+      objetoTipo: 'titulo',
+      objetoId: String(tituloAtual.id),
+      dados: {
+        motivo: 'config_multa_juros_sem_conta_encargos',
+        config_multa_juros_id: configEncargos!.id,
+        encargos_centavos: encargos.encargosCentavos,
+      },
+    });
+    throw new ErroAplicacao(
+      409,
+      `A configuração de multa/juros aplicável a este título não tem conta de encargos: ` +
+        `informe a conta de multa e juros antes de registrar a baixa em atraso de ${encargos.diasAtraso} dia(s) ` +
+        `(multa ${reaisDe(encargos.multaCentavos)} + juros ${reaisDe(encargos.jurosCentavos)} — RF-23).`,
+      'config_multa_juros_sem_conta_encargos',
+    );
+  }
+
+  const liquidoCentavos = entrada.valorCentavos - retencaoTotal;
+  const caixaCentavos = liquidoCentavos + encargos.encargosCentavos;
+
+  // Tabela que computa ZERO (alíquota 0% ou arredondamento do bruto × alíquota
+  // para baixo) é estado LEGÍTIMO: ela foi aplicada e não reteve nada. Ela NÃO
+  // pode virar par de partidas de valor zero — o CHECK `partida_valor_positivo`
+  // (0005) abortaria a transação no meio, virando 500 sem auditoria (CE-19).
+  // O guard do total acima garante que sobra retenção com valor; ainda assim,
+  // se por qualquer caminho não sobrasse nenhuma partida com valor, a recusa é
+  // auditada ANTES do INSERT (nada gravado).
+  const itensRetencao = retencoes.porTabela.filter((item) => item.valorCentavos > 0);
+  if (retencaoTotal > 0 && itensRetencao.length === 0) {
+    registrarEvento(db, {
+      acao: 'titulo.baixa_recusada',
+      usuarioId: atorId,
+      empresaId: entrada.empresaId,
+      objetoTipo: 'titulo',
+      objetoId: String(tituloAtual.id),
+      dados: {
+        motivo: 'retencao_sem_partidas_com_valor',
+        retencao_centavos: retencaoTotal,
+        tabelas: retencoes.porTabela,
+      },
+    });
+    throw new ErroAplicacao(
+      400,
+      `A retenção total (${reaisDe(retencaoTotal)}) não resultou em nenhuma tabela com valor positivo a lançar: ` +
+        `confira as alíquotas das tabelas associadas ao título #${tituloAtual.id} (RF-22).`,
+      'retencao_sem_partidas_com_valor',
+    );
+  }
+
   try {
     return transacaoComAuditoria(db, (tx, auditoria) => {
+      // Lançamento do pagamento/recebimento: líquido sobre a conta do título
+      // + encargos (quando houver) no mesmo lado do título, caixa = líquido +
+      // encargos (CA-48: lançamento soma 1.030,00; CA-47: caixa 950,00).
+      const partidasPagamento = [
+        { contaId: tituloAtual.contaId, natureza: direcao, valorCentavos: liquidoCentavos },
+        ...(encargos.encargosCentavos > 0
+          ? [
+              {
+                contaId: configEncargos!.contaEncargosId!,
+                natureza: direcao,
+                valorCentavos: encargos.encargosCentavos,
+              },
+            ]
+          : []),
+        { contaId: contrapartida.id, natureza: contraparteNatureza, valorCentavos: caixaCentavos },
+      ];
       const { lancamento: lancamentoBaixa } = inserirLancamentoComPartidas(tx, {
         empresaId: entrada.empresaId,
         periodoId,
@@ -516,15 +682,59 @@ export async function criarBaixa(db: AppDb, entrada: EntradaBaixa, atorId: numbe
         historico,
         estornoDeId: null,
         criadoPor: atorId,
-        partidas: [
-          { contaId: tituloAtual.contaId, natureza: direcao, valorCentavos: entrada.valorCentavos },
-          {
-            contaId: contrapartida.id,
-            natureza: contraparteNatureza,
-            valorCentavos: entrada.valorCentavos,
-          },
-        ],
+        partidas: partidasPagamento,
       });
+
+      // Lançamento de retenção a recolher (RF-22/H19/CA-47): SEPARADO do
+      // pagamento; debita/credita a conta do título pelo valor retido (com a
+      // mesma direção da baixa) e a conta de retenção de cada tabela no lado
+      // contrário — em conjunto com o pagamento, a conta do título é abatida
+      // pelo BRUTO (D1).
+      let lancamentoRetencaoId: number | null = null;
+      if (retencaoTotal > 0) {
+        // Só as tabelas que reteveram algo (F1: a de valor 0 foi filtrada
+        // lá fora, ANTES da transação — ver `itensRetencao` acima).
+        const partidasRetencao = itensRetencao.flatMap((item) => {
+          const tabela = tabelasRetencao.find((t) => t.tabelaId === item.tabelaId)!;
+          return [
+            { contaId: tituloAtual.contaId, natureza: direcao, valorCentavos: item.valorCentavos },
+            {
+              contaId: tabela.contaRetencaoId!,
+              natureza: contraparteNatureza,
+              valorCentavos: item.valorCentavos,
+            },
+          ];
+        });
+        const { lancamento: lancamentoRetencao } = inserirLancamentoComPartidas(tx, {
+          empresaId: entrada.empresaId,
+          periodoId,
+          data: entrada.data,
+          historico: `Retenção na fonte do título #${tituloAtual.id}: ${tituloAtual.contraparte}`.slice(0, 200),
+          estornoDeId: null,
+          criadoPor: atorId,
+          partidas: partidasRetencao,
+        });
+        lancamentoRetencaoId = lancamentoRetencao.id;
+
+        auditoria.registrar({
+          acao: 'lancamento.criacao',
+          usuarioId: atorId,
+          empresaId: entrada.empresaId,
+          objetoTipo: 'lancamento',
+          objetoId: String(lancamentoRetencao.id),
+          dados: {
+            origem: 'retencao_baixa',
+            titulo_id: tituloAtual.id,
+            data: lancamentoRetencao.data,
+            historico: lancamentoRetencao.historico,
+            periodo_id: lancamentoRetencao.periodoId,
+            retencao_centavos: retencaoTotal,
+            tabelas: retencoes.porTabela,
+            debitos_centavos: retencaoTotal,
+            creditos_centavos: retencaoTotal,
+          },
+        });
+      }
 
       const criada = tx
         .insert(baixa)
@@ -535,8 +745,11 @@ export async function criarBaixa(db: AppDb, entrada: EntradaBaixa, atorId: numbe
           estornoLancamentoId: null,
           data: entrada.data,
           valorCentavos: entrada.valorCentavos,
-          retencaoCentavos: 0,
-          encargosCentavos: 0,
+          retencaoCentavos: retencaoTotal,
+          encargosCentavos: encargos.encargosCentavos,
+          multaCentavos: encargos.multaCentavos,
+          jurosCentavos: encargos.jurosCentavos,
+          retencaoLancamentoId: lancamentoRetencaoId,
           criadoPor: atorId,
         })
         .returning()
@@ -599,10 +812,14 @@ export async function criarBaixa(db: AppDb, entrada: EntradaBaixa, atorId: numbe
         dados: {
           titulo_id: tituloAtual.id,
           lancamento_id: lancamentoBaixa.id,
+          retencao_lancamento_id: lancamentoRetencaoId,
           data: criada.data,
           valor_centavos: criada.valorCentavos,
           retencao_centavos: criada.retencaoCentavos,
+          multa_centavos: criada.multaCentavos,
+          juros_centavos: criada.jurosCentavos,
           encargos_centavos: criada.encargosCentavos,
+          caixa_centavos: caixaCentavos,
           saldo_centavos: atualizado.saldoCentavos,
           situacao: atualizado.situacao,
         },
@@ -783,6 +1000,20 @@ export async function estornarBaixa(
     valorCentavos: p.valorCentavos,
   }));
 
+  // A baixa pode ter um lançamento de retenção SEPARADO (T017-F-1): ele
+  // também é estornado, senão as contas de retenção ficariam com o valor
+  // retido preso depois de o título voltar a ficar aberto. A leitura das
+  // partidas é fora da transação, como a do pagamento (T016-F-4).
+  const retencaoLancamentoId = baixaAtual.retencaoLancamentoId;
+  const inversasRetencao =
+    retencaoLancamentoId === null
+      ? null
+      : (await partidasDoLancamento(db, retencaoLancamentoId)).map((p) => ({
+          contaId: p.contaId,
+          natureza: (p.natureza === 'D' ? 'C' : 'D') as Natureza,
+          valorCentavos: p.valorCentavos,
+        }));
+
   try {
     return transacaoComAuditoria(db, (tx, auditoria) => {
       const { lancamento: lancamentoEstorno } = inserirLancamentoComPartidas(tx, {
@@ -797,6 +1028,40 @@ export async function estornarBaixa(
         criadoPor: atorId,
         partidas: inversas,
       });
+
+      // Estorno do lançamento de retenção da mesma baixa (T017-F-1), na
+      // MESMA transação: ou os dois existem ou nenhum. O par
+      // pagamento/estorno fica protegido por `lancamento_estorno_de_uk`.
+      let lancamentoEstornoRetencao: { id: number; data: string; periodoId: number } | null = null;
+      if (retencaoLancamentoId !== null && inversasRetencao !== null) {
+        const { lancamento: estornoRetencao } = inserirLancamentoComPartidas(tx, {
+          empresaId: entrada.empresaId,
+          periodoId: periodoEstornoId,
+          data: entrada.data,
+          historico:
+            `Estorno da retenção da baixa #${baixaAtual.id} do título #${tituloAtual.id}: ` +
+            `${tituloAtual.contraparte}`.slice(0, 200),
+          estornoDeId: retencaoLancamentoId,
+          criadoPor: atorId,
+          partidas: inversasRetencao,
+        });
+        lancamentoEstornoRetencao = estornoRetencao;
+        auditoria.registrar({
+          acao: 'lancamento.estorno',
+          usuarioId: atorId,
+          empresaId: entrada.empresaId,
+          objetoTipo: 'lancamento',
+          objetoId: String(estornoRetencao.id),
+          dados: {
+            origem: 'estorno_de_retencao_baixa',
+            baixa_id: baixaAtual.id,
+            titulo_id: tituloAtual.id,
+            estorno_de_id: retencaoLancamentoId,
+            data: estornoRetencao.data,
+            periodo_id: estornoRetencao.periodoId,
+          },
+        });
+      }
 
       // "Uma única vez por baixa" reforçada NO BANCO: só atualiza se ainda não
       // tem estorno (a coluna é única — `baixa_estorno_lancamento_uk`).
@@ -864,6 +1129,8 @@ export async function estornarBaixa(
           titulo_id: tituloAtual.id,
           lancamento_id: baixaAtual.lancamentoId,
           estorno_lancamento_id: lancamentoEstorno.id,
+          retencao_lancamento_id: retencaoLancamentoId,
+          estorno_retencao_lancamento_id: lancamentoEstornoRetencao?.id ?? null,
           valor_centavos: baixaAtual.valorCentavos,
           saldo_centavos: atualizado.saldoCentavos,
           situacao: atualizado.situacao,

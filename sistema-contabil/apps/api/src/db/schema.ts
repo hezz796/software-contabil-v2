@@ -256,6 +256,9 @@ export const periodoContabil = sqliteTable(
   },
   (t) => [
     uniqueIndex('periodo_empresa_ano_mes_uk').on(t.empresaId, t.ano, t.mes),
+    // Base da FK composta `apuracao_das_periodo_empresa_fk` (S-T014-6, TASK-017):
+    // (id, empresa_id) é único porque id é a PK.
+    uniqueIndex('periodo_id_empresa_uk').on(t.id, t.empresaId),
     index('periodo_empresa_idx').on(t.empresaId),
   ],
 );
@@ -452,8 +455,10 @@ export type NovoTitulo = typeof titulo.$inferInsert;
  * - **Decisão D1 (2026-10-22):** `valor_centavos` é o **bruto abatido do
  *   saldo** do título — a recusa "valor maior que o saldo" do CA-16 é
  *   literalmente sobre o bruto; `retencao_centavos` e `encargos_centavos`
- *   (multa/juros) são colunas próprias que entram no lançamento vinculado
- *   (CA-47/CA-48 — entrada/cálculo são da T017; nesta tarefa nascem em 0);
+ *   (multa/juros — em `multa_centavos`/`juros_centavos`, com
+ *   `encargos = multa + juros` no banco) são colunas próprias que entram nos
+ *   lançamentos vinculados (CA-47/T017: retenção em lançamento separado;
+ *   CA-48/T017: encargos dentro do lançamento da baixa);
  * - `lancamento_id` é o vínculo contábil da baixa (RF-15); a correção é o
  *   **estorno de baixa** (RF-24), que preenche `estorno_lancamento_id` —
  *   coluna ÚNICA (`baixa_estorno_lancamento_uk`), portanto um estorno por
@@ -483,10 +488,19 @@ export const baixa = sqliteTable(
     data: text('data').notNull(),
     /** Bruto abatido do saldo do título (D1). */
     valorCentavos: integer('valor_centavos').notNull(),
-    /** Retenção na fonte dentro do bruto (D1; CA-47 é T017 — aqui 0). */
+    /** Retenção na fonte dentro do bruto (D1; CA-47/T017). */
     retencaoCentavos: integer('retencao_centavos').notNull().default(0),
-    /** Multa/juros acrescidos ao caixa (D1; CA-48 é T017 — aqui 0). */
+    /** Multa/juros acrescidos ao caixa (D1; CA-48/T017); `encargos = multa + juros`. */
     encargosCentavos: integer('encargos_centavos').notNull().default(0),
+    /** Multa de atraso dentro de `encargos_centavos` (T017; ex.: 2% = 20,00). */
+    multaCentavos: integer('multa_centavos').notNull().default(0),
+    /** Juros de atraso dentro de `encargos_centavos` (T017/H18: mensal/30 pro rata). */
+    jurosCentavos: integer('juros_centavos').notNull().default(0),
+    /**
+     * Lançamento de retenção a recolher gerado pela baixa (RF-22/CA-47/T017):
+     * separado do lançamento do pagamento. `NULL` = baixa sem retenção.
+     */
+    retencaoLancamentoId: integer('retencao_lancamento_id'),
     criadoPor: integer('criado_por')
       .notNull()
       .references(() => usuario.id),
@@ -512,15 +526,351 @@ export const baixa = sqliteTable(
       foreignColumns: [lancamento.id, lancamento.empresaId],
       name: 'baixa_estorno_lancamento_empresa_fk',
     }),
+    // Mesma garantia S-T014-6 para o lançamento de retenção a recolher (T017).
+    foreignKey({
+      columns: [t.retencaoLancamentoId, t.empresaId],
+      foreignColumns: [lancamento.id, lancamento.empresaId],
+      name: 'baixa_retencao_lancamento_empresa_fk',
+    }),
     /** Um estorno por baixa (NULLs não colidem no SQLite — RF-24). */
     uniqueIndex('baixa_estorno_lancamento_uk').on(t.estornoLancamentoId),
+    uniqueIndex('baixa_retencao_lancamento_uk').on(t.retencaoLancamentoId),
     index('baixa_titulo_idx').on(t.tituloId),
     index('baixa_empresa_idx').on(t.empresaId),
     check('baixa_valor_positivo', sql`${t.valorCentavos} > 0`),
     check('baixa_retencao_nao_negativa', sql`${t.retencaoCentavos} >= 0`),
     check('baixa_encargos_nao_negativos', sql`${t.encargosCentavos} >= 0`),
+    // Invariantes de domínio NO BANCO (regra 4): multa/juros não negativos e
+    // encargos = multa + juros (CA-48: 20,00 + 10,00 = 30,00); retenção
+    // coerente com o bruto abatido do saldo (CA-47: 50,00 de 1.000,00).
+    check('baixa_multa_nao_negativa', sql`${t.multaCentavos} >= 0`),
+    check('baixa_juros_nao_negativo', sql`${t.jurosCentavos} >= 0`),
+    check(
+      'baixa_encargos_soma_multa_juros',
+      sql`${t.encargosCentavos} = ${t.multaCentavos} + ${t.jurosCentavos}`,
+    ),
+    check(
+      'baixa_retencao_nao_maior_que_bruto',
+      sql`${t.retencaoCentavos} <= ${t.valorCentavos}`,
+    ),
   ],
 );
 
 export type Baixa = typeof baixa.$inferSelect;
 export type NovaBaixa = typeof baixa.$inferInsert;
+
+/* -------------------------------------------------------------------------- */
+/* Fiscal configurável: tabelas, retenções, multa/juros e DAS (RF-20..23,      */
+/* H17/H18/H19, CA-45..49/54; TASK-017)                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Alíquota percentual em **centésimos de percentual** (ex.: 4% = `400`,
+ * 6% = `600`) — inteiro, nunca float (ADR-0001). O valor em dinheiro é
+ * `valor_centavos = round(base_centavos * aliquota_centavos / 10000)`.
+ */
+
+/**
+ * Tabela de imposto/retenção configurável por empresa (RF-20, CA-45).
+ *
+ * - `aliquota_centavos >= 0` garantido NO BANCO (CHECK) e na camada de
+ *   entrada (Zod, mensagem específica — CA-45/CE-19);
+ * - `conta_retencao_id` é a conta (passivo "impostos a recolher") creditada
+ *   pelo lançamento de retenção da baixa (RF-22/H19). `NULL` = tabela ainda
+ *   sem conta: pode ser cadastrada/associada (CA-45 é nome + alíquota), mas a
+ *   baixa que a aplique é recusada com mensagem (T017);
+ * - sem exclusão dura (mesmo padrão de conta/título): `ativa` tira a tabela
+ *   das aplicações novas sem perder histórico;
+ * - `tabela_imposto_id + empresa_id` é único (`tabela_imposto_id_empresa_uk`)
+ *   porque é a referência alvo da FK composta de `titulo_tabela_imposto`.
+ */
+export const tabelaImposto = sqliteTable(
+  'tabela_imposto',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** Ex.: "ISS", "IRRF" — trim na camada de entrada. */
+    nome: text('nome').notNull(),
+    /** Percentual em centésimos (4% = 400). */
+    aliquotaCentavos: integer('aliquota_centavos').notNull(),
+    /** Conta de "retenções a recolher" creditada na baixa (RF-22); NULL = sem conta. */
+    contaRetencaoId: integer('conta_retencao_id'),
+    ativa: integer('ativa', { mode: 'boolean' }).notNull().default(true),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    uniqueIndex('tabela_imposto_id_empresa_uk').on(t.id, t.empresaId),
+    // Base das FKs compostas de `titulo_tabela_imposto` (S-T014-6): qualquer
+    // vínculo título↔tabela é obrigado a compartilhar `empresa_id` NO BANCO.
+    index('tabela_imposto_empresa_idx').on(t.empresaId),
+    foreignKey({
+      columns: [t.contaRetencaoId, t.empresaId],
+      foreignColumns: [conta.id, conta.empresaId],
+      name: 'tabela_imposto_conta_empresa_fk',
+    }),
+    check('tabela_imposto_aliquota_nao_negativa', sql`${t.aliquotaCentavos} >= 0`),
+    check('tabela_imposto_nome_nao_vazio', sql`length(trim(${t.nome})) > 0`),
+  ],
+);
+
+export type TabelaImposto = typeof tabelaImposto.$inferSelect;
+export type NovaTabelaImposto = typeof tabelaImposto.$inferInsert;
+
+/**
+ * Associação tabela de imposto ↔ título (RF-13/RF-20, CA-45; TASK-017).
+ *
+ * PK `(titulo_id, tabela_imposto_id)` — uma tabela por título uma única vez.
+ * As duas FKs compostas `(…, empresa_id) → pai(id, empresa_id)` garantem NO
+ * BANCO que título e tabela pertencem à MESMA empresa (S-T014-6).
+ */
+export const tituloTabelaImposto = sqliteTable(
+  'titulo_tabela_imposto',
+  {
+    tituloId: integer('titulo_id').notNull(),
+    tabelaImpostoId: integer('tabela_imposto_id').notNull(),
+    empresaId: integer('empresa_id').notNull(),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tituloId, t.tabelaImpostoId] }),
+    index('titulo_tabela_imposto_tabela_idx').on(t.tabelaImpostoId),
+    index('titulo_tabela_imposto_empresa_idx').on(t.empresaId),
+    foreignKey({
+      columns: [t.tituloId, t.empresaId],
+      foreignColumns: [titulo.id, titulo.empresaId],
+      name: 'titulo_tabela_titulo_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.tabelaImpostoId, t.empresaId],
+      foreignColumns: [tabelaImposto.id, tabelaImposto.empresaId],
+      name: 'titulo_tabela_tabela_empresa_fk',
+    }),
+  ],
+);
+
+export type TituloTabelaImposto = typeof tituloTabelaImposto.$inferSelect;
+export type NovoTituloTabelaImposto = typeof tituloTabelaImposto.$inferInsert;
+
+/**
+ * Configuração de multa/juros de atraso (RF-23, CA-48; TASK-017).
+ *
+ * - escopo por `titulo_id`: `NULL` = configuração PADRÃO da empresa;
+ *   preenchido = **override por título** (prioridade: título > empresa —
+ *   "por título e/ou contrato" de RF-23; não existe entidade "contrato" no
+ *   MVP, hipótese registrada em `TASK-017.json`);
+ * - percentuais em centésimos (2% = `200`; 1% a.m. = `100`); juros são
+ *   pro rata diária = mensal ÷ 30 (H18);
+ * - `conta_encargos_id` é a conta (despesa) debitada pelos encargos gerados
+ *   na baixa; `NULL` = sem conta: a config vale, mas a baixa que gerar
+ *   encargos é recusada com mensagem (T017);
+ * - unicidades NO BANCO: uma configuração padrão por empresa (índice único
+ *   parcial) e um override por título (`config_multa_juros_titulo_uk`).
+ */
+export const configMultaJuros = sqliteTable(
+  'config_multa_juros',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    /** `NULL` = configuração padrão da empresa; id = override por título. */
+    tituloId: integer('titulo_id'),
+    /** Percentual da multa em centésimos (ex.: 2% = 200). */
+    multaCentavos: integer('multa_centavos').notNull().default(0),
+    /** Percentual de juros MENAL em centésimos (ex.: 1% a.m. = 100 — H18). */
+    jurosMensalCentavos: integer('juros_mensal_centavos').notNull().default(0),
+    /** Conta (despesa) debitada pelos encargos da baixa; NULL = sem conta. */
+    contaEncargosId: integer('conta_encargos_id'),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    // Um override por título (NULLs não colidem no SQLite — RF-23).
+    uniqueIndex('config_multa_juros_titulo_uk').on(t.tituloId),
+    // Uma configuração padrão por empresa (índice parcial).
+    uniqueIndex('config_multa_juros_empresa_default_uk')
+      .on(t.empresaId)
+      .where(sql`${t.tituloId} IS NULL`),
+    index('config_multa_juros_empresa_idx').on(t.empresaId),
+    // Base da FK composta `config_multa_juros_titulo_empresa_fk` (S-T014-6).
+    uniqueIndex('config_multa_juros_id_empresa_uk').on(t.id, t.empresaId),
+    foreignKey({
+      columns: [t.tituloId, t.empresaId],
+      foreignColumns: [titulo.id, titulo.empresaId],
+      name: 'config_multa_juros_titulo_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.contaEncargosId, t.empresaId],
+      foreignColumns: [conta.id, conta.empresaId],
+      name: 'config_multa_juros_conta_empresa_fk',
+    }),
+    check('config_multa_juros_multa_nao_negativa', sql`${t.multaCentavos} >= 0`),
+    check('config_multa_juros_juros_nao_negativo', sql`${t.jurosMensalCentavos} >= 0`),
+  ],
+);
+
+export type ConfigMultaJuros = typeof configMultaJuros.$inferSelect;
+export type NovoConfigMultaJuros = typeof configMultaJuros.$inferInsert;
+
+/**
+ * Regimes fiscais suportados (RF-21): por enquanto só o Simples Nacional
+ * (escopo do MVP — PB-4/RF-21); enum pronto para extensão sem hardcode de
+ * cálculo (RK-8: tudo configurável).
+ */
+export const REGIMES_FISCAIS = ['simples_nacional'] as const;
+export type RegimeFiscal = (typeof REGIMES_FISCAIS)[number];
+
+/**
+ * Regime fiscal da empresa (RF-21, CA-46/CA-49; TASK-017).
+ *
+ * - **UM registro por empresa** (`regime_fiscal_empresa_uk`): reconfigurar é
+ *   UPDATE do mesmo registro (o valor novo vale para as apurações seguintes —
+ *   CA-54b para tabelas, mesmo espírito aqui);
+ * - `ativa = false` equivale a "sem regime configurado" para a apuração
+ *   (CA-49: recusa sem lançamento) sem perder o histórico;
+ * - a base do DAS (H17) é a soma das **receitas lançadas no período**;
+ * - as duas contas do lançamento de apuração: `conta_despesa_id` (D — "DAS a
+ *   pagar/despesa") e `conta_passivo_id` (C — "DAS a recolher"), ambas com
+ *   FK composta com `empresa_id` (S-T014-6).
+ */
+export const regimeFiscalTabela = sqliteTable(
+  'regime_fiscal',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    regime: text('regime', { enum: REGIMES_FISCAIS }).notNull().default('simples_nacional'),
+    /** Percentual em centésimos (6% = 600). */
+    aliquotaCentavos: integer('aliquota_centavos').notNull(),
+    /** Conta DEBITADA no lançamento de apuração do DAS (tipo despesa). */
+    contaDespesaId: integer('conta_despesa_id').notNull(),
+    /** Conta CREDITADA no lançamento de apuração do DAS (tipo passivo). */
+    contaPassivoId: integer('conta_passivo_id').notNull(),
+    ativa: integer('ativa', { mode: 'boolean' }).notNull().default(true),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    /** Um regime por empresa (RF-21: "regime configurado" é único). */
+    uniqueIndex('regime_fiscal_empresa_uk').on(t.empresaId),
+    // Base da FK composta `apuracao_das_regime_empresa_fk` (S-T014-6).
+    uniqueIndex('regime_fiscal_id_empresa_uk').on(t.id, t.empresaId),
+    foreignKey({
+      columns: [t.contaDespesaId, t.empresaId],
+      foreignColumns: [conta.id, conta.empresaId],
+      name: 'regime_fiscal_despesa_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.contaPassivoId, t.empresaId],
+      foreignColumns: [conta.id, conta.empresaId],
+      name: 'regime_fiscal_passivo_empresa_fk',
+    }),
+    check('regime_fiscal_aliquota_nao_negativa', sql`${t.aliquotaCentavos} >= 0`),
+    check('regime_fiscal_regime_valido', sql`${t.regime} IN ('simples_nacional')`),
+  ],
+);
+
+export type RegimeFiscalTabela = typeof regimeFiscalTabela.$inferSelect;
+export type NovoRegimeFiscal = typeof regimeFiscalTabela.$inferInsert;
+
+/**
+ * Apuração do DAS (RF-21/RF-15, H17, CA-46/CA-49; TASK-017).
+ *
+ * - **Uma apuração por período** (`apuracao_das_periodo_uk`): o DAS de um
+ *   mês é apurado uma vez; correção é estornar o lançamento vinculado
+ *   (imutabilidade R9), não gerar outro;
+ * - `base_centavos` = soma das receitas lançadas no período (H17);
+ *   `aliquota_centavos` é **snapshot** do regime no ato da apuração;
+ * - `das_centavos` é derivado NO BANCO por CHECK:
+ *   `das = (base * aliquota + 5000) / 10000` (arredondamento meio-em-cima,
+ *   inteiro — regra 4: o valor apurado não pode divergir do cálculo);
+ * - `lancamento_id` é o vínculo contábil da apuração (RF-15), com FK
+ *   composta `(…, empresa_id)`.
+ */
+export const apuracaoDas = sqliteTable(
+  'apuracao_das',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id')
+      .notNull()
+      .references(() => empresa.id),
+    regimeId: integer('regime_id').notNull(),
+    /** Período apurado (FK composta com `empresa_id`). */
+    periodoId: integer('periodo_id').notNull(),
+    /** Lançamento contábil da apuração (RF-15). */
+    lancamentoId: integer('lancamento_id').notNull(),
+    /** Base: receitas lançadas no período (H17), em centavos. */
+    baseCentavos: integer('base_centavos').notNull(),
+    /** Snapshot da alíquota do regime no ato da apuração (centésimos). */
+    aliquotaCentavos: integer('aliquota_centavos').notNull(),
+    /** Valor do DAS em centavos (derivado por CHECK da base × alíquota). */
+    dasCentavos: integer('das_centavos').notNull(),
+    criadoPor: integer('criado_por')
+      .notNull()
+      .references(() => usuario.id),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(agora),
+  },
+  (t) => [
+    /** Uma apuração por período (RF-21). */
+    uniqueIndex('apuracao_das_periodo_uk').on(t.periodoId),
+    index('apuracao_das_empresa_idx').on(t.empresaId),
+    foreignKey({
+      columns: [t.regimeId, t.empresaId],
+      foreignColumns: [regimeFiscalTabela.id, regimeFiscalTabela.empresaId],
+      name: 'apuracao_das_regime_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.periodoId, t.empresaId],
+      foreignColumns: [periodoContabil.id, periodoContabil.empresaId],
+      name: 'apuracao_das_periodo_empresa_fk',
+    }),
+    foreignKey({
+      columns: [t.lancamentoId, t.empresaId],
+      foreignColumns: [lancamento.id, lancamento.empresaId],
+      name: 'apuracao_das_lancamento_empresa_fk',
+    }),
+    check('apuracao_das_base_nao_negativa', sql`${t.baseCentavos} >= 0`),
+    check('apuracao_das_aliquota_nao_negativa', sql`${t.aliquotaCentavos} >= 0`),
+    check('apuracao_das_valor_nao_negativo', sql`${t.dasCentavos} >= 0`),
+    // DAS = base × alíquota (arredondamento meio-em-cima em inteiro; H17).
+    check(
+      'apuracao_das_valor_derivado',
+      sql`${t.dasCentavos} = (${t.baseCentavos} * ${t.aliquotaCentavos} + 5000) / 10000`,
+    ),
+  ],
+);
+
+export type ApuracaoDas = typeof apuracaoDas.$inferSelect;
+export type NovaApuracaoDas = typeof apuracaoDas.$inferInsert;

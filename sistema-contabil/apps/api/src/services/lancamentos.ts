@@ -355,15 +355,23 @@ export async function estornarLancamento(
   // orientando ao estorno de baixa; a impossibilidade de o banco distinguir os
   // dois INSERTs (ambos `estorno_de_id = baixa.lancamento_id`) está registrada
   // em `TASK-016.json:assumptions` — esta rota é a fronteira.
+  //
+  // T017-F-1: vale igual para o lançamento de RETENÇÃO da baixa e para o
+  // estorno dele — os dois são desfeitos juntos pelo estorno de baixa.
+  const vinculos = [
+    eq(baixa.lancamentoId, original.id),
+    eq(baixa.estornoLancamentoId, original.id),
+    eq(baixa.retencaoLancamentoId, original.id),
+  ];
+  if (original.estornoDeId !== null) {
+    // O estorno do lançamento de retenção: `original.estorno_de_id` é a
+    // retenção, que por sua vez é `baixa.retencao_lancamento_id`.
+    vinculos.push(eq(baixa.retencaoLancamentoId, original.estornoDeId));
+  }
   const baixasVinculadas = await db
     .select({ id: baixa.id })
     .from(baixa)
-    .where(
-      and(
-        eq(baixa.empresaId, entrada.empresaId),
-        or(eq(baixa.lancamentoId, original.id), eq(baixa.estornoLancamentoId, original.id)),
-      ),
-    )
+    .where(and(eq(baixa.empresaId, entrada.empresaId), or(...vinculos)))
     .limit(1);
   if (baixasVinculadas.length > 0) {
     registrarEvento(db, {

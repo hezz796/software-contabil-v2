@@ -764,10 +764,16 @@ export const baixaSchema = z.object({
   data: dataLancamentoSchema,
   /** Bruto abatido do saldo do título (decisão D1 da T016). */
   valor_centavos: z.number().int(),
-  /** Dentro do bruto (D1; cálculo de retenções — CA-47 — é T017). */
+  /** Retenção na fonte dentro do bruto (D1/RF-22 — CA-47/T017). */
   retencao_centavos: z.number().int(),
-  /** Acrescidos ao caixa (D1; multa/juros — CA-48 — é T017). */
+  /** Acrescidos ao caixa (D1/RF-23 — CA-48/T017); `encargos = multa + juros`. */
   encargos_centavos: z.number().int(),
+  /** Multa de atraso dentro dos encargos (T017; ex.: 20,00). */
+  multa_centavos: z.number().int(),
+  /** Juros de atraso dentro dos encargos (T017/H18; ex.: 10,00). */
+  juros_centavos: z.number().int(),
+  /** Lançamento de retenção a recolher (RF-22/CA-47); `null` = sem retenção. */
+  retencao_lancamento_id: z.number().int().nullable(),
   criado_por: z.number().int(),
   /** ISO-8601 UTC. */
   criado_em: z.iso.datetime(),
@@ -850,3 +856,244 @@ export const cancelarTituloRequestSchema = z.object({
 });
 
 export type CancelarTituloRequest = z.infer<typeof cancelarTituloRequestSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Fiscal configurável: tabelas, retenções, multa/juros e DAS (TASK-017,       */
+/* RF-20..23, CA-45..49/54)                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Percentual fiscal em **centésimos de percentual** (4% = 400, 1% a.m. = 100):
+ * inteiro, nunca float (ADR-0001). Negativo, acima de 100% (10.000) ou não
+ * numérico é recusado com mensagem (CA-45/CE-19) já na camada de entrada.
+ */
+export const aliquotaCentavosSchema = z
+  .number({
+    error: 'Informe a alíquota como um número em centésimos de percentual (ex.: 400 = 4%).',
+  })
+  .int('A alíquota deve ser um número inteiro de centésimos de percentual (ex.: 400 = 4%).')
+  .min(0, 'A alíquota deve ser um número não negativo (ex.: 400 = 4%).')
+  .max(10_000, 'A alíquota não pode ultrapassar 100% (10.000 = 100% em centésimos de percentual).');
+
+/** Nome da tabela de imposto (RF-20: "nome, alíquota e aplicação"). */
+export const nomeTabelaImpostoSchema = z
+  .string({ error: 'Informe o nome da tabela de imposto.' })
+  .trim()
+  .min(1, 'Informe o nome da tabela de imposto.')
+  .max(200, 'O nome da tabela de imposto deve ter no máximo 200 caracteres.');
+
+/** Tabela de imposto devolvida pela API (RF-20). */
+export const tabelaImpostoSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  nome: z.string(),
+  /** Centésimos de percentual (4% = 400). */
+  aliquota_centavos: z.number().int(),
+  /** Conta de "retenções a recolher" (RF-22); `null` = tabela sem conta. */
+  conta_retencao_id: z.number().int().nullable(),
+  ativa: z.boolean(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+  atualizado_em: z.iso.datetime(),
+});
+
+export type TabelaImpostoDTO = z.infer<typeof tabelaImpostoSchema>;
+
+/** Criação de tabela de imposto (RF-20/CA-45): configuração fiscal auditada. */
+export const criarTabelaImpostoRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  nome: nomeTabelaImpostoSchema,
+  aliquota_centavos: aliquotaCentavosSchema,
+  conta_retencao_id: z.number().int().positive().nullish(),
+  ativa: z.boolean().optional(),
+});
+
+export type CriarTabelaImpostoRequest = z.infer<typeof criarTabelaImpostoRequestSchema>;
+
+/** Alteração de tabela de imposto (CA-54): ao menos um campo; alíquota nova vale para as associações seguintes. */
+export const atualizarTabelaImpostoRequestSchema = z
+  .object({
+    nome: nomeTabelaImpostoSchema.optional(),
+    aliquota_centavos: aliquotaCentavosSchema.optional(),
+    conta_retencao_id: z.number().int().positive().nullish(),
+    ativa: z.boolean().optional(),
+  })
+  .refine(
+    (valor) =>
+      valor.nome !== undefined ||
+      valor.aliquota_centavos !== undefined ||
+      valor.conta_retencao_id !== undefined ||
+      valor.ativa !== undefined,
+    'Informe ao menos um campo para atualizar (nome, alíquota, conta de retenção ou situação).',
+  );
+
+export type AtualizarTabelaImpostoRequest = z.infer<typeof atualizarTabelaImpostoRequestSchema>;
+
+/** Filtros de `GET /fiscal/tabelas-imposto`: empresa obrigatória. */
+export const tabelasImpostoQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+});
+
+export type TabelasImpostoQuery = z.infer<typeof tabelasImpostoQuerySchema>;
+
+export const listaTabelasImpostoResponseSchema = z.object({
+  tabelas: z.array(tabelaImpostoSchema),
+});
+
+export type ListaTabelasImpostoResponse = z.infer<typeof listaTabelasImpostoResponseSchema>;
+
+/** Associação tabela de imposto ↔ título (RF-13/RF-20/RF-22 — escrita financeira, T017-F-2). */
+export const associarTabelaTituloRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  tabela_imposto_id: z.number().int().positive('tabela_imposto_id é obrigatório.'),
+});
+
+export type AssociarTabelaTituloRequest = z.infer<typeof associarTabelaTituloRequestSchema>;
+
+/** Associação devolvida pela API. */
+export const tituloTabelaImpostoSchema = z.object({
+  titulo_id: z.number().int(),
+  tabela_imposto_id: z.number().int(),
+  empresa_id: z.number().int(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type TituloTabelaImpostoDTO = z.infer<typeof tituloTabelaImpostoSchema>;
+
+/** Configuração de multa/juros (RF-23/CA-48). */
+export const configMultaJurosSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  /** `null` = configuração padrão da empresa; id = override por título. */
+  titulo_id: z.number().int().nullable(),
+  /** Centésimos de percentual (2% = 200). */
+  multa_centavos: z.number().int(),
+  /** Centésimos de percentual MENSAIS (1% a.m. = 100 — H18). */
+  juros_mensal_centavos: z.number().int(),
+  /** Conta (despesa) dos encargos; `null` = sem conta (baixa com atraso recusada). */
+  conta_encargos_id: z.number().int().nullable(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+  atualizado_em: z.iso.datetime(),
+});
+
+export type ConfigMultaJurosDTO = z.infer<typeof configMultaJurosSchema>;
+
+/** Configuração (upsert) de multa/juros: padrão da empresa ou override por título. */
+export const configurarMultaJurosRequestSchema = z
+  .object({
+    empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+    titulo_id: z.number().int().positive().nullish(),
+    multa_centavos: aliquotaCentavosSchema.optional(),
+    juros_mensal_centavos: aliquotaCentavosSchema.optional(),
+    conta_encargos_id: z.number().int().positive().nullish(),
+  })
+  .refine(
+    (valor) =>
+      valor.multa_centavos !== undefined ||
+      valor.juros_mensal_centavos !== undefined ||
+      valor.conta_encargos_id !== undefined,
+    'Informe ao menos um campo para configurar (multa, juros mensais ou conta de encargos).',
+  );
+
+export type ConfigurarMultaJurosRequest = z.infer<typeof configurarMultaJurosRequestSchema>;
+
+export const listaConfigMultaJurosResponseSchema = z.object({
+  configuracoes: z.array(configMultaJurosSchema),
+});
+
+export type ListaConfigMultaJurosResponse = z.infer<typeof listaConfigMultaJurosResponseSchema>;
+
+/** Regimes fiscais suportados (RF-21: MVP = Simples Nacional). */
+export const regimeFiscalSchema = z.enum(['simples_nacional'], {
+  error: 'O regime fiscal deve ser Simples Nacional (único suportado no MVP — RF-21).',
+});
+export type RegimeFiscalDTO = z.infer<typeof regimeFiscalSchema>;
+
+/** Regime fiscal da empresa devolvido pela API (RF-21). */
+export const regimeFiscalEmpresaSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  regime: regimeFiscalSchema,
+  /** Centésimos de percentual (6% = 600). */
+  aliquota_centavos: z.number().int(),
+  /** Conta debitada na apuração do DAS (despesa). */
+  conta_das_despesa_id: z.number().int(),
+  /** Conta creditada na apuração do DAS (passivo "a recolher"). */
+  conta_das_passivo_id: z.number().int(),
+  ativa: z.boolean(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+  atualizado_em: z.iso.datetime(),
+});
+
+export type RegimeFiscalEmpresaDTO = z.infer<typeof regimeFiscalEmpresaSchema>;
+
+/** Configuração (upsert) do regime fiscal da empresa (RF-21/CA-46). */
+export const configurarRegimeFiscalRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  regime: regimeFiscalSchema.optional(),
+  aliquota_centavos: aliquotaCentavosSchema,
+  conta_das_despesa_id: z.number().int().positive('conta_das_despesa_id é obrigatório.'),
+  conta_das_passivo_id: z.number().int().positive('conta_das_passivo_id é obrigatório.'),
+  ativa: z.boolean().optional(),
+});
+
+export type ConfigurarRegimeFiscalRequest = z.infer<typeof configurarRegimeFiscalRequestSchema>;
+
+/** Consulta/apuração do DAS por período (RF-21/H17 — leitura quando só consulta). */
+export const apuracaoDasQuerySchema = z.object({
+  empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+  ano: anoPeriodoSchema,
+  mes: mesPeriodoSchema,
+});
+
+export type ApuracaoDasQuery = z.infer<typeof apuracaoDasQuerySchema>;
+
+/** Prévia do DAS (sem persistir): base do período, alíquota e valor apurado. */
+export const previaApuracaoDasSchema = z.object({
+  empresa_id: z.number().int(),
+  periodo_id: z.number().int(),
+  regime: regimeFiscalSchema,
+  /** Centésimos de percentual vigentes. */
+  aliquota_centavos: z.number().int(),
+  /** Receitas lançadas no período (H17), em centavos. */
+  base_centavos: z.number().int(),
+  das_centavos: z.number().int(),
+});
+
+export type PreviaApuracaoDasDTO = z.infer<typeof previaApuracaoDasSchema>;
+
+/** Apuração do DAS persistida com o lançamento vinculado (RF-21/RF-15, CA-46). */
+export const apuracaoDasSchema = z.object({
+  id: z.number().int(),
+  empresa_id: z.number().int(),
+  regime_id: z.number().int(),
+  periodo_id: z.number().int(),
+  /** Lançamento contábil gerado (RF-15), visível no razão (CA-46). */
+  lancamento_id: z.number().int(),
+  base_centavos: z.number().int(),
+  aliquota_centavos: z.number().int(),
+  das_centavos: z.number().int(),
+  criado_por: z.number().int(),
+  /** ISO-8601 UTC. */
+  criado_em: z.iso.datetime(),
+});
+
+export type ApuracaoDasDTO = z.infer<typeof apuracaoDasSchema>;
+
+/** Geração do DAS (escrita contábil — T017-F-2): apuração + lançamento. */
+export const gerarApuracaoDasRequestSchema = z.object({
+  empresa_id: z.number().int().positive('empresa_id é obrigatório.'),
+  ano: anoPeriodoSchema,
+  mes: mesPeriodoSchema,
+  /** Padrão: último dia do período apurado; precisa cair dentro dele. */
+  data: dataLancamentoSchema.optional(),
+});
+
+export type GerarApuracaoDasRequest = z.infer<typeof gerarApuracaoDasRequestSchema>;

@@ -19,6 +19,9 @@ import { registrarEvento } from './auditoria.ts';
  *   encerramento...) exige papel contador **atribuído** à empresa (F13/CA-33):
  *   admin é recusado auditado; contador não atribuído é recusado auditado
  *   (CA-35/36); empresa inativa bloqueia escrita nova (CA-40/CE-14).
+ * - `autorizarConfiguracaoFiscal`: configuração fiscal (tabelas/alíquotas,
+ *   multa/juros, regime — RF-20..23) é configuração administrativa auditada,
+ *   NÃO escrita contábil (F13/RF-02/CA-54): admin e contador atribuído podem.
  *
  * Toda recusa gera evento `escopo.tentativa_negada` com usuário, empresa
  * solicitada, objeto e motivo (RF-05/CE-12/CE-15).
@@ -108,6 +111,78 @@ export async function autorizarLeituraEmpresa(
       new ErroAplicacao(403, 'Acesso negado: usuário sem acesso a esta empresa.'),
     );
   }
+}
+
+/**
+ * Autoriza CONFIGURAÇÃO fiscal de uma empresa (RF-02/RF-20, CA-54) e devolve
+ * o `empresa_id` resolvido no servidor.
+ *
+ * A configuração fiscal (tabelas/alíquotas, multa/juros, regime — RF-20..23)
+ * é **configuração administrativa do escritório, não escrita contábil**
+ * (F13/RF-02): pode ser feita por administrador e por contador **atribuído**
+ * à empresa; toda alteração é auditada pelo próprio serviço (CA-54).
+ *
+ * Recusas (auditadas como tentativa):
+ * - contador não atribuído à empresa (CA-54a: requisição direta com empresa
+ *   alheia) — 403;
+ * - empresa inexistente — 404 auditado (contador recusado antes pela
+ *   atribuição, sem oráculo; admin, que tem leitura global, também passa por
+ *   `recusar` — a sondagem de `empresa_id` fica na trilha RF-05/CE-15).
+ *
+ * Empresa inativa NÃO bloqueia a configuração: ela não entra no razão nem no
+ * financeiro (aqui é só cadastro de regras) — decisão técnica T017, registrada
+ * no retorno; escrita contábil nova continua bloqueada pela CA-40.
+ */
+export async function autorizarConfiguracaoFiscal(
+  db: AppDb,
+  autenticacao: Autenticacao,
+  empresaIdSolicitada: number,
+  contexto: ContextoRecusa,
+): Promise<number> {
+  if (autenticacao.usuario.papel === 'contador') {
+    // Atribuição ANTES de existência: recusa sempre 403 genérica para não
+    // usar a rota de configuração como oráculo de existência de empresa
+    // (mesma lógica de `autorizarEscritaContabil`).
+    if (!autenticacao.empresaIds.includes(empresaIdSolicitada)) {
+      recusar(
+        db,
+        autenticacao,
+        empresaIdSolicitada,
+        { ...contexto, motivo: 'empresa_nao_atribuida' },
+        new ErroAplicacao(403, 'Acesso negado: usuário sem acesso a esta empresa.'),
+      );
+    }
+  }
+
+  const existe = await db
+    .select({ id: empresa.id })
+    .from(empresa)
+    .where(eq(empresa.id, empresaIdSolicitada));
+
+  if (existe.length === 0) {
+    if (autenticacao.usuario.papel === 'administrador') {
+      // Recusa AUDITADA como em todas as rotas (RF-05/CE-15): admin tem
+      // leitura global, mas a sondagem de empresa_id fica na trilha. O
+      // contador nunca chega aqui com empresa inexistente — a checagem de
+      // atribuição acima devolve 403 genérica antes (sem oráculo).
+      recusar(
+        db,
+        autenticacao,
+        empresaIdSolicitada,
+        { ...contexto, motivo: 'empresa_inexistente' },
+        new ErroAplicacao(404, 'Empresa não encontrada.', 'empresa_nao_encontrada'),
+      );
+    }
+    recusar(
+      db,
+      autenticacao,
+      empresaIdSolicitada,
+      { ...contexto, motivo: 'empresa_inexistente' },
+      new ErroAplicacao(404, 'Empresa não encontrada.', 'empresa_nao_encontrada'),
+    );
+  }
+
+  return empresaIdSolicitada;
 }
 
 /**

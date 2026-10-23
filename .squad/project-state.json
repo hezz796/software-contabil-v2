@@ -9,7 +9,7 @@
     "phase": "implementation",
     "status": "in_progress",
     "current_task_id": "TASK-017",
-    "next_action": "MARCO T016 COMMITADO EM 2026-10-22 — escopo: codigo T016 + correcoes pos-revisao C1..C7, ADR-0008 (decisoes humanas D-R1..3), handoffs REVIEW-T016 e PREFLIGHT-T016-T019, memorias .squad (TASK-016/019/021 e este estado). AGENTS.md: o usuario restaurou os caminhos reais (.squad/ e docs/) em 2026-10-22; RESTA PENDENTE de decisao humana — a secao \"Regras contra reincidencia\" (5 regras, 14 linhas) segue apagada e o arquivo permanece FORA do commit ate o usuario decidir restaurar ou manter. DERIVA CORRIGIDA NESTE MARCO: tasks[] T015/T016 -> done, current_task_id -> TASK-017, ADR-0008 adicionada as decisions[]. PROXIMO PASSO: (1) smoke-test do agente qa numa verificacao pequena ANTES de apostar nele na T021 (nunca completou um trabalho — 2 interrupcoes na T007; permissao em opencode.jsonc e shell \"ask\", entao pedidos de aprovacao podem aparecer) — nunca em paralelo com outro subagente (rate limit ja derrubou 2 sessoes simultaneas); (2) T017 fiscal (o pre-flight PREFLIGHT-T016-T019 ja cobre T017-F-1 e F-2); depois T018 (architect na escolha de libs de OFX/CSV/PDF), T019, restante T020, T021 (absorve lacunas de teste da T016, deduplicacao 404-sem-oraculo, comportamentos sem CA e rechecagem dos predicados otimistas), T022 (implantacao: backup/restore/runbook — registrada aqui para nao ser ignorada pela cadeia). NOTA INFRA: reviewer e security-reviewer tem shell deny restrito a git (opencode.jsonc) — confirmar permissoes de execucao do qa antes de delegar a T021. PENDENCIAS DE PRODUTO: V-2 (chips RF/CA na UI), RK-8 adiado, V-1 favicon."
+    "next_action": "T017 COMPLETA E VERIFICADA — AGUARDA ORDEM DE COMMIT (marco 9). Retomada 2026-10-23: baseline revalidada pelo coordenador (127/127 medidos; footprint 16 arquivos de sistema-contabil + 4 de memoria; o registro anterior dizia 17 — contagem corrigida). Rodadas concluidas: A2 CORRIGIDO pelo implementer (ses_e962ba733ffeKG0PdNkYkspORf): recusa 404 de admin em autorizarConfiguracaoFiscal passou de throw direto para recusar() auditado (permissoes.ts:162-175), teste red-green provou trilha escopo.tentativa_negada motivo empresa_inexistente; 128/128. A1 e A4 aplicados conforme DECISAO HUMANA 2026-10-23 pelo implementer (ses_e9623a86fffeRb2066PFzoH87n): A1 = .max(10000) em aliquotaCentavosSchema SO no Zod (packages/shared/src/index.ts:876, sem CHECK nova, 0008 intacta), teste de borda 10000 aceita/10001 rejeitada red-green; A4 = mensagem de apuracao_ja_existente corrigida (services/fiscal.ts:866-868) para dizer que estornar o lancamento NAO libera nova apuracao, contrato 409/codigo inalterado, testes ajustados. VERIFICACAO FINAL DO COORDENADOR (2026-10-23): npm test 130/130 MEDIDOS pelo coordenador; typecheck 0 erros; drizzle-kit generate = No schema changes (0008 byte-intacta); footprint = 16 arquivos de sistema-contabil + 4 de memoria; NENHUM commit. PROXIMO: usuario ordena o commit (marco 9 = T017: fiscal configuravel + FIX-T017-R1 + A1/A2/A4) -> marcar TASK-017 done. Depois: T018 (architect na escolha de libs OFX/CSV/PDF com Context7), T019, restante T020, T021 (qa; inclui A5 IDOR-tests, lacunas de teste, deduplicacao 404-sem-oraculo, concorrencia fiscal e pendencia de produto reapuracao-apos-estorno do DAS), T022 (implantacao). PENDENCIAS DE PRODUTO: reapuracao apos estorno do DAS (A4 — decidido adiar), V-2 (chips RF/CA), RK-8 adiado, V-1 favicon."
   },
   "tooling": [
     {
@@ -41,7 +41,7 @@
     { "id": "TASK-014", "title": "Lançamentos em partidas dobradas e estorno", "status": "done", "path": ".squad/tasks/TASK-014.json", "owner": "implementer" },
     { "id": "TASK-015", "title": "Relatórios contábeis e encerramentos (FIX-01)", "status": "done", "path": ".squad/tasks/TASK-015.json", "owner": "implementer" },
     { "id": "TASK-016", "title": "Financeiro: títulos, baixas e estorno de baixa", "status": "done", "path": ".squad/tasks/TASK-016.json", "owner": "implementer" },
-    { "id": "TASK-017", "title": "Fiscal configurável: tabelas, retenções, multa/juros, DAS", "status": "todo", "path": ".squad/tasks/TASK-017.json", "owner": "implementer" },
+    { "id": "TASK-017", "title": "Fiscal configurável: tabelas, retenções, multa/juros, DAS", "status": "in_progress", "path": ".squad/tasks/TASK-017.json", "owner": "implementer" },
     { "id": "TASK-018", "title": "Conciliação bancária e importação OFX/CSV", "status": "todo", "path": ".squad/tasks/TASK-018.json", "owner": "implementer" },
     { "id": "TASK-019", "title": "Fluxo de caixa e exportação CSV/PDF", "status": "todo", "path": ".squad/tasks/TASK-019.json", "owner": "implementer" },
     { "id": "TASK-020", "title": "Frontend completo pt-BR", "status": "in_progress", "path": ".squad/tasks/TASK-020.json", "owner": "implementer" },
@@ -172,6 +172,16 @@
         "name": "Compra/contratação de VPS",
         "result": "not_run",
         "evidence": "Não é ação da squad; ADR-0003 recomenda e a contratação é decisão humana."
+      },
+      {
+        "name": "SMOKE-QA-01 — agente qa comprovado em verificacao pequena (gate da T021)",
+        "result": "passed",
+        "evidence": "2026-10-22, ses_e9ac7532affe5eS7btW8Tiyk0s, foreground. Escopo fechado: footprint do commit 83b4086 (20 arquivos; sem AGENTS.md; sem landpage/), npm test 15/82 medidos pelo proprio agente (6.36s), typecheck 3 workspaces sem erro, spot-check dos 3 predicados C1 (throws em services/titulos.ts linhas 332/571/837), catch C2 (linha 882) e 2 testes de corrida (titulos.test.ts 1265/1311). Zero divergencias entre medido e declarado; arvore intacta pos-agente (nenhuma edicao); nenhum comando negado (perfil shell ask executou tudo na primeira tentativa); limitacao declarada de exit code inferido. Coordenador reconferiu as linhas citadas e o git status. Apto para a T021 apos 2 interrupcoes historicas na T007."
+      },
+      {
+        "name": "TASK-017 — fiscal configuravel entregue, revisado, corrigido e verificado pelo coordenador (aguardando ordem de commit)",
+        "result": "passed",
+        "evidence": "2026-10-23. Implementacao (implementer, 16 arquivos de sistema-contabil: domain/services/routes/middleware fiscal, migracao 0008 com hand-fix, 5 tabelas novas com FKs compostas, testes). Revisao reviewer (REVIEW-T017.md: F1/F2/F3/L1/L2 corrigidos em FIX-T017-R1 com red-green 500->201/400) e security-reviewer (SECURITY-T017.md: aprovado; nenhum critico/alto de autorizacao ou IDOR; 12 rotas com guard correto; FKs compostas isolam tenant no banco). Pendencias fechadas em 2026-10-23: A2 corrigido (404 de admin auditado, red-green, ses_e962ba733ffeKG0PdNkYkspORf); A1 teto .max(10000) so no Zod e A4 mensagem honesta do apuracao_ja_existente por decisao humana (ses_e9623a86fffeRb2066PFzoH87n). VERIFICACAO FINAL independente do coordenador: npm test 130/130 medidos; typecheck 0 erros; drizzle-kit generate = No schema changes (0008 intacta); footprint conferido contra baseline. A3 descartado com evidencia executada (z.iso.date() rejeita datas impossiveis); A5 (testes IDOR cross-empresa) e a pendencia de produto reapuracao-apos-estorno (A4) migram para a T021."
       }
     ],
     "notes": "Requisitos, stack, implantacao, plano e direcao de UI/UX decididos. Estimativa revisada: ~106h de agente somadas (T010..T023; +9h em 2026-10-21 pela v4 aprovada em ADR-0007), 3-4 semanas de calendario com paralelismo; revisao oficial de estimativa ao fim de T011 e T016. Nenhum custo assumido; VPS ainda nao contratada (decisao humana). O campo commit fica null de proposito (auto-referencia): usar git log. Fluxo paralelo da landing page: artefatos TASK-004..007, ADR-0002 e landpage/ observados, nao inspecionados nem commitados por este fluxo."
@@ -183,5 +193,5 @@
       "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-22T19:52:55.024Z"
+  "updated_at": "2026-10-23T17:55:00.000Z"
 }

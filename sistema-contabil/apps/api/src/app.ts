@@ -10,6 +10,7 @@ import { auditoriaRoutes } from './routes/auditoria.ts';
 import { authRoutes } from './routes/auth.ts';
 import { contaRoutes } from './routes/contas.ts';
 import { empresaRoutes } from './routes/empresas.ts';
+import { fiscalRoutes } from './routes/fiscal.ts';
 import { gestaoUsuariosRoutes } from './routes/gestao-usuarios.ts';
 import { healthRoutes } from './routes/health.ts';
 import { lancamentoRoutes } from './routes/lancamentos.ts';
@@ -50,6 +51,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   registrarAutenticacao(app);
   // Decorator usado pelo preHandler de escrita contábil (TASK-012); null = não resolvido.
   app.decorateRequest('escritaContabilEmpresaId', null);
+  // Decorator do guard de CONFIGURAÇÃO fiscal (TASK-017); null = não resolvido.
+  app.decorateRequest('configuracaoFiscalEmpresaId', null);
 
   // Resposta de erro padrão `{ erro }`; detalhes internos só no log.
   app.setErrorHandler((erro: unknown, request, reply) => {
@@ -79,6 +82,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(periodoRoutes);
   await app.register(lancamentoRoutes);
   await app.register(tituloRoutes);
+  await app.register(fiscalRoutes);
   await app.register(relatorioRoutes);
   await app.register(healthRoutes);
 

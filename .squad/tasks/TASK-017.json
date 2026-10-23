@@ -2,7 +2,7 @@
   "id": "TASK-017",
   "title": "Fiscal configuravel: tabelas, retencoes, multa/juros e DAS",
   "objective": "Implementar o escopo fiscal ampliado por PB-4 (F12): tabelas de imposto configuraveis (RF-20), retencao na fonte na baixa (RF-22), multa e juros pro rata diaria (RF-23) e apuracao do DAS (RF-21), todos com vinculo contabil (RF-15).",
-  "status": "todo",
+  "status": "in_progress",
   "owner": "implementer",
   "depends_on": ["TASK-016"],
   "scope": {
@@ -37,14 +37,36 @@
       "method": "juros pro rata, retencao e DAS em funcoes puras testadas isoladamente."
     }
   ],
-  "evidence": [],
-  "assumptions": [
-    "H17 (base = receitas lancadas no periodo) e H18 (mensal/30) mantidas; validacao com o escritorio e pendencia D4/RK-8 anterior a producao."
+  "evidence": [
+    "Testes: tests/integration/fiscal.test.ts (CA-45/46/47/48/49/54 + FIX-T017-R1 red-green + FIX-T017-A2) e tests/unit/fiscal.test.ts (dominio: juros pro rata, retencao, DAS + teto de aliquota).",
+    "Estado final medido pelo coordenador em 2026-10-23: npm test 130/130 (17 arquivos), typecheck 0 erros nos 3 workspaces, drizzle-kit generate = No schema changes (0008 byte-intacta).",
+    "Revisoes: reviewer (ses_e9a577b7bffeXkzZwuib43ALK7 + FIX-T017-R1 ses_e9a41f6f5ffejNBofAsYPYIGIt) e security-reviewer (ses_e9a34fa60ffer6IhB8ntXnL7yo) — .squad/handoffs/REVIEW-T017.md e SECURITY-T017.md.",
+    "Correcoes pos-revisao/decisao: A2 (ses_e962ba733ffeKG0PdNkYkspORf), A1+A4 (ses_e9623a86fffeRb2066PFzoH87n), ambas com red-green."
   ],
+  "assumptions": [
+    "H17 (base = receitas lancadas no periodo) e H18 (mensal/30) mantidas; validacao com o escritorio e pendencia D4/RK-8 anterior a producao.",
+    "Entidade contrato nao existe no MVP: config_multa_juros aceita override por titulo e/ou empresa (RF-23 fala \"por titulo e/ou contrato\"); o termo contrato e mapeado para a granularidade disponivel, comentado em schema.ts e services/fiscal.ts (F4 da revisao REVIEW-T017, registrado 2026-10-22).",
+    "A1 (decisao humana 2026-10-23): teto de aliquota = .max(10000) (100%) SO no Zod, em aliquotaCentavosSchema (packages/shared/src/index.ts:876), cobrindo tabela, regime, multa e juros; sem CHECK nova e sem alteracao na migracao 0008. A divergencia JS x SQLite permanece teorica (exige base >= ~R$ 1 tri/mes).",
+    "A4 (decisao humana 2026-10-23): estorno do lancamento do DAS NAO libera o periodo no MVP; a mensagem de apuracao_ja_existente foi corrigida para nao sugerir caminho que trava (contrato 409/codigo inalterado); pendencia de produto (reapuracao apos estorno do DAS) registrada para a T021."
+  ],
+  "coordinator_final_verification": {
+    "verified_at": "2026-10-23",
+    "result": "ACCEPTED",
+    "evidence": [
+      "npm test 130/130 medidos PELO COORDENADOR apos A1/A2/A4; typecheck 0 erros; drizzle-kit generate = No schema changes (0008 intacta); footprint = 16 arquivos de sistema-contabil + 4 de memoria, nenhum commit.",
+      "A2 auditado na fonte: recusar() do ramo admin (permissoes.ts:162-175) no padrao do ramo nao-admin; recusar sempre lanca (throw em :55), sem cair no segundo call.",
+      "A1 auditado na fonte: .max(10_000) em aliquotaCentavosSchema (shared/index.ts:876) com mensagem pt-BR no estilo das irmas; A4 auditado na fonte: so texto mudou, 409/codigo iguais (fiscal.ts:864-871)."
+    ],
+    "limitations": [
+      "A5 (testes IDOR cross-empresa das rotas fiscais) e a pendencia de produto reapuracao-apos-estorno do DAS ficam para a T021 (decisao humana A4 de 2026-10-23).",
+      "Teto de aliquota existe SO no Zod; sem CHECK no banco (decisao humana A1 de 2026-10-23; divergencia JS x SQLite teorica em magnitudes inatingiveis).",
+      "Concorrencia nos POST /fiscal/regime e /fiscal/multa-juros (leituras fora da transacao, services/fiscal.ts:504-514 e :619-621) segue como risco H10 aceito, com acompanhamento na T021."
+    ]
+  },
   "blockers": [],
   "worktree": null,
-  "session_id": null,
+  "session_id": "ses_e9ab05c9cffez6sqvyijaec6ck",
   "estimate_hours": 7,
   "created_at": "2026-10-20T22:55:00Z",
-  "updated_at": "2026-10-20T22:55:00Z"
+  "updated_at": "2026-10-23T17:55:00.000Z"
 }
