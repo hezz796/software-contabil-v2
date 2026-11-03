@@ -2,7 +2,7 @@
   "id": "TASK-018",
   "title": "Conciliacao bancaria e importacao de extrato OFX/CSV",
   "objective": "Implementar contas bancarias, itens de extrato manuais e por importacao validada (RF-16/F10), conciliacao item a item com desconciliacao (CA-28) e a regra de estorno de baixa exigindo desconciliacao (H20/CA-44).",
-  "status": "in_progress",
+  "status": "done",
   "owner": "implementer",
   "depends_on": ["TASK-017"],
   "scope": {
@@ -58,5 +58,5 @@
   "session_id": null,
   "estimate_hours": 7,
   "created_at": "2026-10-23T18:20:00.000Z",
-  "updated_at": "2026-10-23T19:05:00.000Z"
+  "updated_at": "2026-10-23T19:30:00.000Z"
 }

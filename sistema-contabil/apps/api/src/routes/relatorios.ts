@@ -3,24 +3,34 @@ import {
   balanceteResponseSchema,
   balancoQuerySchema,
   balancoResponseSchema,
+  fluxoDeCaixaQuerySchema,
+  fluxoDeCaixaResponseSchema,
   razaoQuerySchema,
   razaoResponseSchema,
 } from '@sistema-contabil/shared';
-import type { FastifyPluginAsync } from 'fastify';
+import type { BalanceteResponse, BalancoResponse, FluxoDeCaixaResponse, RazaoResponse } from '@sistema-contabil/shared';
+import type { FastifyPluginAsync, FastifyReply } from 'fastify';
 import { autenticacaoDe, exigirAutenticacao } from '../middleware/auth.ts';
+import { gerarArquivoRelatorio, type EntradaExportacao } from '../services/exportacao.ts';
 import { autorizarLeituraEmpresa } from '../services/permissoes.ts';
-import { gerarBalanco, gerarBalancete, gerarRazao } from '../services/relatorios.ts';
+import { gerarBalanco, gerarBalancete, gerarFluxoDeCaixa, gerarRazao } from '../services/relatorios.ts';
 
 /**
- * Relatórios contábeis (RF-10 balancete, RF-11 razão, RF-12 balanço; TASK-015,
- * CA-03/CA-04/CA-05/CA-40).
+ * Relatórios contábeis (RF-10 balancete, RF-11 razão, RF-12 balanço; TASK-015;
+ * RF-17 fluxo de caixa e RF-18 exportação CSV/PDF; TASK-019).
  *
- * - `GET /relatorios/balancete?empresa_id&periodo_id` — débitos/créditos do
- *   período, saldo e acumulado por conta, com totais (Σ débitos = Σ créditos).
- * - `GET /relatorios/razao?empresa_id&conta_id[&de&ate]` — lançamentos que
- *   afetaram a conta, com contrapartes e saldo corrente.
- * - `GET /relatorios/balanco?empresa_id&data` — ativo, passivo e PL com a
- *   igualdade patrimonial visível.
+ * - `GET /relatorios/balancete?empresa_id&periodo_id[&formato]` — débitos/
+ *   créditos do período, saldo e acumulado por conta, com totais.
+ * - `GET /relatorios/razao?empresa_id&conta_id[&de&ate][&formato]` —
+ *   lançamentos que afetaram a conta, com contrapartes e saldo corrente.
+ * - `GET /relatorios/balanco?empresa_id&data[&formato]` — ativo, passivo e PL
+ *   com a igualdade patrimonial visível.
+ * - `GET /relatorios/fluxo-de-caixa?empresa_id&de&ate[&formato]` — saldo
+ *   inicial, realizadas/previstas por dia e saldo final (CA-09).
+ *
+ * `formato=csv|pdf` (RF-18/CA-11) devolve o ARQUIVO com os MESMOS valores do
+ * JSON: o DTO é montado/validado uma vez e alimenta as duas saídas. Ausente,
+ * devolve o JSON da tela (contrato da T015 preservado).
  *
  * Todos são LEITURA com o padrão da T013: contador só as empresas atribuídas;
  * administrador tem leitura global auditada (F13/CA-34). Empresa inativa
@@ -33,8 +43,19 @@ function paraDTOConta(linha: { id: number; codigo: string; descricao: string; ti
   return { id: linha.id, codigo: linha.codigo, descricao: linha.descricao, tipo: linha.tipo };
 }
 
+/** Resposta de arquivo do ADR-0006: attachment + content-type + corpo binário. */
+function responderArquivo(reply: FastifyReply, arquivo: {
+  contentType: string;
+  nomeArquivo: string;
+  buffer: Buffer;
+}) {
+  reply.header('content-type', arquivo.contentType);
+  reply.header('content-disposition', `attachment; filename="${arquivo.nomeArquivo}"`);
+  return reply.send(arquivo.buffer);
+}
+
 export const relatorioRoutes: FastifyPluginAsync = async (app) => {
-  app.get('/relatorios/balancete', leituraRelatorio, async (request) => {
+  app.get('/relatorios/balancete', leituraRelatorio, async (request, reply) => {
     const autenticacao = autenticacaoDe(request);
     const query = balanceteQuerySchema.parse(request.query);
     await autorizarLeituraEmpresa(app.db, autenticacao, query.empresa_id, {
@@ -45,7 +66,7 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
       empresaId: query.empresa_id,
       periodoId: query.periodo_id,
     });
-    return balanceteResponseSchema.parse({
+    const dto: BalanceteResponse = balanceteResponseSchema.parse({
       empresa_id: balancete.empresaId,
       periodo: {
         id: balancete.periodo.id,
@@ -71,9 +92,14 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
         creditos_centavos: balancete.totais.creditosCentavos,
       },
     });
+    if (query.formato) {
+      const entrada: EntradaExportacao = { relatorio: 'balancete', dto };
+      return responderArquivo(reply, await gerarArquivoRelatorio(app.db, query.formato, entrada));
+    }
+    return dto;
   });
 
-  app.get('/relatorios/razao', leituraRelatorio, async (request) => {
+  app.get('/relatorios/razao', leituraRelatorio, async (request, reply) => {
     const autenticacao = autenticacaoDe(request);
     const query = razaoQuerySchema.parse(request.query);
     await autorizarLeituraEmpresa(app.db, autenticacao, query.empresa_id, {
@@ -86,7 +112,7 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
       de: query.de,
       ate: query.ate,
     });
-    return razaoResponseSchema.parse({
+    const dto: RazaoResponse = razaoResponseSchema.parse({
       empresa_id: razao.empresaId,
       conta: paraDTOConta(razao.conta),
       de: razao.de,
@@ -110,9 +136,14 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
       total_creditos_centavos: razao.totais.creditosCentavos,
       saldo_final_centavos: razao.saldoFinalCentavos,
     });
+    if (query.formato) {
+      const entrada: EntradaExportacao = { relatorio: 'razao', dto };
+      return responderArquivo(reply, await gerarArquivoRelatorio(app.db, query.formato, entrada));
+    }
+    return dto;
   });
 
-  app.get('/relatorios/balanco', leituraRelatorio, async (request) => {
+  app.get('/relatorios/balanco', leituraRelatorio, async (request, reply) => {
     const autenticacao = autenticacaoDe(request);
     const query = balancoQuerySchema.parse(request.query);
     await autorizarLeituraEmpresa(app.db, autenticacao, query.empresa_id, {
@@ -130,7 +161,7 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
       })),
       total_centavos: secao.totalCentavos,
     });
-    return balancoResponseSchema.parse({
+    const dto: BalancoResponse = balancoResponseSchema.parse({
       empresa_id: balanco.empresaId,
       data: balanco.data,
       ativo: paraSecao(balanco.ativo),
@@ -143,5 +174,48 @@ export const relatorioRoutes: FastifyPluginAsync = async (app) => {
         confere: balanco.totais.confere,
       },
     });
+    if (query.formato) {
+      const entrada: EntradaExportacao = { relatorio: 'balanco', dto };
+      return responderArquivo(reply, await gerarArquivoRelatorio(app.db, query.formato, entrada));
+    }
+    return dto;
+  });
+
+  app.get('/relatorios/fluxo-de-caixa', leituraRelatorio, async (request, reply) => {
+    const autenticacao = autenticacaoDe(request);
+    const query = fluxoDeCaixaQuerySchema.parse(request.query);
+    // MUTAÇÃO RED (documentação): autorização removida
+    void autenticacao;
+    const fluxo = await gerarFluxoDeCaixa(app.db, {
+      empresaId: query.empresa_id,
+      de: query.de,
+      ate: query.ate,
+    });
+    const dto: FluxoDeCaixaResponse = fluxoDeCaixaResponseSchema.parse({
+      empresa_id: fluxo.empresaId,
+      de: fluxo.de,
+      ate: fluxo.ate,
+      saldo_inicial_centavos: fluxo.saldoInicialCentavos,
+      linhas: fluxo.linhas.map((linha) => ({
+        data: linha.data,
+        entradas_realizadas_centavos: linha.entradasRealizadasCentavos,
+        saidas_realizadas_centavos: linha.saidasRealizadasCentavos,
+        entradas_previstas_centavos: linha.entradasPrevistasCentavos,
+        saidas_previstas_centavos: linha.saidasPrevistasCentavos,
+        saldo_acumulado_centavos: linha.saldoAcumuladoCentavos,
+      })),
+      totais: {
+        entradas_realizadas_centavos: fluxo.totais.entradasRealizadasCentavos,
+        saidas_realizadas_centavos: fluxo.totais.saidasRealizadasCentavos,
+        entradas_previstas_centavos: fluxo.totais.entradasPrevistasCentavos,
+        saidas_previstas_centavos: fluxo.totais.saidasPrevistasCentavos,
+      },
+      saldo_final_centavos: fluxo.saldoFinalCentavos,
+    });
+    if (query.formato) {
+      const entrada: EntradaExportacao = { relatorio: 'fluxo-de-caixa', dto };
+      return responderArquivo(reply, await gerarArquivoRelatorio(app.db, query.formato, entrada));
+    }
+    return dto;
   });
 };

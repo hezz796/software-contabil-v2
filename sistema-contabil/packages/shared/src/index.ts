@@ -514,10 +514,26 @@ export type EstornarLancamentoRequest = z.infer<typeof estornarLancamentoRequest
  * Os campos `*_centavos` seguem o ADR-0001 (nunca float).
  */
 
+/**
+ * Formato de arquivo do relatório (RF-18/H9, ADR-0006): parâmetro OPCIONAL do
+ * query string nos 4 relatórios — ausente devolve o JSON da tela; `csv` ou
+ * `pdf` devolve o arquivo com os MESMOS valores (CA-11). Valor fora do enum é
+ * recusado com mensagem em pt-BR (padrão de entrada do projeto).
+ */
+export const formatoExportacaoSchema = z.enum(['csv', 'pdf'], {
+  error: "Informe um formato de exportação válido: 'csv' ou 'pdf'.",
+});
+
+export type FormatoExportacaoDTO = z.infer<typeof formatoExportacaoSchema>;
+
+/** Mesmo campo, como aparece no query string das rotas de relatório. */
+const formatoExportacaoQuerySchema = formatoExportacaoSchema.optional();
+
 /** `empresa_id` + `periodo_id` do balancete (RF-10). */
 export const balanceteQuerySchema = z.object({
   empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
   periodo_id: z.coerce.number().int().positive('periodo_id é obrigatório.'),
+  formato: formatoExportacaoQuerySchema,
 });
 
 export type BalanceteQuery = z.infer<typeof balanceteQuerySchema>;
@@ -558,6 +574,7 @@ export const razaoQuerySchema = z.object({
   conta_id: z.coerce.number().int().positive('conta_id é obrigatório.'),
   de: dataLancamentoSchema.optional(),
   ate: dataLancamentoSchema.optional(),
+  formato: formatoExportacaoQuerySchema,
 });
 
 export type RazaoQuery = z.infer<typeof razaoQuerySchema>;
@@ -612,6 +629,7 @@ export type RazaoResponse = z.infer<typeof razaoResponseSchema>;
 export const balancoQuerySchema = z.object({
   empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
   data: dataLancamentoSchema,
+  formato: formatoExportacaoQuerySchema,
 });
 
 export type BalancoQuery = z.infer<typeof balancoQuerySchema>;
@@ -651,6 +669,68 @@ export const balancoResponseSchema = z.object({
 });
 
 export type BalancoResponse = z.infer<typeof balancoResponseSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Fluxo de caixa (TASK-019, RF-17/CA-09)                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Filtros do fluxo de caixa (RF-17): empresa + intervalo de datas (obrigatórios).
+ * `de <= ate` é garantido no schema com mensagem própria (CA-09 usa intervalos
+ * D−2..D+10; recusa imediata do intervalo invertido).
+ */
+export const fluxoDeCaixaQuerySchema = z
+  .object({
+    empresa_id: z.coerce.number().int().positive('empresa_id é obrigatório.'),
+    de: z.iso.date({ error: 'Informe a data inicial (de) no formato AAAA-MM-DD.' }),
+    ate: z.iso.date({ error: 'Informe a data final (ate) no formato AAAA-MM-DD.' }),
+    formato: formatoExportacaoQuerySchema,
+  })
+  .refine((query) => query.de <= query.ate, {
+    error: 'A data inicial (de) não pode ser posterior à data final (ate).',
+    path: ['de'],
+  });
+
+export type FluxoDeCaixaQuery = z.infer<typeof fluxoDeCaixaQuerySchema>;
+
+/**
+ * Dia com movimento no fluxo de caixa (RF-17): entradas/saídas **realizadas**
+ * (baixas vigentes do dia, pelo valor de caixa) e **previstas** (vencimentos
+ * dos títulos em aberto no dia), mais o saldo acumulado ao fim do dia.
+ * Dias sem movimento não geram linha; `saldo_acumulado_centavos` permite
+ * conferir a identidade `saldo_inicial + entradas − saídas` linha a linha.
+ */
+export const linhaFluxoDeCaixaSchema = z.object({
+  data: dataLancamentoSchema,
+  entradas_realizadas_centavos: z.number().int(),
+  saidas_realizadas_centavos: z.number().int(),
+  entradas_previstas_centavos: z.number().int(),
+  saidas_previstas_centavos: z.number().int(),
+  /** Saldo ao fim do dia (positivo = caixa a favor; pode ficar negativo). */
+  saldo_acumulado_centavos: z.number().int(),
+});
+
+export type LinhaFluxoDeCaixaDTO = z.infer<typeof linhaFluxoDeCaixaSchema>;
+
+export const fluxoDeCaixaResponseSchema = z.object({
+  empresa_id: z.number().int(),
+  de: dataLancamentoSchema,
+  ate: dataLancamentoSchema,
+  /** Σ `saldo_inicial_centavos` das contas bancárias com `data_saldo_inicial <= de`. */
+  saldo_inicial_centavos: z.number().int(),
+  /** Apenas dias com movimento, em ordem cronológica. */
+  linhas: z.array(linhaFluxoDeCaixaSchema),
+  totais: z.object({
+    entradas_realizadas_centavos: z.number().int(),
+    saidas_realizadas_centavos: z.number().int(),
+    entradas_previstas_centavos: z.number().int(),
+    saidas_previstas_centavos: z.number().int(),
+  }),
+  /** Identidade do RF-17/CA-09: saldo_inicial + entradas − saídas. */
+  saldo_final_centavos: z.number().int(),
+});
+
+export type FluxoDeCaixaResponse = z.infer<typeof fluxoDeCaixaResponseSchema>;
 
 /* -------------------------------------------------------------------------- */
 /* Encerramento de período e exercício (TASK-015, RF-09/H12, CA-31/CA-32)      */

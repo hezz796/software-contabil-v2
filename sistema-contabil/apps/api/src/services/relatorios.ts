@@ -1,10 +1,14 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
 import type { AppDb } from '../db/index.ts';
 import {
+  baixa,
   conta,
+  contaBancaria,
   lancamento,
   partida,
   periodoContabil,
+  titulo,
+  SITUACOES_TITULO,
   type Conta,
   type PeriodoContabil,
   type TipoConta,
@@ -450,4 +454,184 @@ export function saldosResultadoAtePeriodo(
     if (saldo !== 0) saldos.push({ conta: contaLinha, saldoCentavos: saldo });
   }
   return saldos;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Fluxo de caixa (RF-17, TASK-019)                                            */
+/* -------------------------------------------------------------------------- */
+
+export interface DiaFluxoDeCaixa {
+  data: string;
+  entradasRealizadasCentavos: number;
+  saidasRealizadasCentavos: number;
+  entradasPrevistasCentavos: number;
+  saidasPrevistasCentavos: number;
+  /** Saldo ao fim do dia (positivo = caixa a favor; pode ficar negativo). */
+  saldoAcumuladoCentavos: number;
+}
+
+export interface FluxoDeCaixa {
+  empresaId: number;
+  de: string;
+  ate: string;
+  /** Σ `saldo_inicial_centavos` das contas bancárias com `data_saldo_inicial <= de` (F-1). */
+  saldoInicialCentavos: number;
+  /** Apenas dias com movimento, em ordem cronológica. */
+  linhas: DiaFluxoDeCaixa[];
+  totais: {
+    entradasRealizadasCentavos: number;
+    saidasRealizadasCentavos: number;
+    entradasPrevistasCentavos: number;
+    saidasPrevistasCentavos: number;
+  };
+  /** Identidade do RF-17/CA-09: saldo_inicial + entradas − saídas. */
+  saldoFinalCentavos: number;
+}
+
+/** Títulos em aberto/parcial são os que ainda podem virar caixa (previstos). */
+const SITUACOES_EM_ABERTO = SITUACOES_TITULO.filter(
+  (situacao) => situacao === 'aberto' || situacao === 'parcial',
+);
+
+/**
+ * Fluxo de caixa por empresa e intervalo de datas (RF-17/CA-09):
+ * - **saldo inicial (F-1):** Σ `saldo_inicial_centavos` das contas bancárias
+ *   DA EMPRESA com `data_saldo_inicial <= de` (contas declaradas depois do
+ *   início e contas de outras empresas ficam de fora);
+ * - **realizadas (F-3):** baixas **vigentes** (`estorno_lancamento_id IS NULL`)
+ *   do intervalo, pelo valor de caixa líquido (`valor − retenção + encargos`);
+ *   baixa estornada não conta;
+ * - **previstas (F-3):** `saldo_centavos` residual dos títulos em aberto
+ *   (`situacao IN ('aberto','parcial')`) posicionado no vencimento; título
+ *   pago/cancelado deixa de ser previsto.
+ *
+ * Agrupa por dia (dias sem movimento não geram linha) e acumula o saldo dia a
+ * dia, de modo que `saldo_inicial + entradas − saídas = saldo_final` confere
+ * por construção (CA-09).
+ */
+export async function gerarFluxoDeCaixa(
+  db: AppDb,
+  entrada: { empresaId: number; de: string; ate: string },
+): Promise<FluxoDeCaixa> {
+  const contasIniciais = db
+    .select({ saldoInicialCentavos: contaBancaria.saldoInicialCentavos })
+    .from(contaBancaria)
+    .where(
+      and(
+        eq(contaBancaria.empresaId, entrada.empresaId),
+        lte(contaBancaria.dataSaldoInicial, entrada.de),
+      ),
+    )
+    .all();
+  const saldoInicialCentavos = contasIniciais.reduce(
+    (total, linha) => total + linha.saldoInicialCentavos,
+    0,
+  );
+
+  interface MovimentoDia {
+    data: string;
+    entradasRealizadasCentavos: number;
+    saidasRealizadasCentavos: number;
+    entradasPrevistasCentavos: number;
+    saidasPrevistasCentavos: number;
+  }
+  const porDia = new Map<string, MovimentoDia>();
+  const diaDe = (data: string): MovimentoDia => {
+    const existente = porDia.get(data);
+    if (existente) return existente;
+    const novo: MovimentoDia = {
+      data,
+      entradasRealizadasCentavos: 0,
+      saidasRealizadasCentavos: 0,
+      entradasPrevistasCentavos: 0,
+      saidasPrevistasCentavos: 0,
+    };
+    porDia.set(data, novo);
+    return novo;
+  };
+
+  // Realizadas: baixas vigentes do intervalo, pelo valor de caixa (F-3).
+  const baixas = db
+    .select({
+      data: baixa.data,
+      tipo: titulo.tipo,
+      caixaCentavos: sql<number>`${baixa.valorCentavos} - ${baixa.retencaoCentavos} + ${baixa.encargosCentavos}`,
+    })
+    .from(baixa)
+    .innerJoin(titulo, eq(baixa.tituloId, titulo.id))
+    .where(
+      and(
+        eq(baixa.empresaId, entrada.empresaId),
+        isNull(baixa.estornoLancamentoId),
+        gte(baixa.data, entrada.de),
+        lte(baixa.data, entrada.ate),
+      ),
+    )
+    .all();
+  for (const baixaLinha of baixas) {
+    const movimento = diaDe(baixaLinha.data);
+    if (baixaLinha.tipo === 'receber') {
+      movimento.entradasRealizadasCentavos += baixaLinha.caixaCentavos;
+    } else {
+      movimento.saidasRealizadasCentavos += baixaLinha.caixaCentavos;
+    }
+  }
+
+  // Previstas: vencimentos dos títulos em aberto no intervalo (saldo residual).
+  const vencimentos = db
+    .select({
+      data: titulo.vencimento,
+      tipo: titulo.tipo,
+      saldoCentavos: titulo.saldoCentavos,
+    })
+    .from(titulo)
+    .where(
+      and(
+        eq(titulo.empresaId, entrada.empresaId),
+        inArray(titulo.situacao, SITUACOES_EM_ABERTO),
+        gte(titulo.vencimento, entrada.de),
+        lte(titulo.vencimento, entrada.ate),
+      ),
+    )
+    .all();
+  for (const tituloLinha of vencimentos) {
+    const movimento = diaDe(tituloLinha.data);
+    if (tituloLinha.tipo === 'receber') {
+      movimento.entradasPrevistasCentavos += tituloLinha.saldoCentavos;
+    } else {
+      movimento.saidasPrevistasCentavos += tituloLinha.saldoCentavos;
+    }
+  }
+
+  const totais = {
+    entradasRealizadasCentavos: 0,
+    saidasRealizadasCentavos: 0,
+    entradasPrevistasCentavos: 0,
+    saidasPrevistasCentavos: 0,
+  };
+  const linhas: DiaFluxoDeCaixa[] = [];
+  let acumulado = saldoInicialCentavos;
+  const ordenados = [...porDia.values()].sort((a, b) => (a.data < b.data ? -1 : 1));
+  for (const movimento of ordenados) {
+    acumulado +=
+      movimento.entradasRealizadasCentavos +
+      movimento.entradasPrevistasCentavos -
+      movimento.saidasRealizadasCentavos -
+      movimento.saidasPrevistasCentavos;
+    linhas.push({ ...movimento, saldoAcumuladoCentavos: acumulado });
+    totais.entradasRealizadasCentavos += movimento.entradasRealizadasCentavos;
+    totais.saidasRealizadasCentavos += movimento.saidasRealizadasCentavos;
+    totais.entradasPrevistasCentavos += movimento.entradasPrevistasCentavos;
+    totais.saidasPrevistasCentavos += movimento.saidasPrevistasCentavos;
+  }
+
+  return {
+    empresaId: entrada.empresaId,
+    de: entrada.de,
+    ate: entrada.ate,
+    saldoInicialCentavos,
+    linhas,
+    totais,
+    saldoFinalCentavos: acumulado,
+  };
 }

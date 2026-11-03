@@ -8,8 +8,8 @@
   "workflow": {
     "phase": "implementation",
     "status": "in_progress",
-    "current_task_id": "TASK-018",
-    "next_action": "T018 COMPLETA E VERIFICADA — AGUARDA ORDEM DE COMMIT (marco 10). Ciclo fechado em 2026-10-23: architect T018-ARCH gerou e o coordenador APROVOU a ADR-0009 (parser OFX/CSV proprio confirmado com evidencia; pdfmake para o PDF da T019); implementer implementou (13 arquivos, 0009 ADD-only verificada pelo coordenador: 10/10, integrity ok, FKs compostas, uks de exclusividade, 8 triggers intactos); reviewer achou 3 defeitos (corrida de reativação, desconciliacao sem changes, valor 0 manual) corrigidos em FIX-T018-R1 com D-R1 e red-green deterministico; security-reviewer aprovou com ressalvas (nenhum achado de tenant/autorizacao/oraculo); FIX-T018-R2 fechou as ressalvas locais (bodyLimit 2 MiB, base64 2M, teto 10.000 transacoes, caps 500/120, resumirValor 80) e EXPôS o 500 de SQLITE_MAX_VARIABLE_NUMBER em arquivos validos de 3.277..10.000 linhas; FIX-T018-R3 fechou com chunk de 1.000 na mesma transacao (red 500 -> green 201 com 4.000 itens). VERIFICACAO FINAL DO COORDENADOR: 151/151 medidos, typecheck 0, journal ADD-only, footprint = 13 arquivos T018 + ADR-0009 + 3 de memoria; NENHUM commit. PROXIMO: usuario ordena o commit (marco 10 = T018 + ADR-0009 + memorias) -> marcar TASK-018 done. Depois: T019 (fluxo de caixa CSV/PDF com pdfmake+csv-stringify conforme ADR-0009; hipoteses pre-flight F-1..F-3), restante T020, T021 (qa; inclui A5 IDOR-tests, lacunas de teste, deduplicacao 404-sem-oraculo, concorrencia fiscal, reapuracao-apos-estorno do DAS, DIVIDAS da T018: rate limit, paginacao da importacao, dedup FITID, 413 pt-BR), T022 (implantacao). PENDENCIAS DE PRODUTO: reapuracao apos estorno do DAS (A4), V-2 (chips RF/CA), RK-8 adiado, V-1 favicon."
+    "current_task_id": "TASK-019",
+    "next_action": "T019 ABERTA (2026-10-27): humano AUTORIZOU npm install das 3 libs da ADR-0009 (instaladas em apps/api, baseline 151/151 + typecheck 0) e CONFIRMOU as hipoteses F-1 (fluxo por empresa, saldo inicial = soma das contas com data <= inicio) e F-3 (realizadas = baixas vigentes pelo valor de caixa; previstas = saldo em aberto). TASK-019 em in_progress. PROXIMO: brief do implementer para fluxo de caixa (CA-09) + exportacao CSV/PDF dos 4 relatorios (CA-11, ADR-0006: CSV UTF-8+BOM/;/decimal virgula, PDF com empresa+periodo+emissao; arquivo x API campo a campo no CSV, conferencia de valores no PDF conforme T019-F-2). APOS: verificacao do coordenador, reviewer, security-reviewer, fixes, entao pedir ordem do marco 11. Lembretes: 2 memorias do marco 10 seguem sujas e entram no commit do marco 11; T021 herda as DIVIDAS da T018 (rate limit, paginacao da importacao, dedup FITID, 413 pt-BR)."
   },
   "tooling": [
     {
@@ -193,5 +193,5 @@
       "required_action": "Sem ação: .squad/tasks/TASK-004.json foi criado pela sessão da landing page com status 'done' (requisitos em docs/requirements/landpage.md). Confirmado pelo coordenador na retomada de 2026-10-21."
     }
   ],
-  "updated_at": "2026-10-23T19:05:00.000Z"
+  "updated_at": "2026-10-27T12:00:00.000Z"
 }

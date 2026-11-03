@@ -2,7 +2,7 @@
   "id": "TASK-019",
   "title": "Fluxo de caixa e exportacao CSV/PDF dos relatorios",
   "objective": "Implementar o fluxo de caixa com saldo inicial, realizadas e previstas (RF-17) e a exportacao de balancete, razao, balanco e fluxo de caixa em arquivo com os mesmos valores da tela (RF-18/H9).",
-  "status": "todo",
+  "status": "in_progress",
   "owner": "implementer",
   "depends_on": ["TASK-017","TASK-018"],
   "scope": {
@@ -34,12 +34,15 @@
   ],
   "evidence": [],
   "assumptions": [
-    "CORRIGIDO EM 2026-10-22 pelo pre-flight de requisitos (.squad/handoffs/PREFLIGHT-T016-T019.md): esta tarefa NAO e paralela segura com a T018. O CA-09 exige saldo inicial que vem de conta_bancaria, tabela que so nasce na T018 (Q-UI-2), e o \"realizado\" depende das baixas da T016. depends_on corrigido para TASK-017 + TASK-018. Hipotese pendente de definicao: fluxo de caixa e por empresa (RF-17), com saldo inicial = soma dos saldo_inicial das contas cuja data_saldo_inicial <= inicio do intervalo — o wireframe relatorios.html nao tem seletor de conta; se o fluxo for por conta, muda RF-17 e o wireframe e vira decisao humana."
+    "CORRIGIDO EM 2026-10-22 pelo pre-flight de requisitos (.squad/handoffs/PREFLIGHT-T016-T019.md): esta tarefa NAO e paralela segura com a T018. O CA-09 exige saldo inicial que vem de conta_bancaria, tabela que so nasce na T018 (Q-UI-2), e o \"realizado\" depende das baixas da T016. depends_on corrigido para TASK-017 + TASK-018. Hipotese pendente de definicao: fluxo de caixa e por empresa (RF-17), com saldo inicial = soma dos saldo_inicial das contas cuja data_saldo_inicial <= inicio do intervalo — o wireframe relatorios.html nao tem seletor de conta; se o fluxo for por conta, muda RF-17 e o wireframe e vira decisao humana.",
+    "AUTORIZACAO HUMANA (2026-10-27): npm install APROVADO das libs da ADR-0009 — csv-stringify@^6.9.0 e pdfmake@^0.3.13 em apps/api dependencies, @types/pdfmake@^0.3.3 em devDependencies (raiz do monorepo intacta; lockfile sincronizado; baseline pos-install 151/151 e typecheck 0 medidos pelo coordenador).",
+    "T019-F-1 CONFIRMADA PELO HUMANO (2026-10-27): fluxo de caixa POR EMPRESA, saldo inicial = soma dos saldo_inicial das contas com data_saldo_inicial <= inicio do intervalo (leitura literal do RF-17; wireframe sem seletor de conta).",
+    "T019-F-3 CONFIRMADA PELO HUMANO (2026-10-27): realizadas = baixas vigentes (nao estornadas) pelo VALOR DE CAIXA do lancamento vinculado (liquido de retencoes/encargos); previstas = saldo em aberto dos titulos; baixa estornada sai do realizado."
   ],
   "blockers": [],
   "worktree": null,
   "session_id": null,
   "estimate_hours": 5,
-  "created_at": "2026-10-20T22:55:00Z",
+  "created_at": "2026-10-27T12:00:00.000Z",
   "updated_at": "2026-10-20T22:55:00Z"
 }
